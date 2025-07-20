@@ -1,0 +1,15 @@
+{
+  "server": {
+    "PORT": 8080,
+    "HOST": "localhost",
+    "SECURE": false
+  },
+  "database": {
+    "NAME": "store",
+    "USER": "postgres",
+    "PASSWORD": "root",
+    "HOST": "localhost",
+    "PORT": 5432,
+    "LOGGING": false
+  }
+}
