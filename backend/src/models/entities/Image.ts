@@ -5,8 +5,8 @@ interface ImageAttributes {
   id: string;
   width: number;
   height: number;
-  filePath: string;
-  thumbnailPath: string;
+  filename: string;
+  thumbnailFilename: string;
   mimeType: string;
 }
 
@@ -28,11 +28,11 @@ const Image = sequelize.define<ImageInstance>('image', {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
-  filePath: {
+  filename: {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  thumbnailPath: {
+  thumbnailFilename: {
     type: DataTypes.STRING,
     allowNull: false,
   },

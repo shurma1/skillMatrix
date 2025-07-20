@@ -7,7 +7,7 @@ interface FileAttributes {
   mimeType: string;
   size: number;
   creationAt: Date;
-  path: string;
+  filename: string;
 }
 
 type FileCreationAttributes = Omit<FileAttributes, 'id'>;
@@ -36,7 +36,7 @@ const File = sequelize.define<FileInstance>('file', {
     type: DataTypes.DATE,
     allowNull: false,
   },
-  path: {
+  filename: {
     type: DataTypes.STRING,
     allowNull: false,
   },
