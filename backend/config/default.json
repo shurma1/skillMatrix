@@ -11,5 +11,8 @@
     "HOST": "localhost",
     "PORT": 5432,
     "LOGGING": false
+  },
+  "logging": {
+    "level": 5
   }
 }
