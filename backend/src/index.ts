@@ -3,6 +3,9 @@ import config from "config";
 import { Sequelize } from './models';
 import router from "./routes";
 import path from "path";
+import {initEnv} from "./utils/InitEnv";
+
+initEnv();
 
 export const ROOT_PATH = path.resolve(__dirname, '..');
 export const UPLOAD_PATH = path.resolve(ROOT_PATH, 'upload');
