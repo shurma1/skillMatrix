@@ -4,6 +4,7 @@ import { Sequelize } from './models';
 import router from "./routes";
 import path from "path";
 import {initEnv} from "./utils/InitEnv";
+import {Logger} from "./utils/logger";
 
 initEnv();
 
@@ -26,7 +27,7 @@ const start  = async () => {
 	app.listen(
 		PORT,
 		() => {
-			console.log(`start http://localhost:${PORT}`);
+			Logger.log(`start http://localhost:${PORT}`);
 		}
 	)
 }
