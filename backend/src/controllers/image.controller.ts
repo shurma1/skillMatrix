@@ -5,6 +5,7 @@ import ImageRepository from '../repositories/Image.repository';
 import fs from 'fs';
 import {ImageDTO} from "../dtos/Image.dto";
 import imageRepository from "../repositories/Image.repository";
+import {isImageMimeType} from "../utils/isImageMimeType";
 
 
 class ImageController {
@@ -13,7 +14,14 @@ class ImageController {
 			if (!req.file) {
 				return res.status(400).json({ error: 'No file uploaded' });
 			}
+			
 			const originalPath = req.file.path;
+			
+			if(! isImageMimeType(req.file.mimetype)) {
+				fs.unlinkSync(originalPath);
+				return res.status(500).json({ error: 'mime type not supported' });
+			}
+			
 			const ext = '.webp';
 			const webpFilename = path.basename(originalPath, path.extname(originalPath)) + ext;
 			const webpPath = path.resolve(path.dirname(originalPath), webpFilename);
