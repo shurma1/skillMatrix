@@ -6,20 +6,21 @@ import fs from 'fs';
 import {ImageDTO} from "../dtos/Image.dto";
 import imageRepository from "../repositories/Image.repository";
 import {isImageMimeType} from "../utils/isImageMimeType";
+import {ApiError} from "../error/apiError";
 
 
 class ImageController {
 	async upload(req: Request, res: Response, next: NextFunction) {
 		try {
 			if (!req.file) {
-				return res.status(400).json({ error: 'No file uploaded' });
+				throw ApiError.errorByType('NO_FILE_UPLOADED');
 			}
 			
 			const originalPath = req.file.path;
 			
 			if(! isImageMimeType(req.file.mimetype)) {
 				fs.unlinkSync(originalPath);
-				return res.status(500).json({ error: 'mime type not supported' });
+				throw ApiError.errorByType('MIME_TYPE_NOT_SUPPORTED');
 			}
 			
 			const ext = '.webp';
@@ -30,11 +31,14 @@ class ImageController {
 
 			const converted = await ImageService.convertToWEBP(originalPath, webpPath);
 			if (!converted) {
-				return res.status(500).json({ error: 'Failed to convert to webp' });
+				fs.unlinkSync(originalPath);
+				throw ApiError.errorByType('FAILED_TO_LOAD_FILE');
 			}
 			const thumbCreated = await ImageService.createThumbnail(webpPath, thumbPath);
 			if (!thumbCreated) {
-				return res.status(500).json({ error: 'Failed to create thumbnail' });
+				fs.unlinkSync(originalPath);
+				fs.unlinkSync(webpPath);
+				throw ApiError.errorByType('FAILED_TO_LOAD_FILE');
 			}
 
 			fs.unlinkSync(originalPath);
@@ -56,12 +60,12 @@ class ImageController {
 			const thumb = req.query.thumb === 'true';
 			const image = await imageRepository.getByID(id);
 			if (!image) {
-				return res.status(404).json({ error: 'Image not found' });
+				throw ApiError.errorByType('FILE_NOT_FOUND');
 			}
 			const fileName = thumb ? image.thumbnailFilename : image.filename;
 			const filePath = path.resolve(__dirname, '../../uploads', fileName);
 			if (!fs.existsSync(filePath)) {
-				return res.status(404).json({ error: 'File not found' });
+				throw ApiError.errorByType('FILE_NOT_FOUND');
 			}
 			res.sendFile(filePath);
 		} catch (err) {
