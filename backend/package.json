@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start:dev": "nodemon src/index.ts env mode=development",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "generate:doc": "node scripts/generate-doc.js"
   },
   "keywords": [],
   "author": "",
@@ -14,6 +15,8 @@
     "@types/config": "^3.3.5",
     "@types/express": "^5.0.3",
     "@types/multer": "^2.0.0",
+    "@types/swagger-ui-express": "^4.1.8",
+    "@types/yamljs": "^0.2.34",
     "nodemon": "^3.1.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.4"
@@ -21,12 +24,18 @@
   "dependencies": {
     "config": "^4.0.1",
     "express": "^5.1.0",
+    "express-swagger-generator": "^1.1.17",
+    "express-validator": "^7.2.1",
     "i": "^0.3.7",
+    "json2yaml": "^1.1.0",
     "multer": "^2.0.2",
     "pg": "^8.16.3",
     "pnpm": "^10.13.1",
     "sequelize": "^6.37.7",
     "sharp": "^0.34.3",
-    "uuid": "^11.1.0"
+    "swagger-ui-express": "^5.0.1",
+    "swagger2openapi": "^7.0.8",
+    "uuid": "^11.1.0",
+    "yamljs": "^0.3.0"
   }
 }

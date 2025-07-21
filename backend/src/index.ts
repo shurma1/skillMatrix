@@ -5,18 +5,34 @@ import router from "./routes";
 import path from "path";
 import {initEnv} from "./utils/InitEnv";
 import {Logger} from "./utils/logger";
+import YAML from 'yamljs';
+import swaggerUi from 'swagger-ui-express'
+import {errorHandlingMiddleware} from "./middlewares/errorHandling.middleware";
 
 initEnv();
 
 export const ROOT_PATH = path.resolve(__dirname, '..');
 export const UPLOAD_PATH = path.resolve(ROOT_PATH, 'upload');
 
+export const isDev = process.env.mode === "development";
+
 const PORT = config.get("server.PORT") || 8000;
 const HOST = config.get("server.HOST") || 'localhost';
 
 const app = express();
 
-app.use('/api', router)
+if(isDev) {
+	const specs = YAML.load(path.join(ROOT_PATH, 'docs', 'docs.yaml'));
+	app.use(
+		"/api/docs",
+		swaggerUi.serve,
+		swaggerUi.setup(specs)
+	);
+}
+
+app.use(express.json());
+app.use('/api', router);
+app.use(errorHandlingMiddleware);
 
 
 const start  = async () => {
@@ -27,7 +43,10 @@ const start  = async () => {
 	app.listen(
 		PORT,
 		() => {
-			Logger.log(`start http://localhost:${PORT}`);
+			Logger.log(`Server started on http://localhost:${PORT}/api/ [${isDev ? 'Development': 'Production'}]`);
+			if(isDev) {
+				Logger.log(`Swagger http://localhost:${PORT}/api/docs/`);
+			}
 		}
 	)
 }

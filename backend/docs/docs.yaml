@@ -1,0 +1,21 @@
+---
+  openapi: "3.0.0"
+  info: 
+    title: "Skill matrix service"
+    description: "This service defines the main API methods"
+    version: "1.0.0"
+    contact: 
+      name: "Dmitriy Prokhorov"
+      email: "dmitriy.prokhorov.04@gmail.com"
+  paths: {}
+  tags: []
+  servers: 
+    - 
+      url: "http://localhost:8080"
+  components: 
+    securitySchemes: 
+      JWT: 
+        type: "apiKey"
+        in: "header"
+        name: "Authorization"
+        description: ""
