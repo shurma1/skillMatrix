@@ -1,7 +1,7 @@
-
 const options = (dirname) => {
     return {
         swaggerDefinition: {
+            openapi: "3.0.0",
             info: {
                 title: 'Skill matrix service',
                 description: 'This service defines the main API methods',
@@ -27,11 +27,11 @@ const options = (dirname) => {
             },
         },
         route: {
-            url: '/docs/swagger2',
+            url: '/docs',
             docs: '/swagger.json',
         },
         basedir: dirname,
-        files: ['./routes/*.ts', './dto/**/*.ts', './controllers/**/*.ts', './exceptions/*.ts']
+        apis: ['src/dtos/*.ts', 'src/routes/*.ts'],
     };
 }
 

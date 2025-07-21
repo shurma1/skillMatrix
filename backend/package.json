@@ -24,7 +24,6 @@
   "dependencies": {
     "config": "^4.0.1",
     "express": "^5.1.0",
-    "express-swagger-generator": "^1.1.17",
     "express-validator": "^7.2.1",
     "i": "^0.3.7",
     "json2yaml": "^1.1.0",
@@ -33,6 +32,7 @@
     "pnpm": "^10.13.1",
     "sequelize": "^6.37.7",
     "sharp": "^0.34.3",
+    "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "swagger2openapi": "^7.0.8",
     "uuid": "^11.1.0",

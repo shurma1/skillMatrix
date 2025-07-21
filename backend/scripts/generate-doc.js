@@ -1,24 +1,15 @@
 const express = require('express');
-const ExpressSwaggerGenerator = require('express-swagger-generator');
-const swaggerOptions = require('../config/swagger.options.js');
-const {fileURLToPath} = require('url');
+const swaggerJSDoc = require('swagger-jsdoc');
 const jsonToYaml = require('json2yaml');
 const fs = require('fs');
-const swaggerConverter = require('swagger2openapi');
+const path = require('path');
+const swaggerOptions = require('../config/swagger.options.js');
 
-const expressSwaggerGenerator = ExpressSwaggerGenerator(express());
+const options = swaggerOptions(path.resolve(__dirname, '..'));
 
-const swaggerDoc = expressSwaggerGenerator(swaggerOptions(__dirname));
+const swaggerSpec = swaggerJSDoc(options);
 
-fs.writeFileSync('./docs/docs_swagger2.yaml', jsonToYaml.stringify(swaggerDoc));
+fs.writeFileSync('./docs/docs_swagger2.yaml', jsonToYaml.stringify(swaggerSpec));
+fs.writeFileSync('./docs/docs.yaml', jsonToYaml.stringify(swaggerSpec));
 
-swaggerConverter.convertObj(swaggerDoc, {}, (err, options) => {
-    if (err) {
-        console.log(err);
-    } else {
-        const output = jsonToYaml.stringify(options.openapi);
-				
-        fs.writeFileSync('./docs/docs.yaml', output);
-        process.exit(0);
-    }
-});
+console.log('Swagger docs generated!');
