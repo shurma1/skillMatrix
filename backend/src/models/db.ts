@@ -8,6 +8,7 @@ export default new Sequelize(
 	{
 		dialect: 'postgres',
 		host: config.get("database.HOST"),
-		port: config.get("database.PORT")
+		port: config.get("database.PORT"),
+		logging: config.get("database.LOGGING")
 	}
 )
