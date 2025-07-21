@@ -1,4 +1,5 @@
 ---
+  openapi: "3.0.0"
   info: 
     title: "Skill matrix service"
     description: "This service defines the main API methods"
@@ -18,9 +19,80 @@
       in: "header"
       name: "Authorization"
       description: ""
-  swagger: "2.0"
-  paths: {}
-  definitions: {}
-  responses: {}
-  parameters: {}
+  paths: 
+    /image/upload: 
+      post: 
+        summary: "Upload an image file"
+        description: "Uploads an image, converts it to WEBP, creates a thumbnail, and returns metadata."
+        tags: 
+          - "Image"
+        requestBody: 
+          required: true
+          content: 
+            multipart/form-data: 
+              schema: 
+                type: "object"
+                properties: 
+                  image: 
+                    type: "string"
+                    format: "binary"
+        responses: 
+          201: 
+            description: "Image uploaded successfully"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/ImageDTO"
+          400: 
+            description: "No file uploaded"
+          500: 
+            description: "Failed to process file or unsupported mime type"
+    /image/{id}: 
+      get: 
+        summary: "Get image by ID"
+        description: "Returns the image file or its thumbnail by ID."
+        tags: 
+          - "Image"
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+            description: "Image ID"
+          - 
+            in: "query"
+            name: "thumb"
+            required: false
+            schema: 
+              type: "boolean"
+            description: "If true, returns thumbnail"
+        responses: 
+          200: 
+            description: "Image file"
+            content: 
+              image/webp: 
+                schema: 
+                  type: "string"
+                  format: "binary"
+          404: 
+            description: "File not found"
+  components: 
+    schemas: 
+      ImageDTO: 
+        type: "object"
+        properties: 
+          id: 
+            type: "string"
+            description: "Unique identifier for the image"
+          width: 
+            type: "integer"
+            description: "Width of the image in pixels"
+          height: 
+            type: "integer"
+            description: "Height of the image in pixels"
+          mimeType: 
+            type: "string"
+            description: "MIME type of the image (e.g., image/webp)"
   tags: []
