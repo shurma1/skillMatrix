@@ -6,20 +6,26 @@
   "scripts": {
     "start:dev": "nodemon src/index.ts env mode=development",
     "start": "node dist/index.js",
-    "generate:doc": "node scripts/generate-doc.js"
+    "generate:doc": "node scripts/generate-doc.js",
+    "lint": "eslint src --ext .ts,.js",
+    "lint:fix": "eslint src --ext .ts,.js --fix"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@eslint/js": "^9.31.0",
     "@types/config": "^3.3.5",
     "@types/express": "^5.0.3",
     "@types/multer": "^2.0.0",
     "@types/swagger-ui-express": "^4.1.8",
     "@types/yamljs": "^0.2.34",
+    "eslint": "^9.31.0",
+    "globals": "^16.3.0",
     "nodemon": "^3.1.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.4.4"
+    "typescript": "^5.4.4",
+    "typescript-eslint": "^8.38.0"
   },
   "dependencies": {
     "config": "^4.0.1",
