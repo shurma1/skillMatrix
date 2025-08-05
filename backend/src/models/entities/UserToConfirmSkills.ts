@@ -17,35 +17,35 @@ type UserToConfirmSkillsCreationAttributes = Omit<UserToConfirmSkillsAttributes,
 export interface UserToConfirmSkillsInstance extends Model<UserToConfirmSkillsAttributes, UserToConfirmSkillsCreationAttributes>, UserToConfirmSkillsAttributes {}
 
 const UserToConfirmSkills = sequelize.define<UserToConfirmSkillsInstance>('userToConfirmSkills', {
-  id: {
-    type: DataTypes.UUID,
-    primaryKey: true,
-    defaultValue: DataTypes.UUIDV4,
-  },
-  type: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  level: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-  userId: {
-    type: DataTypes.UUID,
-    allowNull: false,
-  },
-  skillId: {
-    type: DataTypes.UUID,
-    allowNull: false,
-  },
-  version: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-  date: {
-    type: DataTypes.DATE,
-    allowNull: false,
-  },
+	id: {
+		type: DataTypes.UUID,
+		primaryKey: true,
+		defaultValue: DataTypes.UUIDV4,
+	},
+	type: {
+		type: DataTypes.STRING,
+		allowNull: false,
+	},
+	level: {
+		type: DataTypes.INTEGER,
+		allowNull: false,
+	},
+	userId: {
+		type: DataTypes.UUID,
+		allowNull: false,
+	},
+	skillId: {
+		type: DataTypes.UUID,
+		allowNull: false,
+	},
+	version: {
+		type: DataTypes.INTEGER,
+		allowNull: false,
+	},
+	date: {
+		type: DataTypes.DATE,
+		allowNull: false,
+	},
 });
 
 export default UserToConfirmSkills;

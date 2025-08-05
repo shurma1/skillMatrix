@@ -1,7 +1,7 @@
 import {NextFunction, Request, Response} from 'express';
 import {ApiError} from '../error/apiError';
 import {checkSchema, Schema} from 'express-validator';
-import {ErrorKeys} from '../constants/Errors';
+import {ErrorKeys} from '../constants/errors';
 
 interface IError{
 	type: string,

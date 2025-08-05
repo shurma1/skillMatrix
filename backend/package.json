@@ -15,6 +15,7 @@
   "license": "ISC",
   "devDependencies": {
     "@eslint/js": "^9.31.0",
+    "@types/bcrypt": "^6.0.0",
     "@types/config": "^3.3.5",
     "@types/express": "^5.0.3",
     "@types/multer": "^2.0.0",
@@ -28,10 +29,12 @@
     "typescript-eslint": "^8.38.0"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "config": "^4.0.1",
     "express": "^5.1.0",
     "express-validator": "^7.2.1",
     "i": "^0.3.7",
+    "ioredis": "^5.7.0",
     "json2yaml": "^1.1.0",
     "multer": "^2.0.2",
     "pg": "^8.16.3",

@@ -1,6 +1,6 @@
 import express from 'express';
 import config from "config";
-import { Sequelize } from './models';
+import {Sequelize} from './models';
 import router from "./routes";
 import path from "path";
 import {initEnv} from "./utils/InitEnv";
@@ -8,6 +8,9 @@ import {Logger} from "./utils/logger";
 import YAML from 'yamljs';
 import swaggerUi from 'swagger-ui-express'
 import {errorHandlingMiddleware} from "./middlewares/errorHandling.middleware";
+import Redis from 'ioredis';
+
+export const redis = new Redis();
 
 initEnv();
 
@@ -20,6 +23,7 @@ const PORT = config.get("server.PORT") || 8000;
 const HOST = config.get("server.HOST") || 'localhost';
 
 const app = express();
+
 
 if(isDev) {
 	const specs = YAML.load(path.join(ROOT_PATH, 'docs', 'docs.yaml'));
@@ -34,11 +38,11 @@ app.use(express.json());
 app.use('/api', router);
 app.use(errorHandlingMiddleware);
 
-
 const start  = async () => {
 	
 	await Sequelize.authenticate();
 	await Sequelize.sync();
+	
 	
 	app.listen(
 		PORT,

@@ -1,5 +1,4 @@
 import Image, {ImageInstance} from '../models/entities/Image';
-import {ImageDTO} from "../dtos/Image.dto";
 
 class ImageRepository {
 	async create(
@@ -8,7 +7,7 @@ class ImageRepository {
 		filename: string,
 		thumbnailFilename: string,
 		mimeType: string
-		): Promise<ImageInstance> {
+	): Promise<ImageInstance> {
 		return await Image.create({width, height, filename, thumbnailFilename, mimeType});
 	}
 	

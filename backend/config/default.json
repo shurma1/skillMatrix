@@ -14,5 +14,9 @@
   },
   "logging": {
     "level": 5
+  },
+  "times": {
+    "MOUNTS_BEFORE_AUDIT": 36,
+    "MOUNTS_TO_NOTIFY": 1
   }
 }

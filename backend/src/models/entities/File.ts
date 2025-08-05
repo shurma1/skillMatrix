@@ -6,8 +6,8 @@ interface FileAttributes {
   name: string;
   mimeType: string;
   size: number;
-  creationAt: Date;
   filename: string;
+  createdAt?: Date;
 }
 
 type FileCreationAttributes = Omit<FileAttributes, 'id'>;
@@ -15,31 +15,27 @@ type FileCreationAttributes = Omit<FileAttributes, 'id'>;
 export interface FileInstance extends Model<FileAttributes, FileCreationAttributes>, FileAttributes {}
 
 const File = sequelize.define<FileInstance>('file', {
-  id: {
-    type: DataTypes.UUID,
-    primaryKey: true,
-    defaultValue: DataTypes.UUIDV4,
-  },
-  name: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  mimeType: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  size: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-  creationAt: {
-    type: DataTypes.DATE,
-    allowNull: false,
-  },
-  filename: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
+	id: {
+		type: DataTypes.UUID,
+		primaryKey: true,
+		defaultValue: DataTypes.UUIDV4,
+	},
+	name: {
+		type: DataTypes.STRING,
+		allowNull: false,
+	},
+	mimeType: {
+		type: DataTypes.STRING,
+		allowNull: false,
+	},
+	size: {
+		type: DataTypes.BIGINT,
+		allowNull: false,
+	},
+	filename: {
+		type: DataTypes.STRING,
+		allowNull: false,
+	},
 });
 
 export default File;

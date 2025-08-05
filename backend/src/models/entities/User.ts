@@ -5,11 +5,11 @@ interface UserAttributes{
 	id: string;
 	login: string;
 	firstname: string;
-	lastname: number;
+	lastname: string;
 	patronymic: string;
 	email?: string;
 	password_hash: string;
-	avatar_id?: string
+	avatar_id?: string | null;
 }
 
 type UserCreationAttributes = Omit<UserAttributes, 'id'>

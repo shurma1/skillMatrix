@@ -30,7 +30,7 @@ Image.hasOne(User, { foreignKey: 'avatar_id', as: 'user' });
 
 // User <-> JobRole (many-to-many)
 User.belongsToMany(JobRole, { through: UserToJobRole, foreignKey: 'userId' });
-JobRole.belongsToMany(User, { through: UserToJobRole, foreignKey: 'jobId' });
+JobRole.belongsToMany(User, { through: UserToJobRole, foreignKey: 'jobRoleId' });
 
 // JobRole <-> Skill (many-to-many)
 JobRole.belongsToMany(Skill, { through: JobRoleToSkills, foreignKey: 'jobRoleId' });
@@ -64,9 +64,9 @@ SkillVersion.belongsTo(Skill, { foreignKey: 'skillId' });
 File.belongsToMany(SkillVersion, { through: FileToSkillVersion, foreignKey: 'fileId' });
 SkillVersion.belongsToMany(File, { through: FileToSkillVersion, foreignKey: 'skillVersionId' });
 
-// Test <-> Skill (many-to-one)
-Skill.hasMany(Test, { foreignKey: 'skillId' });
-Test.belongsTo(Skill, { foreignKey: 'skillId' });
+// Test <-> SkillVersion (many-to-one)
+SkillVersion.hasMany(Test, { foreignKey: 'skillVersionId' });
+Test.belongsTo(SkillVersion, { foreignKey: 'skillVersionId' });
 
 // User <-> Test (many-to-many)
 User.belongsToMany(Test, { through: UserTest, foreignKey: 'userId' });
