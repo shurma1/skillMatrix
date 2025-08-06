@@ -9,6 +9,8 @@ import YAML from 'yamljs';
 import swaggerUi from 'swagger-ui-express'
 import {errorHandlingMiddleware} from "./middlewares/errorHandling.middleware";
 import Redis from 'ioredis';
+import {DailyTaskService} from "./services/dailyTask.service";
+import SkillService from "./services/skill.service";
 
 export const redis = new Redis();
 
@@ -53,6 +55,11 @@ const start  = async () => {
 			}
 		}
 	)
+	
+	const dailyTask = new DailyTaskService();
+	
+	dailyTask.register(SkillService.checkExpirationDateOfTheSkills);
+	dailyTask.register(SkillService.checkExpirationDateOfTheUserSkills);
 }
 
 

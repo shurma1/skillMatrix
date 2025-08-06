@@ -202,6 +202,13 @@ class SkillService {
 		await SkillRepository.getTags(skillId);
 	}
 	
+	async checkExpirationDateOfTheSkills() {
+		// оповещалка авторов за месяц до истечения skill
+	}
+	
+	async checkExpirationDateOfTheUserSkills() {
+		// проверка, не истекли ли у пользователя навыки
+	}
 }
 
 export default new SkillService();

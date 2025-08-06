@@ -35,6 +35,9 @@ importers:
       multer:
         specifier: ^2.0.2
         version: 2.0.2
+      node-cron:
+        specifier: ^4.2.1
+        version: 4.2.1
       pg:
         specifier: ^8.16.3
         version: 8.16.3
@@ -1157,6 +1160,10 @@ packages:
   node-addon-api@8.5.0:
     resolution: {integrity: sha512-/bRZty2mXUIFY/xU5HLvveNHlswNJej+RnxBjOMkidWfwZzgTbPG1E3K5TOxRLOR+5hX7bSofy8yf1hZevMS8A==}
     engines: {node: ^18 || ^20 || >= 21}
+
+  node-cron@4.2.1:
+    resolution: {integrity: sha512-lgimEHPE/QDgFlywTd8yTR61ptugX3Qer29efeyWw2rv259HtGBNn1vZVmp8lB9uo9wC0t/AT4iGqXxia+CJFg==}
+    engines: {node: '>=6.0.0'}
 
   node-fetch-h2@2.3.0:
     resolution: {integrity: sha512-ofRW94Ab0T4AOh5Fk8t0h8OBWrmjb0SSB20xh1H8YnPV9EJ+f5AMoYSUQ2zgJ4Iq2HAK0I2l5/Nequ8YzFS3Hg==}
@@ -2817,6 +2824,8 @@ snapshots:
   negotiator@1.0.0: {}
 
   node-addon-api@8.5.0: {}
+
+  node-cron@4.2.1: {}
 
   node-fetch-h2@2.3.0:
     dependencies:
