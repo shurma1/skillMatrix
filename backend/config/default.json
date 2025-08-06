@@ -18,5 +18,18 @@
   "times": {
     "MOUNTS_BEFORE_AUDIT": 36,
     "MOUNTS_TO_NOTIFY": 1
+  },
+  "JWT": {
+    "REFRESH_SECRET": "632b2155f603fcfa8816858873f70d6c06fd74d010a53081af1ab6bc34b2048e",
+    "ACCESS_SECRET": "77d9170d2306332f1f53ca440d0c76d51e967f901d5c6b8e68fcc54216caf6ca",
+    "ACCESS_EXPIRES_IN": "15m",
+    "REFRESH_EXPIRES_IN": "30D"
+  },
+  "SMTP": {
+    "HOST": "smtp.gmail.com",
+    "PORT": "587",
+    "SECURE": false,
+    "USER": "palmaqualityservice@gmail.com",
+    "PASSWORD": "uhic fjco wwuh czmt"
   }
 }

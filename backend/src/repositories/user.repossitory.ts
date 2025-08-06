@@ -1,6 +1,6 @@
 import User, {UserInstance} from '../models/entities/User';
 import {updateModel} from "../utils/updateModel";
-import permissionRepository from "./permission.repository";
+import permissionRepository from "../repositories/permission.repository";
 import userToPermission from "../models/entities/UserToPermission";
 import jobRoleRepository from "./jobRole.repository";
 import userToJobRole, {UserToJobRoleInstance} from "../models/entities/UserToJobRole";
@@ -78,6 +78,10 @@ class UserRepository {
 	
 	async getByID(id: string): Promise<UserInstance | null> {
 		return await User.findOne({ where: { id } });
+	}
+	
+	async getUserByEmail(email: string): Promise<UserInstance | null> {
+		return await User.findOne({ where: { email } });
 	}
 	
 	async getByLogin(login: string): Promise<UserInstance | null> {

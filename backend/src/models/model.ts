@@ -19,6 +19,11 @@ import UserTest from './entities/UserTest';
 import UserTestResult from './entities/UserTestResult';
 import Question from './entities/Question';
 import AnswerVariant from './entities/AnswerVariant';
+import Token from "./entities/Token";
+
+// User <-> Token (one-to-many)
+User.hasMany(Token);
+Token.belongsTo(User);
 
 // User <-> Permission (many-to-many)
 User.belongsToMany(Permission, { through: UserToPermission, foreignKey: 'userId' });
@@ -108,4 +113,5 @@ export {
 	UserTestResult,
 	Question,
 	AnswerVariant,
+	Token
 };

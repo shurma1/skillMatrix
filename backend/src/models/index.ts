@@ -21,6 +21,7 @@ import {
 	UserTestResult,
 	Question,
 	AnswerVariant,
+	Token
 } from './model';
 
 export {
@@ -46,4 +47,5 @@ export {
 	UserTestResult,
 	Question,
 	AnswerVariant,
+	Token
 };

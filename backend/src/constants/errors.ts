@@ -7,7 +7,7 @@ const API_ERROR = {
 	MIME_TYPE_NOT_SUPPORTED: {
 		type: 'MIME_TYPE_NOT_SUPPORTED',
 		description: 'The mime type of the uploaded file is not supported.',
-		code: 500,
+		code: 415,
 	},
 	FAILED_TO_LOAD_FILE: {
 		type: 'FAILED_TO_LOAD_FILE',
@@ -17,7 +17,7 @@ const API_ERROR = {
 	FILE_NOT_FOUND: {
 		type: 'FILE_NOT_FOUND',
 		description: 'The file has not been found.',
-		code: 404,
+		code: 400,
 	},
 	USER_NOT_FOUND: {
 		type: 'USER_NOT_FOUND',
@@ -47,7 +47,7 @@ const API_ERROR = {
 	INVALID_UUID: {
 		type: 'INVALID_UUID',
 		description: 'UUID is invalid',
-		code: 500,
+		code: 400,
 	},
 	INVALID_DATA: {
 		type: 'INVALID_DATA',
@@ -102,7 +102,7 @@ const API_ERROR = {
 	TAG_NOT_FOUND: {
 		type: 'TAG_NOT_FOUND',
 		description: 'The tag not found.',
-		code: 400,
+		code: 404,
 	},
 	TAG_ALREADY_ADDED: {
 		type: 'TAG_ALREADY_ADDED',
@@ -122,13 +122,28 @@ const API_ERROR = {
 	TEST_NOT_FOUND: {
 		type: 'TEST_NOT_FOUND',
 		description: 'Test not found.',
-		code: 400,
+		code: 404,
 	},
 	SESSION_NOT_FOUND: {
 		type: 'SESSION_NOT_FOUND',
 		description: 'Session not found.',
+		code: 404,
+	},
+	INVALID_ACCESS_TOKEN: {
+		type: 'INVALID_ACCESS_TOKEN',
+		description: 'The access token is invalid.',
+		code: 401,
+	},
+	INVALID_REFRESH_TOKEN: {
+		type: 'INVALID_REFRESH_TOKEN',
+		description: 'The refresh token is invalid.',
+		code: 401,
+	},
+	INVALID_AUTHORIZATION_DATA: {
+		type: 'INVALID_AUTHORIZATION_DATA',
+		description: 'Email, login or password are invalid.',
 		code: 400,
-	}
+	},
 };
 
 type ErrorKeys = keyof typeof API_ERROR;
