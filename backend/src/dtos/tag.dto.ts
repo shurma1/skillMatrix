@@ -1,4 +1,36 @@
 // TagSearchDTO
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     TagSearchDTO:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         name:
+ *           type: string
+ *     TagDTO:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         name:
+ *           type: string
+ *         skillsCount:
+ *           type: integer
+ *     TagCreateDTO:
+ *       type: object
+ *       required: [name]
+ *       properties:
+ *         name:
+ *           type: string
+ *     TagUpdateDTO:
+ *       type: object
+ *       properties:
+ *         name:
+ *           type: string
+ */
 export class TagSearchDTO {
 	id: string;
 	name: string;

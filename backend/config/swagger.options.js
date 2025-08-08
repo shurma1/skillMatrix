@@ -17,6 +17,7 @@ const options = (dirname) => {
                 "application/json",
             ],
             schemes: ['http'],
+            // Swagger 2.0 style (kept for compatibility with tooling that still reads it)
             securityDefinitions: {
                 JWT: {
                     type: 'apiKey',
@@ -25,13 +26,24 @@ const options = (dirname) => {
                     description: "",
                 }
             },
+            // OpenAPI 3.0 security scheme used by swagger-ui to show the Authorize button
+            components: {
+                securitySchemes: {
+                    JWT: {
+                        type: 'http',
+                        scheme: 'bearer',
+                        bearerFormat: 'JWT',
+                        description: 'Input your JWT as: Bearer <token>'
+                    }
+                }
+            },
         },
         route: {
             url: '/docs',
             docs: '/swagger.json',
         },
         basedir: dirname,
-        apis: ['src/dtos/*.ts', 'src/routes/*.ts'],
+    apis: ['src/dtos/*.ts', 'src/routes/*.ts'], // includes x-permissions via JSDoc @openapi
     };
 }
 

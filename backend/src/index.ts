@@ -32,7 +32,14 @@ if(isDev) {
 	app.use(
 		"/api/docs",
 		swaggerUi.serve,
-		swaggerUi.setup(specs)
+		swaggerUi.setup(specs, {
+			explorer: true,
+			swaggerOptions: {
+				// Show vendor extensions like x-permissions in the UI
+				showExtensions: true,
+				showCommonExtensions: true,
+			},
+		})
 	);
 }
 

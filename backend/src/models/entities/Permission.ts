@@ -4,6 +4,7 @@ import sequelize from '../db';
 interface PermissionAttributes {
   id: string;
   name: string;
+  description: string
 }
 
 type PermissionCreationAttributes = Omit<PermissionAttributes, 'id'>;
@@ -17,6 +18,11 @@ const Permission = sequelize.define<PermissionInstance>('permission', {
 		defaultValue: DataTypes.UUIDV4,
 	},
 	name: {
+		type: DataTypes.STRING,
+		unique: true,
+		allowNull: false,
+	},
+	description: {
 		type: DataTypes.STRING,
 		allowNull: false,
 	},

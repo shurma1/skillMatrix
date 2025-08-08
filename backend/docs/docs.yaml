@@ -19,275 +19,67 @@
       in: "header"
       name: "Authorization"
       description: ""
-  paths: 
-    /api/image/upload: 
-      post: 
-        summary: "Upload an image file"
-        description: "Uploads an image, converts it to WEBP, creates a thumbnail, and returns metadata."
-        tags: 
-          - "Image"
-        requestBody: 
-          required: true
-          content: 
-            multipart/form-data: 
-              schema: 
-                type: "object"
-                properties: 
-                  image: 
-                    type: "string"
-                    format: "binary"
-        responses: 
-          201: 
-            description: "Image uploaded successfully"
-            content: 
-              application/json: 
-                schema: 
-                  $ref: "#/components/schemas/ImageDTO"
-          400: 
-            description: "No file uploaded"
-          500: 
-            description: "Failed to process file or unsupported mime type"
-    /api/image/{id}: 
-      get: 
-        summary: "Get image by ID"
-        description: "Returns the image file or its thumbnail by ID."
-        tags: 
-          - "Image"
-        parameters: 
-          - 
-            in: "path"
-            name: "id"
-            required: true
-            schema: 
-              type: "string"
-            description: "Image ID"
-          - 
-            in: "query"
-            name: "thumb"
-            required: false
-            schema: 
-              type: "boolean"
-            description: "If true, returns thumbnail"
-        responses: 
-          200: 
-            description: "Image file"
-            content: 
-              image/webp: 
-                schema: 
-                  type: "string"
-                  format: "binary"
-          404: 
-            description: "File not found"
-    /api/jobrole: 
-      post: 
-        summary: "Create a job role"
-        tags: 
-          - "JobRole"
-        requestBody: 
-          required: true
-          content: 
-            application/json: 
-              schema: 
-                type: "object"
-                properties: 
-                  title: 
-                    type: "string"
-                    description: "Title of the job role"
-        responses: 
-          201: 
-            description: "Job role created"
-            content: 
-              application/json: 
-                schema: 
-                  $ref: "#/components/schemas/JobRoleDTO"
-    /api/jobrole/{id}: 
-      get: 
-        summary: "Get job role by ID"
-        tags: 
-          - "JobRole"
-        parameters: 
-          - 
-            in: "path"
-            name: "id"
-            required: true
-            schema: 
-              type: "string"
-        responses: 
-          200: 
-            description: "Job role found"
-            content: 
-              application/json: 
-                schema: 
-                  $ref: "#/components/schemas/JobRoleDTO"
-          404: 
-            description: "Job role not found"
-      put: 
-        summary: "Update job role"
-        tags: 
-          - "JobRole"
-        parameters: 
-          - 
-            in: "path"
-            name: "id"
-            required: true
-            schema: 
-              type: "string"
-        requestBody: 
-          required: true
-          content: 
-            application/json: 
-              schema: 
-                $ref: "#/components/schemas/JobRoleDTO"
-        responses: 
-          200: 
-            description: "Job role updated"
-            content: 
-              application/json: 
-                schema: 
-                  $ref: "#/components/schemas/JobRoleDTO"
-          404: 
-            description: "Job role not found"
-      delete: 
-        summary: "Delete job role"
-        tags: 
-          - "JobRole"
-        parameters: 
-          - 
-            in: "path"
-            name: "id"
-            required: true
-            schema: 
-              type: "string"
-        responses: 
-          204: 
-            description: "Job role deleted"
-          404: 
-            description: "Job role not found"
-    /api/jobrole/search: 
-      get: 
-        summary: "Search job roles"
-        tags: 
-          - "JobRole"
-        parameters: 
-          - 
-            in: "query"
-            name: "query"
-            required: true
-            schema: 
-              type: "string"
-        responses: 
-          200: 
-            description: "List of job roles"
-            content: 
-              application/json: 
-                schema: 
-                  type: "array"
-                  items: 
-                    $ref: "#/components/schemas/JobRoleDTO"
-    /api/user: 
-      post: 
-        summary: "Create a user"
-        tags: 
-          - "User"
-        requestBody: 
-          required: true
-          content: 
-            application/json: 
-              schema: 
-                $ref: "#/components/schemas/UserDTO"
-        responses: 
-          201: 
-            description: "User created"
-            content: 
-              application/json: 
-                schema: 
-                  $ref: "#/components/schemas/UserDTO"
-    /api/user/{id}: 
-      get: 
-        summary: "Get user by ID"
-        tags: 
-          - "User"
-        parameters: 
-          - 
-            in: "path"
-            name: "id"
-            required: true
-            schema: 
-              type: "string"
-        responses: 
-          200: 
-            description: "User found"
-            content: 
-              application/json: 
-                schema: 
-                  $ref: "#/components/schemas/UserDTO"
-          404: 
-            description: "User not found"
-      put: 
-        summary: "Update user"
-        tags: 
-          - "User"
-        parameters: 
-          - 
-            in: "path"
-            name: "id"
-            required: true
-            schema: 
-              type: "string"
-        requestBody: 
-          required: true
-          content: 
-            application/json: 
-              schema: 
-                $ref: "#/components/schemas/UserDTO"
-        responses: 
-          200: 
-            description: "User updated"
-            content: 
-              application/json: 
-                schema: 
-                  $ref: "#/components/schemas/UserDTO"
-          404: 
-            description: "User not found"
-      delete: 
-        summary: "Delete user"
-        tags: 
-          - "User"
-        parameters: 
-          - 
-            in: "path"
-            name: "id"
-            required: true
-            schema: 
-              type: "string"
-        responses: 
-          204: 
-            description: "User deleted"
-          404: 
-            description: "User not found"
-    /api/user/search: 
-      get: 
-        summary: "Search users"
-        tags: 
-          - "User"
-        parameters: 
-          - 
-            in: "query"
-            name: "query"
-            required: true
-            schema: 
-              type: "string"
-        responses: 
-          200: 
-            description: "List of users"
-            content: 
-              application/json: 
-                schema: 
-                  type: "array"
-                  items: 
-                    $ref: "#/components/schemas/UserDTO"
   components: 
+    securitySchemes: 
+      JWT: 
+        type: "http"
+        scheme: "bearer"
+        bearerFormat: "JWT"
+        description: "Input your JWT as: Bearer <token>"
     schemas: 
+      LoginRequestDTO: 
+        type: "object"
+        required: 
+          - "identifier"
+          - "password"
+        properties: 
+          identifier: 
+            type: "string"
+            description: "Login or email"
+          password: 
+            type: "string"
+      AuthDTO: 
+        type: "object"
+        properties: 
+          accessToken: 
+            type: "string"
+          refreshToken: 
+            type: "string"
+          user: 
+            $ref: "#/components/schemas/UserDTO"
+      ConfirmationDTO: 
+        type: "object"
+        properties: 
+          id: 
+            type: "string"
+          type: 
+            type: "string"
+            enum: 
+              - "acquired"
+              - "debuff"
+          level: 
+            type: "integer"
+          date: 
+            type: "string"
+            format: "date-time"
+          version: 
+            type: "integer"
+      FileDTO: 
+        type: "object"
+        properties: 
+          id: 
+            type: "string"
+          name: 
+            type: "string"
+          mimeType: 
+            type: "string"
+          size: 
+            type: "integer"
+          filename: 
+            type: "string"
+          createdAt: 
+            type: "string"
+            format: "date-time"
       ImageDTO: 
         type: "object"
         properties: 
@@ -312,6 +104,306 @@
           title: 
             type: "string"
             description: "Title of the job role"
+      JobRoleSearchDTO: 
+        type: "object"
+        properties: 
+          id: 
+            type: "string"
+          title: 
+            type: "string"
+      JobRoleSkillSearchDTO: 
+        type: "object"
+        properties: 
+          skillId: 
+            type: "string"
+          title: 
+            type: "string"
+          type: 
+            type: "string"
+          tags: 
+            type: "array"
+            items: 
+              $ref: "#/components/schemas/TagSearchDTO"
+          targetLevel: 
+            type: "integer"
+          testId: 
+            type: "string"
+            nullable: true
+      JobRoleUserSearchDTO: 
+        type: "object"
+        properties: 
+          userId: 
+            type: "string"
+          login: 
+            type: "string"
+          email: 
+            type: "string"
+            nullable: true
+          firstname: 
+            type: "string"
+          lastname: 
+            type: "string"
+          patronymic: 
+            type: "string"
+          avatarId: 
+            type: "string"
+            nullable: true
+          assignedAt: 
+            type: "string"
+            format: "date-time"
+      SkillVersionDTO: 
+        type: "object"
+        properties: 
+          id: 
+            type: "string"
+          skillId: 
+            type: "string"
+          version: 
+            type: "integer"
+          approvedDate: 
+            type: "string"
+            format: "date-time"
+          auditDate: 
+            type: "string"
+            format: "date-time"
+          files: 
+            type: "array"
+            items: 
+              $ref: "#/components/schemas/FileDTO"
+          testId: 
+            type: "string"
+            nullable: true
+      SkillWithCurrentVersionDTO: 
+        type: "object"
+        properties: 
+          id: 
+            type: "string"
+          type: 
+            type: "string"
+            enum: 
+              - "skill"
+              - "document"
+          title: 
+            type: "string"
+          isActive: 
+            type: "boolean"
+          approvedDate: 
+            type: "string"
+            format: "date-time"
+          auditDate: 
+            type: "string"
+            format: "date-time"
+          authorId: 
+            type: "string"
+            nullable: true
+          verifierId: 
+            type: "string"
+          version: 
+            type: "integer"
+          tags: 
+            type: "array"
+            items: 
+              $ref: "#/components/schemas/TagDTO"
+          testId: 
+            type: "string"
+            nullable: true
+      TagSearchDTO: 
+        type: "object"
+        properties: 
+          id: 
+            type: "string"
+          name: 
+            type: "string"
+      TagDTO: 
+        type: "object"
+        properties: 
+          id: 
+            type: "string"
+          name: 
+            type: "string"
+          skillsCount: 
+            type: "integer"
+      TagCreateDTO: 
+        type: "object"
+        required: 
+          - "name"
+        properties: 
+          name: 
+            type: "string"
+      TagUpdateDTO: 
+        type: "object"
+        properties: 
+          name: 
+            type: "string"
+      AnswerVariantDTO: 
+        type: "object"
+        properties: 
+          text: 
+            type: "string"
+          isTrue: 
+            type: "boolean"
+      QuestionDTO: 
+        type: "object"
+        properties: 
+          text: 
+            type: "string"
+          answerVariants: 
+            type: "array"
+            items: 
+              $ref: "#/components/schemas/AnswerVariantDTO"
+      CreateTestDTO: 
+        type: "object"
+        required: 
+          - "needScore"
+          - "timeLimit"
+          - "title"
+          - "questions"
+        properties: 
+          needScore: 
+            type: "integer"
+          timeLimit: 
+            type: "integer"
+          title: 
+            type: "string"
+          questions: 
+            type: "array"
+            items: 
+              $ref: "#/components/schemas/QuestionDTO"
+      StartTestDTO: 
+        type: "object"
+        required: 
+          - "userId"
+          - "testId"
+        properties: 
+          userId: 
+            type: "string"
+          testId: 
+            type: "string"
+      EndTestDTO: 
+        type: "object"
+        required: 
+          - "userId"
+          - "sessionId"
+        properties: 
+          userId: 
+            type: "string"
+          sessionId: 
+            type: "string"
+      SendAnswerDTO: 
+        type: "object"
+        required: 
+          - "skillId"
+          - "testId"
+          - "questIonId"
+          - "answerId"
+        properties: 
+          skillId: 
+            type: "string"
+          testId: 
+            type: "string"
+          questIonId: 
+            type: "string"
+          answerId: 
+            type: "string"
+      AnswerResultDTO: 
+        type: "object"
+        properties: 
+          answerId: 
+            type: "string"
+          answerText: 
+            type: "string"
+          isTrue: 
+            type: "boolean"
+          isPicked: 
+            type: "boolean"
+      QuestionResultDTO: 
+        type: "object"
+        properties: 
+          questIonId: 
+            type: "string"
+          questionText: 
+            type: "string"
+          answers: 
+            type: "array"
+            items: 
+              $ref: "#/components/schemas/AnswerResultDTO"
+      UserTestResultDTO: 
+        type: "object"
+        properties: 
+          id: 
+            type: "string"
+          title: 
+            type: "string"
+          userId: 
+            type: "string"
+          testId: 
+            type: "string"
+          score: 
+            type: "integer"
+          needScore: 
+            type: "integer"
+          questions: 
+            type: "array"
+            items: 
+              $ref: "#/components/schemas/QuestionResultDTO"
+      TestDTO: 
+        type: "object"
+        properties: 
+          id: 
+            type: "string"
+          questionsCount: 
+            type: "integer"
+          needScore: 
+            type: "integer"
+          timeLimit: 
+            type: "integer"
+          questions: 
+            type: "array"
+            items: 
+              $ref: "#/components/schemas/QuestionDTO"
+      PreviewTestDto: 
+        type: "object"
+        properties: 
+          id: 
+            type: "string"
+          needScore: 
+            type: "integer"
+          title: 
+            type: "string"
+          timeLimit: 
+            type: "integer"
+          questionsCount: 
+            type: "integer"
+      StartTestResponseDTO: 
+        type: "object"
+        properties: 
+          sessionId: 
+            type: "string"
+          test: 
+            $ref: "#/components/schemas/TestDTO"
+          startTime: 
+            type: "integer"
+      UserIdDTO: 
+        type: "object"
+        required: 
+          - "userId"
+        properties: 
+          userId: 
+            type: "string"
+      TokenDTO: 
+        type: "object"
+        properties: 
+          access_token: 
+            type: "string"
+          refresh_token: 
+            type: "string"
+      RefreshRequestDTO: 
+        type: "object"
+        required: 
+          - "refresh_token"
+        properties: 
+          refresh_token: 
+            type: "string"
       UserDTO: 
         type: "object"
         properties: 
@@ -323,11 +415,1728 @@
           firstname: 
             type: "string"
           lastname: 
-            type: "number"
+            type: "string"
           patronymic: 
             type: "string"
           avatar_id: 
             type: "string"
+            nullable: true
           email: 
             type: "string"
+            nullable: true
+      AddUserSkillDTO: 
+        type: "object"
+        required: 
+          - "skillId"
+          - "targetLevel"
+        properties: 
+          skillId: 
+            type: "string"
+          targetLevel: 
+            type: "integer"
+      UpdateUserSkillTargetLevelDTO: 
+        type: "object"
+        required: 
+          - "targetLevel"
+        properties: 
+          targetLevel: 
+            type: "integer"
+      AddUserJobroleDTO: 
+        type: "object"
+        required: 
+          - "jobRoleId"
+        properties: 
+          jobRoleId: 
+            type: "string"
+      UserCreateDTO: 
+        type: "object"
+        properties: 
+          login: 
+            type: "string"
+          firstname: 
+            type: "string"
+          lastname: 
+            type: "string"
+          patronymic: 
+            type: "string"
+          password: 
+            type: "string"
+          avatar_id: 
+            type: "string"
+            nullable: true
+          email: 
+            type: "string"
+            nullable: true
+      UserJobRoleSearchDTO: 
+        type: "object"
+        properties: 
+          jobRoleId: 
+            type: "string"
+          title: 
+            type: "string"
+          assignedAt: 
+            type: "string"
+            format: "date-time"
+      UserSkillDto: 
+        type: "object"
+        properties: 
+          skillId: 
+            type: "string"
+          title: 
+            type: "string"
+          type: 
+            type: "string"
+          level: 
+            type: "integer"
+          targetLevel: 
+            type: "integer"
+          isConfirmed: 
+            type: "boolean"
+          isNew: 
+            type: "boolean"
+          tags: 
+            type: "array"
+            items: 
+              $ref: "#/components/schemas/TagDTO"
+          userId: 
+            type: "string"
+          login: 
+            type: "string"
+          firstname: 
+            type: "string"
+          patronymic: 
+            type: "string"
+          avatarId: 
+            type: "string"
+          confirmations: 
+            type: "array"
+            items: 
+              $ref: "#/components/schemas/ConfirmationDTO"
+          testId: 
+            type: "string"
+            nullable: true
+      UserSkillSearchDto: 
+        type: "object"
+        properties: 
+          skillId: 
+            type: "string"
+          title: 
+            type: "string"
+          type: 
+            type: "string"
+          level: 
+            type: "integer"
+          targetLevel: 
+            type: "integer"
+          isConfirmed: 
+            type: "boolean"
+          isNew: 
+            type: "boolean"
+          tags: 
+            type: "array"
+            items: 
+              $ref: "#/components/schemas/TagDTO"
+          userId: 
+            type: "string"
+          login: 
+            type: "string"
+          firstname: 
+            type: "string"
+          patronymic: 
+            type: "string"
+          avatarId: 
+            type: "string"
+          testId: 
+            type: "string"
+            nullable: true
+      UserUpdateDTO: 
+        type: "object"
+        properties: 
+          login: 
+            type: "string"
+          firstname: 
+            type: "string"
+          lastname: 
+            type: "string"
+          patronymic: 
+            type: "string"
+          password: 
+            type: "string"
+          avatar_id: 
+            type: "string"
+            nullable: true
+          email: 
+            type: "string"
+            nullable: true
+  paths: 
+    /api/auth/login: 
+      post: 
+        summary: "Login with identifier and password"
+        tags: 
+          - "Auth"
+        requestBody: 
+          required: true
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/LoginRequestDTO"
+        responses: 
+          200: 
+            description: "Tokens and user info"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/AuthDTO"
+          401: 
+            description: "Invalid credentials"
+    /api/auth/refresh: 
+      post: 
+        summary: "Refresh access and refresh tokens"
+        tags: 
+          - "Auth"
+        requestBody: 
+          required: true
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/RefreshRequestDTO"
+        responses: 
+          200: 
+            description: "New token pair"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/TokenDTO"
+          401: 
+            description: "Invalid or expired refresh token"
+    /api/file/{id}: 
+      get: 
+        summary: "Download file by id"
+        tags: 
+          - "File"
+        security: 
+          - 
+            JWT: []
+        x-permissions: []
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+        responses: 
+          200: 
+            description: "Binary file stream"
+            content: 
+              application/octet-stream: 
+                schema: 
+                  type: "string"
+                  format: "binary"
+          404: 
+            description: "File not found"
+    /api/file/{id}/info: 
+      get: 
+        summary: "Get file metadata"
+        tags: 
+          - "File"
+        security: 
+          - 
+            JWT: []
+        x-permissions: []
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+        responses: 
+          200: 
+            description: "File metadata"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/FileDTO"
+          404: 
+            description: "File not found"
+    /api/file: 
+      post: 
+        summary: "Upload a file"
+        tags: 
+          - "File"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "EDIT_ALL"
+        requestBody: 
+          required: true
+          content: 
+            multipart/form-data: 
+              schema: 
+                type: "object"
+                required: 
+                  - "name"
+                  - "file"
+                properties: 
+                  name: 
+                    type: "string"
+                  file: 
+                    type: "string"
+                    format: "binary"
+        responses: 
+          201: 
+            description: "File uploaded"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/FileDTO"
+          400: 
+            description: "No file uploaded"
+          403: 
+            description: "Permission denied"
+    /api/image/upload: 
+      post: 
+        summary: "Upload image"
+        tags: 
+          - "Image"
+        security: 
+          - 
+            JWT: []
+        x-permissions: []
+        requestBody: 
+          required: true
+          content: 
+            multipart/form-data: 
+              schema: 
+                type: "object"
+                required: 
+                  - "image"
+                properties: 
+                  image: 
+                    type: "string"
+                    format: "binary"
+        responses: 
+          201: 
+            description: "Image uploaded"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/ImageDTO"
+    /api/image/{id}: 
+      get: 
+        summary: "Get image by id"
+        tags: 
+          - "Image"
+        security: 
+          - 
+            JWT: []
+        x-permissions: []
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+          - 
+            in: "query"
+            name: "thumb"
+            required: false
+            schema: 
+              type: "boolean"
+            description: "Return thumbnail if true"
+        responses: 
+          200: 
+            description: "Image file"
+            content: 
+              image/webp: 
+                schema: 
+                  type: "string"
+                  format: "binary"
+          404: 
+            description: "Image not found"
+    /api/image/{id}/info: 
+      get: 
+        summary: "Get image metadata"
+        tags: 
+          - "Image"
+        security: 
+          - 
+            JWT: []
+        x-permissions: []
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+        responses: 
+          200: 
+            description: "Image metadata"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/ImageDTO"
+          404: 
+            description: "Image not found"
+    /api/jobrole/search: 
+      get: 
+        summary: "Search job roles"
+        tags: 
+          - "JobRole"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "VIEW_ALL"
+        parameters: 
+          - 
+            in: "query"
+            name: "query"
+            required: true
+            schema: 
+              type: "string"
+          - 
+            in: "query"
+            name: "limit"
+            required: false
+            schema: 
+              type: "integer"
+          - 
+            in: "query"
+            name: "page"
+            required: false
+            schema: 
+              type: "integer"
+        responses: 
+          200: 
+            description: "Paginated job roles"
+            content: 
+              application/json: 
+                schema: 
+                  type: "object"
+                  properties: 
+                    count: 
+                      type: "integer"
+                    rows: 
+                      type: "array"
+                      items: 
+                        $ref: "#/components/schemas/JobRoleDTO"
+    /api/jobrole: 
+      post: 
+        summary: "Create job role"
+        tags: 
+          - "JobRole"
+        security: 
+          - 
+            JWT: []
+        requestBody: 
+          required: true
+          content: 
+            application/json: 
+              schema: 
+                type: "object"
+                required: 
+                  - "title"
+                properties: 
+                  title: 
+                    type: "string"
+        responses: 
+          201: 
+            description: "Created"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/JobRoleDTO"
+          403: 
+            description: "Permission denied"
+    /api/jobrole/{id}: 
+      get: 
+        summary: "Get job role by id"
+        tags: 
+          - "JobRole"
+        security: 
+          - 
+            JWT: []
+        x-permissions: []
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+        responses: 
+          200: 
+            description: "Job role"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/JobRoleDTO"
+          404: 
+            description: "Not found"
+      put: 
+        summary: "Update job role"
+        tags: 
+          - "JobRole"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "EDIT_ALL"
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+        requestBody: 
+          required: true
+          content: 
+            application/json: 
+              schema: 
+                type: "object"
+                properties: 
+                  title: 
+                    type: "string"
+        responses: 
+          200: 
+            description: "Updated job role"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/JobRoleDTO"
+          403: 
+            description: "Permission denied"
+      delete: 
+        summary: "Delete job role"
+        tags: 
+          - "JobRole"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "EDIT_ALL"
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+        responses: 
+          204: 
+            description: "Deleted"
+          403: 
+            description: "Permission denied"
+    /api/jobrole/{id}/user: 
+      get: 
+        summary: "List users assigned to job role"
+        tags: 
+          - "JobRole"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "VIEW_ALL"
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+        responses: 
+          200: 
+            description: "Users list"
+            content: 
+              application/json: 
+                schema: 
+                  type: "array"
+                  items: 
+                    $ref: "#/components/schemas/UserJobRoleSearchDTO"
+      post: 
+        summary: "Assign user to job role"
+        tags: 
+          - "JobRole"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "EDIT_ALL"
+        requestBody: 
+          required: true
+          content: 
+            application/json: 
+              schema: 
+                type: "object"
+                required: 
+                  - "userId"
+                properties: 
+                  userId: 
+                    type: "string"
+        responses: 
+          200: 
+            description: "Assignment created"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/UserDTO"
+    /api/jobrole/{id}/user/{userId}: 
+      delete: 
+        summary: "Unassign user from job role"
+        tags: 
+          - "JobRole"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "EDIT_ALL"
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+          - 
+            in: "path"
+            name: "userId"
+            required: true
+            schema: 
+              type: "string"
+        responses: 
+          204: 
+            description: "Removed"
+    /api/jobrole/{id}/skill: 
+      get: 
+        summary: "List job role skills"
+        tags: 
+          - "JobRole"
+        security: 
+          - 
+            JWT: []
+        x-permissions: []
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+        responses: 
+          200: 
+            description: "Skills list"
+            content: 
+              application/json: 
+                schema: 
+                  type: "array"
+                  items: 
+                    $ref: "#/components/schemas/JobRoleSkillSearchDTO"
+      post: 
+        summary: "Add skill to job role"
+        tags: 
+          - "JobRole"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "EDIT_ALL"
+        requestBody: 
+          required: true
+          content: 
+            application/json: 
+              schema: 
+                type: "object"
+                required: 
+                  - "skillId"
+                  - "targetLevel"
+                properties: 
+                  skillId: 
+                    type: "string"
+                  targetLevel: 
+                    type: "integer"
+        responses: 
+          200: 
+            description: "Added skill"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/JobRoleSkillSearchDTO"
+    /api/jobrole/{id}/skill/{skillId}: 
+      put: 
+        summary: "Update job role skill target level"
+        tags: 
+          - "JobRole"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "EDIT_ALL"
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+          - 
+            in: "path"
+            name: "skillId"
+            required: true
+            schema: 
+              type: "string"
+        requestBody: 
+          required: true
+          content: 
+            application/json: 
+              schema: 
+                type: "object"
+                required: 
+                  - "targetLevel"
+                properties: 
+                  targetLevel: 
+                    type: "integer"
+        responses: 
+          200: 
+            description: "Updated"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/JobRoleSkillSearchDTO"
+      delete: 
+        summary: "Remove skill from job role"
+        tags: 
+          - "JobRole"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "EDIT_ALL"
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+          - 
+            in: "path"
+            name: "skillId"
+            required: true
+            schema: 
+              type: "string"
+        responses: 
+          204: 
+            description: "Deleted"
+    /api/skill/search: 
+      get: 
+        summary: "Search skills with filters"
+        tags: 
+          - "Skill"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "VIEW_ALL"
+        parameters: 
+          - 
+            in: "query"
+            name: "query"
+            required: true
+            schema: 
+              type: "string"
+          - 
+            in: "query"
+            name: "tags"
+            schema: 
+              type: "string"
+            description: "Comma-separated tag IDs"
+          - 
+            in: "query"
+            name: "authorIds"
+            schema: 
+              type: "string"
+          - 
+            in: "query"
+            name: "verifierIds"
+            schema: 
+              type: "string"
+          - 
+            in: "query"
+            name: "approvedDates"
+            schema: 
+              type: "string"
+            description: "Comma-separated ISO dates"
+          - 
+            in: "query"
+            name: "auditDates"
+            schema: 
+              type: "string"
+            description: "Comma-separated ISO dates"
+        responses: 
+          200: 
+            description: "Array of skills"
+            content: 
+              application/json: 
+                schema: 
+                  type: "array"
+                  items: 
+                    $ref: "#/components/schemas/SkillWithCurrentVersionDTO"
+    /api/skill: 
+      post: 
+        summary: "Create a skill"
+        tags: 
+          - "Skill"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "EDIT_ALL"
+        requestBody: 
+          required: true
+          content: 
+            application/json: 
+              schema: 
+                type: "object"
+                required: 
+                  - "type"
+                  - "title"
+                  - "isActive"
+                properties: 
+                  type: 
+                    type: "string"
+                    enum: 
+                      - "skill"
+                      - "document"
+                  title: 
+                    type: "string"
+                  approvedDate: 
+                    type: "string"
+                    format: "date-time"
+                  auditDate: 
+                    type: "string"
+                    format: "date-time"
+                  verifierId: 
+                    type: "string"
+                  authorId: 
+                    type: "string"
+                  isActive: 
+                    type: "boolean"
+        responses: 
+          200: 
+            description: "Created skill"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/SkillWithCurrentVersionDTO"
+    /api/skill/{id}: 
+      delete: 
+        summary: "Delete skill"
+        tags: 
+          - "Skill"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "EDIT_ALL"
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+        responses: 
+          204: 
+            description: "Deleted"
+      put: 
+        summary: "Update skill"
+        tags: 
+          - "Skill"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "EDIT_ALL"
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+        requestBody: 
+          required: true
+          content: 
+            application/json: 
+              schema: 
+                type: "object"
+                properties: 
+                  title: 
+                    type: "string"
+                  isActive: 
+                    type: "boolean"
+        responses: 
+          200: 
+            description: "Updated skill"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/SkillWithCurrentVersionDTO"
+      get: 
+        summary: "Get skill by id"
+        tags: 
+          - "Skill"
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+        responses: 
+          200: 
+            description: "Skill"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/SkillWithCurrentVersionDTO"
+    /api/skill/{id}/user: 
+      get: 
+        summary: "List users who have the skill"
+        tags: 
+          - "Skill"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "VIEW_ALL"
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+        responses: 
+          200: 
+            description: "Users list"
+            content: 
+              application/json: 
+                schema: 
+                  type: "array"
+                  items: 
+                    $ref: "#/components/schemas/UserSkillSearchDto"
+    /api/skill/{id}/tag: 
+      post: 
+        summary: "Add tag to skill"
+        tags: 
+          - "Skill"
+        requestBody: 
+          required: true
+          content: 
+            application/json: 
+              schema: 
+                type: "object"
+                required: 
+                  - "tagId"
+                properties: 
+                  tagId: 
+                    type: "string"
+        responses: 
+          204: 
+            description: "Added"
+    /api/skill/{id}/tags: 
+      get: 
+        summary: "Get tags of skill"
+        tags: 
+          - "Skill"
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+        responses: 
+          200: 
+            description: "Tags"
+            content: 
+              application/json: 
+                schema: 
+                  type: "array"
+                  items: 
+                    $ref: "#/components/schemas/TagDTO"
+    /api/skill/{id}/tag/{tagId}: 
+      delete: 
+        summary: "Remove tag from skill"
+        tags: 
+          - "Skill"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "EDIT_ALL"
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+          - 
+            in: "path"
+            name: "tagId"
+            required: true
+            schema: 
+              type: "string"
+        responses: 
+          204: 
+            description: "Removed"
+        x-todo: "add detailed schema/notes"
+    /api/skill/{id}/version: 
+      post: 
+        summary: "Create skill version"
+        tags: 
+          - "Skill"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "EDIT_ALL"
+        requestBody: 
+          required: true
+          content: 
+            application/json: 
+              schema: 
+                type: "object"
+                required: 
+                  - "fileId"
+                  - "authorId"
+                  - "verifierid"
+                properties: 
+                  fileId: 
+                    type: "string"
+                  authorId: 
+                    type: "string"
+                  verifierid: 
+                    type: "string"
+        responses: 
+          200: 
+            description: "Version created"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/SkillVersionDTO"
+      get: 
+        summary: "List versions of a skill"
+        tags: 
+          - "Skill"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "VIEW_ALL"
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+        responses: 
+          200: 
+            description: "Versions"
+            content: 
+              application/json: 
+                schema: 
+                  type: "array"
+                  items: 
+                    $ref: "#/components/schemas/SkillVersionDTO"
+    /api/skill/{id}/version/{versionId}: 
+      get: 
+        summary: "Get specific version of a skill"
+        tags: 
+          - "Skill"
+        security: 
+          - 
+            JWT: []
+        x-permissions: []
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+          - 
+            in: "path"
+            name: "versionId"
+            required: true
+            schema: 
+              type: "string"
+        responses: 
+          200: 
+            description: "Version"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/SkillVersionDTO"
+      delete: 
+        summary: "Delete version"
+        tags: 
+          - "Skill"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "EDIT_ALL"
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+          - 
+            in: "path"
+            name: "versionId"
+            required: true
+            schema: 
+              type: "string"
+        responses: 
+          204: 
+            description: "Deleted"
+    /api/tag/search: 
+      get: 
+        summary: "Search tags"
+        tags: 
+          - "Tag"
+        security: 
+          - 
+            JWT: []
+        x-permissions: []
+        parameters: 
+          - 
+            in: "query"
+            name: "query"
+            required: true
+            schema: 
+              type: "string"
+        responses: 
+          200: 
+            description: "List of tags"
+            content: 
+              application/json: 
+                schema: 
+                  type: "array"
+                  items: 
+                    $ref: "#/components/schemas/TagSearchDTO"
+    /api/tag/{id}: 
+      get: 
+        summary: "Get tag by id"
+        tags: 
+          - "Tag"
+        security: 
+          - 
+            JWT: []
+        x-permissions: []
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+        responses: 
+          200: 
+            description: "Tag"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/TagDTO"
+      put: 
+        summary: "Update tag"
+        tags: 
+          - "Tag"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "EDIT_ALL"
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+        requestBody: 
+          required: true
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/TagUpdateDTO"
+        responses: 
+          200: 
+            description: "Updated tag"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/TagDTO"
+      delete: 
+        summary: "Delete tag"
+        tags: 
+          - "Tag"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "EDIT_ALL"
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+        responses: 
+          204: 
+            description: "Deleted"
+    /api/tag: 
+      post: 
+        summary: "Create tag"
+        tags: 
+          - "Tag"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "EDIT_ALL"
+        requestBody: 
+          required: true
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/TagCreateDTO"
+        responses: 
+          200: 
+            description: "Created tag"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/TagDTO"
+    /api/test: 
+      post: 
+        summary: "Create a test for skill"
+        tags: 
+          - "Test"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "EDIT_ALL"
+        requestBody: 
+          required: true
+          content: 
+            application/json: 
+              schema: 
+                allOf: 
+                  - 
+                    $ref: "#/components/schemas/CreateTestDTO"
+                  - 
+                    type: "object"
+                    properties: 
+                      skillId: 
+                        type: "string"
+        responses: 
+          200: 
+            description: "Created test"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/TestDTO"
+    /api/test/start: 
+      post: 
+        summary: "Start test session"
+        tags: 
+          - "Test"
+        security: 
+          - 
+            JWT: []
+        x-permissions: []
+        requestBody: 
+          required: true
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/StartTestDTO"
+        responses: 
+          200: 
+            description: "Session started"
+    /api/test/end: 
+      post: 
+        summary: "End test session"
+        tags: 
+          - "Test"
+        security: 
+          - 
+            JWT: []
+        x-permissions: []
+        requestBody: 
+          required: true
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/EndTestDTO"
+        responses: 
+          200: 
+            description: "Ended"
+    /api/test/sendAnswer: 
+      post: 
+        summary: "Send answer for question"
+        tags: 
+          - "Test"
+        security: 
+          - 
+            JWT: []
+        x-permissions: []
+        requestBody: 
+          required: true
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/SendAnswerDTO"
+        responses: 
+          200: 
+            description: "Current result"
+    /api/test/result: 
+      get: 
+        summary: "Get user test result by skill"
+        tags: 
+          - "Test"
+        security: 
+          - 
+            JWT: []
+        x-permissions: []
+        parameters: 
+          - 
+            in: "query"
+            name: "skillId"
+            required: true
+            schema: 
+              type: "string"
+        requestBody: 
+          required: true
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/UserIdDTO"
+        responses: 
+          200: 
+            description: "User test result"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/UserTestResultDTO"
+    /api/test/{testId}: 
+      get: 
+        summary: "Get test"
+        tags: 
+          - "Test"
+        security: 
+          - 
+            JWT: []
+        x-permissions: []
+        parameters: 
+          - 
+            in: "path"
+            name: "testId"
+            required: true
+            schema: 
+              type: "string"
+        responses: 
+          200: 
+            description: "Test"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/PreviewTestDto"
+    /api/user/search: 
+      get: 
+        summary: "Search users"
+        tags: 
+          - "User"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "VIEW_ALL"
+        parameters: 
+          - 
+            in: "query"
+            name: "query"
+            required: true
+            schema: 
+              type: "string"
+          - 
+            in: "query"
+            name: "limit"
+            schema: 
+              type: "integer"
+          - 
+            in: "query"
+            name: "page"
+            schema: 
+              type: "integer"
+        responses: 
+          200: 
+            description: "Paginated users"
+            content: 
+              application/json: 
+                schema: 
+                  type: "object"
+                  properties: 
+                    count: 
+                      type: "integer"
+                    rows: 
+                      type: "array"
+                      items: 
+                        $ref: "#/components/schemas/UserDTO"
+    /api/user: 
+      post: 
+        summary: "Create a user"
+        tags: 
+          - "User"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "EDIT_ALL"
+        requestBody: 
+          required: true
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/UserCreateDTO"
+        responses: 
+          201: 
+            description: "User created"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/UserDTO"
+    /api/user/{id}: 
+      get: 
+        summary: "Get user by ID"
+        tags: 
+          - "User"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "VIEW_ALL"
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+        responses: 
+          200: 
+            description: "User"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/UserDTO"
+          404: 
+            description: "Not found"
+      put: 
+        summary: "Update user"
+        tags: 
+          - "User"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "EDIT_ALL"
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+        requestBody: 
+          required: true
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/UserUpdateDTO"
+        responses: 
+          200: 
+            description: "User updated"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/UserDTO"
+          404: 
+            description: "Not found"
+      delete: 
+        summary: "Delete user"
+        tags: 
+          - "User"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "EDIT_ALL"
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+        responses: 
+          204: 
+            description: "Deleted"
+          404: 
+            description: "Not found"
+    /api/user/{id}/skill: 
+      get: 
+        summary: "List user skills"
+        tags: 
+          - "User"
+        security: 
+          - 
+            JWT: []
+        x-permissions: []
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+        responses: 
+          200: 
+            description: "Skills list"
+            content: 
+              application/json: 
+                schema: 
+                  type: "array"
+                  items: 
+                    $ref: "#/components/schemas/UserSkillSearchDto"
+      post: 
+        summary: "Add skill to user"
+        tags: 
+          - "User"
+        security: 
+          - 
+            JWT: []
+        x-permissions: []
+        requestBody: 
+          required: true
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/AddUserSkillDTO"
+        responses: 
+          200: 
+            description: "User skill"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/UserSkillDto"
+    /api/user/{id}/skill/{skillId}: 
+      get: 
+        summary: "Get specific user skill"
+        tags: 
+          - "User"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "EDIT_ALL"
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+          - 
+            in: "path"
+            name: "skillId"
+            required: true
+            schema: 
+              type: "string"
+        responses: 
+          200: 
+            description: "User skill"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/UserSkillDto"
+      put: 
+        summary: "Update user skill target level"
+        tags: 
+          - "User"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "EDIT_ALL"
+        requestBody: 
+          required: true
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/UpdateUserSkillTargetLevelDTO"
+        responses: 
+          200: 
+            description: "Updated user skill"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/UserSkillDto"
+      delete: 
+        summary: "Remove skill from user"
+        tags: 
+          - "User"
+        security: 
+          - 
+            JWT: []
+        x-permissions: []
+        responses: 
+          204: 
+            description: "Deleted"
+    /api/user/{id}/jobrole: 
+      get: 
+        summary: "List user job roles"
+        tags: 
+          - "User"
+        security: 
+          - 
+            JWT: []
+        x-permissions: []
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+        responses: 
+          200: 
+            description: "Job roles"
+            content: 
+              application/json: 
+                schema: 
+                  type: "array"
+                  items: 
+                    $ref: "#/components/schemas/JobRoleDTO"
+      post: 
+        summary: "Add job role to user"
+        tags: 
+          - "User"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "EDIT_ALL"
+        requestBody: 
+          required: true
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/AddUserJobroleDTO"
+        responses: 
+          200: 
+            description: "Added job role"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/JobRoleDTO"
+    /api/user/{id}/jobrole/{jobroleId}: 
+      get: 
+        summary: "List user skills in job role"
+        tags: 
+          - "User"
+        security: 
+          - 
+            JWT: []
+        x-permissions: 
+          - "EDIT_ALL"
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+          - 
+            in: "path"
+            name: "jobroleId"
+            required: true
+            schema: 
+              type: "string"
+        responses: 
+          200: 
+            description: "Skills"
+            content: 
+              application/json: 
+                schema: 
+                  type: "array"
+                  items: 
+                    $ref: "#/components/schemas/UserSkillSearchDto"
+      delete: 
+        summary: "Remove job role from user"
+        tags: 
+          - "User"
+        responses: 
+          204: 
+            description: "Deleted"
+    /api/user/{id}/skill/{skillId}/confirmation: 
+      get: 
+        summary: "Get confirmations for user skill"
+        tags: 
+          - "User"
+        responses: 
+          200: 
+            description: "Confirmations"
+            content: 
+              application/json: 
+                schema: 
+                  type: "array"
+                  items: 
+                    $ref: "#/components/schemas/ConfirmationDTO"
+      post: 
+        summary: "Add confirmation to user skill"
+        tags: 
+          - "User"
+        requestBody: 
+          required: true
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/ConfirmationDTO"
+        responses: 
+          200: 
+            description: "Confirmation added"
+    /api/user/{id}/skill/{skillId}/confirmation/{confirmationId}: 
+      delete: 
+        summary: "Delete confirmation"
+        tags: 
+          - "User"
+        responses: 
+          204: 
+            description: "Deleted"
   tags: []

@@ -144,6 +144,11 @@ const API_ERROR = {
 		description: 'Email, login or password are invalid.',
 		code: 400,
 	},
+	PERMISSION_DENIED: {
+		type: 'PERMISSION_DENIED',
+		description: 'You don\'t have enough permissions.',
+		code: 403,
+	},
 };
 
 type ErrorKeys = keyof typeof API_ERROR;

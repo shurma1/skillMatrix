@@ -5,6 +5,28 @@ export enum SkillType {
 	Document = 'document',
 }
 
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     SkillWithCurrentVersionDTO:
+ *       type: object
+ *       properties:
+ *         id: { type: string }
+ *         type: { type: string, enum: [skill, document] }
+ *         title: { type: string }
+ *         isActive: { type: boolean }
+ *         approvedDate: { type: string, format: date-time }
+ *         auditDate: { type: string, format: date-time }
+ *         authorId: { type: string, nullable: true }
+ *         verifierId: { type: string }
+ *         version: { type: integer }
+ *         tags:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/TagDTO'
+ *         testId: { type: string, nullable: true }
+ */
 export class SkillWithCurrentVersionDTO {
 	id: string;
 	type: SkillType;

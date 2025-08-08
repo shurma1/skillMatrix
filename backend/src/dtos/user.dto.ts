@@ -50,3 +50,25 @@ export class UserDTO {
 		this.email = email;
 	}
 }
+
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     AddUserSkillDTO:
+ *       type: object
+ *       required: [skillId, targetLevel]
+ *       properties:
+ *         skillId: { type: string }
+ *         targetLevel: { type: integer }
+ *     UpdateUserSkillTargetLevelDTO:
+ *       type: object
+ *       required: [targetLevel]
+ *       properties:
+ *         targetLevel: { type: integer }
+ *     AddUserJobroleDTO:
+ *       type: object
+ *       required: [jobRoleId]
+ *       properties:
+ *         jobRoleId: { type: string }
+ */

@@ -1,3 +1,14 @@
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     UserJobRoleSearchDTO:
+ *       type: object
+ *       properties:
+ *         jobRoleId: { type: string }
+ *         title: { type: string }
+ *         assignedAt: { type: string, format: date-time }
+ */
 export class UserJobRoleSearchDTO {
 	jobRoleId: string;
 	title: string;
