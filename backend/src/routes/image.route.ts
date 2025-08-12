@@ -79,9 +79,6 @@ router.post(
  */
 router.get(
 	'/:id',
-	permissionMiddleware({
-		needAuth: true,
-	}),
 	ImageController.get,
 );
 

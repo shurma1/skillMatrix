@@ -17,6 +17,8 @@
     "@eslint/js": "^9.31.0",
     "@types/bcrypt": "^6.0.0",
     "@types/config": "^3.3.5",
+    "@types/cookie-parser": "^1.4.9",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.0.0",
@@ -33,6 +35,8 @@
   "dependencies": {
     "bcrypt": "^6.0.0",
     "config": "^4.0.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
     "express": "^5.1.0",
     "express-validator": "^7.2.1",
     "i": "^0.3.7",

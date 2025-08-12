@@ -22,6 +22,18 @@ const router = express.Router();
  *         schema:
  *           type: string
  *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *         description: Page size (default depends on server settings)
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *         description: Page number starting from 1
+ *       - in: query
  *         name: tags
  *         schema:
  *           type: string
@@ -46,13 +58,18 @@ const router = express.Router();
  *         description: Comma-separated ISO dates
  *     responses:
  *       200:
- *         description: Array of skills
+ *         description: Paginated skills
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/SkillWithCurrentVersionDTO'
+ *               type: object
+ *               properties:
+ *                 count:
+ *                   type: integer
+ *                 rows:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/SkillWithCurrentVersionDTO'
  */
 router.get(
 	'/search',
@@ -80,7 +97,7 @@ router.get(
  *         application/json:
  *           schema:
  *             type: object
- *             required: [type, title, isActive]
+ *             required: [type, title]
  *             properties:
  *               type:
  *                 type: string
@@ -90,15 +107,10 @@ router.get(
  *               approvedDate:
  *                 type: string
  *                 format: date-time
- *               auditDate:
- *                 type: string
- *                 format: date-time
  *               verifierId:
  *                 type: string
  *               authorId:
  *                 type: string
- *               isActive:
- *                 type: boolean
  *     responses:
  *       200:
  *         description: Created skill

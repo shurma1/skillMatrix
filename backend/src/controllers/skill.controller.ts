@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import SkillService from "../services/skill.service";
 import {parseQueryArray} from "../utils/parseQueryArray";
 import {parseQueryDates} from "../utils/parseQueryDates";
+import calcPageLimitAndOffset from "../utils/calcPageLimitAndOffset";
 
 class SkillController {
 	async create(req: Request, res: Response, next: NextFunction) {
@@ -10,20 +11,18 @@ class SkillController {
 				type,
 				title,
 				approvedDate,
-				auditDate,
 				verifierId,
 				authorId,
-				isActive
+				fileId
 			} = req.body;
 			
 			const skill = await SkillService.create({
 				type,
 				title,
 				approvedDate,
-				auditDate,
 				verifierId,
 				authorId,
-				isActive
+				fileId
 			})
 			
 			res.status(200).json(skill);
@@ -77,8 +76,12 @@ class SkillController {
 				authorIds,
 				verifierIds,
 				approvedDates,
-				auditDates
+				auditDates,
+				limit,
+				page
 			} = req.query;
+			
+			const [newLimit, offset] = calcPageLimitAndOffset(limit, page)
 			
 			const decodedQuery = decodeURIComponent(query as string);
 			
@@ -91,11 +94,13 @@ class SkillController {
 			
 			const skills = await SkillService.search(
 				decodedQuery,
+				newLimit,
+				offset,
 				tagsArray,
 				authorIdsArray,
 				verifierIdsArray,
 				approvedDatesArray,
-				auditDatesArray
+				auditDatesArray,
 			);
 			
 			res.send(skills);

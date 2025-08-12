@@ -15,6 +15,7 @@ import SkillRepository from "../repositories/skill.repository";
 import {SkillVersionInstance} from "../models/entities/SkillVersion";
 import {ApiError} from "../error/apiError";
 import UserService from "./user.service";
+import TimerManager from "../utils/TimerManager";
 
 class TestService {
 	async createTest(skillId: string, dto: CreateTestDTO) {
@@ -37,7 +38,7 @@ class TestService {
 		const testFull = await TestRepository.getTestById(test.id);
 		
 		const questions = Array.isArray(testFull.questions)
-			? testFull.questions.map((q) => new QuestionDTO(q.text, Array.isArray(q.answerVariants) ? q.answerVariants.map((a: AnswerVariantDTO) => new AnswerVariantDTO(a.text, a.isTrue)) : []))
+			? testFull.questions.map((q) => new QuestionDTO(q.id, q.text, Array.isArray(q.answerVariants) ? q.answerVariants.map((a: AnswerVariantDTO) => new AnswerVariantDTO(a.id, a.text, a.isTrue)) : []))
 			: [];
 		return new TestDTO(testFull.id, testFull.questionsCount, testFull.needScore, testFull.timeLimit, questions);
 	}
@@ -53,7 +54,7 @@ class TestService {
 		}
 		
 		const questions = Array.isArray(testFull.questions)
-			? testFull.questions.map((q: QuestionDTO) => new QuestionDTO(q.text, Array.isArray(q.answerVariants) ? q.answerVariants.map((a: AnswerVariantDTO) => new AnswerVariantDTO(a.text, false)) : []))
+			? testFull.questions.map((q: QuestionDTO) => new QuestionDTO(q.id, q.text, Array.isArray(q.answerVariants) ? q.answerVariants.map((a: AnswerVariantDTO) => new AnswerVariantDTO(a.id, a.text, false)) : []))
 			: [];
 		
 		const startTime = Date.now();
@@ -68,10 +69,13 @@ class TestService {
 		}
 		
 		const onTestTimeIsOver = async () => {
-			await this.endTest(testId, userId);
+			await this.endTest(sessionId, userId);
 		}
 		
 		const timerId = setTimeout(onTestTimeIsOver, testDTO.timeLimit * 1000);
+		
+		// Сохраняем таймер отдельно
+		TimerManager.setTimer(sessionId, timerId);
 		
 		await TestRepository.saveTestSession(
 			sessionId,
@@ -81,7 +85,6 @@ class TestService {
 				timeLimit: testFull.timeLimit,
 				questionsCount: testFull.questionsCount,
 				startTime,
-				timerId,
 				userId
 			}
 		);
@@ -108,12 +111,13 @@ class TestService {
 		}
 	
 		const session = await TestRepository.getTestSession(sessionId) as TestSession;
-		
+		console.log('[SESSION]', session)
 		if(! session) {
 			throw ApiError.errorByType('SESSION_NOT_FOUND');
 		}
 		
-		clearTimeout(session.timerId);
+		// Очищаем таймер через TimerManager
+		TimerManager.clearTimer(sessionId);
 		
 		let score = 0;
 		
@@ -162,9 +166,11 @@ class TestService {
 		}
 		
 		session.answers = session.answers
-			.filter(answer => answer.questionId !== dto.questIonId);
+			.filter(answer => answer.questionId !== dto.questionId);
 		
-		session.answers.push({ questionId: dto.questIonId, answerId: dto.answerId });
+		session.answers.push({ questionId: dto.questionId, answerId: dto.answerId });
+		
+		console.log('[SESSION ANSWERS]', session);
 		
 		await TestRepository.saveTestSession(sessionId, session);
 	}

@@ -7,17 +7,26 @@ import {SkillVersionDTO} from "../dtos/skillVersion.dto";
 import {FileDTO} from "../dtos/file.dto";
 import {UserSkillSearchDto} from "../dtos/userSkillSearch.dto";
 import TestRepository from "../repositories/test.repository";
+import {PaginationDTO} from "../dtos/Pagination.dto";
 
 const MOUNTS_BEFORE_AUDIT = config.get<number>('times.MOUNTS_BEFORE_AUDIT');
 
 class SkillService {
-	async create(skillData: SkillCreation) {
-		const skill =  await SkillRepository.create(skillData);
+	async create(skillData: Omit<SkillCreation, 'auditDate' | 'isActive'>) {
+		
+		const MOUNTS_BEFORE_AUDIT = config.get<number>('times.MOUNTS_BEFORE_AUDIT');
+		
+		const auditDate = new Date(skillData.approvedDate);
+		auditDate.setMonth(auditDate.getMonth() + MOUNTS_BEFORE_AUDIT);
+		
+		const skill =  await SkillRepository.create({...skillData, auditDate, isActive: true});
 		return skill as SkillWithCurrentVersionDTO;
 	}
 	
 	async search(
 		query: string,
+		limit: number,
+		offset: number,
 		tags?: string[],
 		authorIds?: string[],
 		verifierIds?: string[],
@@ -30,10 +39,14 @@ class SkillService {
 			authorIds,
 			verifierIds,
 			approvedDatesArray,
-			auditDatesArray
+			auditDatesArray,
+			limit,
+			offset
 		})
 		
-		return skills as SkillWithCurrentVersionDTO[];
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+		// @ts-expect-error
+		return skills.result as PaginationDTO<SkillWithCurrentVersionDTO>;
 	}
 	
 	async checkSkillExist(id: string) {
@@ -102,13 +115,13 @@ class SkillService {
 		
 		const lastVersion = await SkillRepository.getLastVersion(skillId);
 		
-		const version = lastVersion?.version || 1;
+		const version = (lastVersion?.version || 0) + 1;
 		
 		const now = new Date(Date.now());
 		const auditDate = new Date(now);
 		auditDate.setMonth(auditDate.getMonth() + MOUNTS_BEFORE_AUDIT);
 		
-		const skillVersion = await SkillRepository.createVersion(skillId, now, auditDate, version, verifierid, authorId);
+		const skillVersion = await SkillRepository.createVersion(skillId, now, auditDate, version, verifierid, authorId, fileId);
 		
 		return this.getVersion(skillVersion.id);
 	}

@@ -1,0 +1,168 @@
+import React from 'react';
+import { Card, Tag, Button, Tooltip, Space, Typography, Popconfirm } from 'antd';
+import { DownloadOutlined, DeleteOutlined, CalendarOutlined } from '@ant-design/icons';
+import type { SkillVersionDTO } from '@/types/api/skill';
+import { formatDate } from '../../utils/dateHelpers';
+
+const { Text } = Typography;
+
+interface SkillVersionCardProps {
+  version: SkillVersionDTO;
+  isLatest: boolean;
+  totalVersions: number;
+  onDownload: (versionId: string, fileId: string) => void;
+  onDelete: (versionId: string) => void;
+  canDelete: boolean;
+  isDeleting: boolean;
+}
+
+/**
+ * Компонент карточки версии навыка
+ * Отображает информацию о версии с возможностью скачивания и удаления
+ */
+const SkillVersionCard: React.FC<SkillVersionCardProps> = ({
+  version,
+  isLatest,
+  totalVersions,
+  onDownload,
+  onDelete,
+  canDelete,
+  isDeleting
+}) => {
+  const hasFiles = version.files && version.files.length > 0;
+  const hasTest = Boolean(version.testId);
+  
+  // Логика для кнопки удаления:
+  // - Нельзя удалить если это единственная версия
+  // - Должны быть права на удаление
+  const canDeleteVersion = canDelete && totalVersions > 1;
+
+  return (
+    <Card
+      size="small"
+      title={
+        <Space>
+          <Text strong>Версия {version.version}</Text>
+          {isLatest && <Tag color="green">Текущая</Tag>}
+          {hasTest && <Tag color="blue">Есть тест</Tag>}
+        </Space>
+      }
+      extra={
+        <Popconfirm
+          title="Удалить версию?"
+          description={
+            isLatest 
+              ? `Вы удаляете текущую версию ${version.version}. После удаления актуальной станет другая версия. Продолжить?`
+              : `Вы уверены, что хотите удалить версию ${version.version}? Это действие нельзя отменить.`
+          }
+          onConfirm={() => onDelete(version.id)}
+          okText="Да, удалить"
+          cancelText="Отмена"
+          okType="danger"
+          disabled={!canDeleteVersion}
+        >
+          <Tooltip 
+            title={
+              !canDeleteVersion 
+                ? totalVersions === 1
+                  ? "Нельзя удалить единственную версию"
+                  : "Нет прав на удаление"
+                : "Удалить версию"
+            }
+          >
+            <Button
+              type="text"
+              danger
+              icon={<DeleteOutlined />}
+              disabled={!canDeleteVersion}
+              loading={isDeleting}
+            />
+          </Tooltip>
+        </Popconfirm>
+      }
+    >
+      <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+        {/* Основная информация */}
+        <div>
+          <Space direction="vertical" size="small" style={{ width: '100%' }}>
+            <div>
+              <Space>
+                <CalendarOutlined />
+                <Text type="secondary">Утверждено:</Text>
+                <Text>{formatDate(version.approvedDate)}</Text>
+              </Space>
+            </div>
+            
+            <div>
+              <Space>
+                <CalendarOutlined />
+                <Text type="secondary">Аудит до:</Text>
+                <Text>{formatDate(version.auditDate)}</Text>
+              </Space>
+            </div>
+          </Space>
+        </div>
+
+        {/* Файлы */}
+        {hasFiles && (
+          <div>
+            <Text strong style={{ display: 'block', marginBottom: 8 }}>
+              Файлы ({version.files.length}):
+            </Text>
+            <Space direction="vertical" size="small" style={{ width: '100%' }}>
+              {version.files.map(file => (
+                <Card 
+                  key={file.id} 
+                  size="small" 
+                  style={{ backgroundColor: '#fafafa' }}
+                  bodyStyle={{ padding: '8px 12px' }}
+                >
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center' 
+                  }}>
+                    <div style={{ flex: 1 }}>
+                      <div>
+                        <Text strong>{file.name}</Text>
+                      </div>
+                      <div>
+                        <Text type="secondary" style={{ fontSize: '12px' }}>
+                          {file.filename} • {(file.size / 1024).toFixed(1)} KB
+                        </Text>
+                      </div>
+                      <div>
+                        <Text type="secondary" style={{ fontSize: '12px' }}>
+                          Загружен: {formatDate(file.createdAt)}
+                        </Text>
+                      </div>
+                    </div>
+                    <Button
+                      type="primary"
+                      size="small"
+                      icon={<DownloadOutlined />}
+                      onClick={() => onDownload(version.id, file.id)}
+                    >
+                      Скачать
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </Space>
+          </div>
+        )}
+
+        {/* Тест */}
+        {hasTest && (
+          <div>
+            <Space>
+              <Tag color="blue">Тест ID: {version.testId}</Tag>
+            </Space>
+          </div>
+        )}
+      </Space>
+    </Card>
+  );
+};
+
+export default SkillVersionCard;

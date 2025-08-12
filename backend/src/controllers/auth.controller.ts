@@ -7,7 +7,14 @@ class AuthController {
 			const { identifier, password } = req.body;
 
 			const authDTO = await AuthService.login(identifier, password);
-
+			
+			res.cookie('refreshToken', authDTO.refreshToken, {
+				httpOnly: true,
+				secure: false,
+				sameSite: 'lax',
+				domain: 'localhost',
+			});
+			
 			res.json(authDTO);
 		} catch (err) {
 			next(err);
@@ -20,6 +27,11 @@ class AuthController {
 			
 			const tokens = await AuthService.refresh(refreshToken);
 			
+			res.cookie('refreshToken', tokens.refresh_token, {
+				httpOnly: true,
+				secure: false,
+				sameSite: 'lax'
+			});
 			res.json(tokens);
 		} catch (err) {
 			next(err);

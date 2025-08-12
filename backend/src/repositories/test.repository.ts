@@ -36,7 +36,6 @@ export interface TestSession {
 	timeLimit: number,
 	startTime: number;
 	questionsCount: number,
-	timerId: NodeJS.Timeout;
 }
 
 interface UserAnswer {

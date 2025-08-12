@@ -124,11 +124,13 @@ export class PreviewTestDto {
  *     AnswerVariantDTO:
  *       type: object
  *       properties:
+ *         id: { type: string }
  *         text: { type: string }
  *         isTrue: { type: boolean }
  *     QuestionDTO:
  *       type: object
  *       properties:
+ *         id: { type: string }
  *         text: { type: string }
  *         answerVariants:
  *           type: array
@@ -230,18 +232,22 @@ export class CreateTestDTO {
 }
 
 export class QuestionDTO {
+	id: string;
 	text: string;
 	answerVariants: AnswerVariantDTO[];
-	constructor(text: string, answerVariants: AnswerVariantDTO[]) {
+	constructor(id: string, text: string, answerVariants: AnswerVariantDTO[]) {
+		this.id = id;
 		this.text = text;
 		this.answerVariants = answerVariants;
 	}
 }
 
 export class AnswerVariantDTO {
+	id: string;
 	text: string;
 	isTrue: boolean;
-	constructor(text: string, isTrue: boolean) {
+	constructor(id: string, text: string, isTrue: boolean) {
+		this.id = id;
 		this.text = text;
 		this.isTrue = isTrue;
 	}
@@ -258,11 +264,11 @@ export class StartTestDTO {
 
 export class SendAnswerDTO {
 	testId: string;
-	questIonId: string;
+	questionId: string;
 	answerId: string;
-	constructor(testId: string, questIonId: string, answerId: string) {
+	constructor(testId: string, questionId: string, answerId: string) {
 		this.testId = testId;
-		this.questIonId = questIonId;
+		this.questionId = questionId;
 		this.answerId = answerId;
 	}
 }

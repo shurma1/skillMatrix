@@ -11,6 +11,8 @@ import {errorHandlingMiddleware} from "./middlewares/errorHandling.middleware";
 import Redis from 'ioredis';
 import {DailyTaskService} from "./services/dailyTask.service";
 import SkillService from "./services/skill.service";
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
 
 export const redis = new Redis();
 
@@ -26,6 +28,14 @@ const HOST = config.get("server.HOST") || 'localhost';
 
 const app = express();
 
+app.use(cookieParser());
+
+app.use(cors({
+	origin: 'http://localhost:5173',
+	credentials: true,
+	methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+	allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 if(isDev) {
 	const specs = YAML.load(path.join(ROOT_PATH, 'docs', 'docs.yaml'));
@@ -51,7 +61,6 @@ const start  = async () => {
 	
 	await Sequelize.authenticate();
 	await Sequelize.sync();
-	
 	
 	app.listen(
 		PORT,

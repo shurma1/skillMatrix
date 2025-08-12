@@ -1,0 +1,228 @@
+import React from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { message, Space, Typography, Button, Spin, Alert, Empty } from 'antd';
+import { ArrowLeftOutlined, PlusOutlined } from '@ant-design/icons';
+import { 
+  useGetSkillQuery,
+  useListSkillVersionsQuery,
+  useDeleteSkillVersionMutation,
+  useCreateSkillVersionMutation
+} from '@/store/endpoints';
+import type { SkillVersionDTO, CreateSkillVersionDTO } from '@/types/api/skill';
+import SkillVersionCard from './SkillVersionCard';
+import CreateVersionModal from '../modals/skill/CreateVersionModal';
+import { extractErrMessage } from '../../utils/errorHelpers';
+
+const { Title, Text } = Typography;
+
+/**
+ * Контейнер для управления версиями навыка
+ * Отвечает за логику работы со списком версий
+ */
+const SkillVersionsContainer: React.FC = () => {
+  const { skillId = '' } = useParams<{ skillId: string }>();
+  const navigate = useNavigate();
+  const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
+
+  // API запросы
+  const { 
+    data: skill, 
+    isFetching: isSkillLoading,
+    error: skillError 
+  } = useGetSkillQuery(skillId, { skip: !skillId });
+
+  const { 
+    data: versions = [], 
+    isFetching: isVersionsLoading,
+    error: versionsError,
+    refetch: refetchVersions
+  } = useListSkillVersionsQuery(skillId, { skip: !skillId });
+
+  // API мутации
+  const [deleteVersion, { isLoading: isDeletingVersion }] = useDeleteSkillVersionMutation();
+  const [createVersion, { isLoading: isCreatingVersion }] = useCreateSkillVersionMutation();
+
+  // Для скачивания файлов создаем отдельную функцию
+  const downloadFileById = async (fileId: string): Promise<Blob | null> => {
+    try {
+      const response = await fetch(`/api/file/${fileId}`);
+      if (response.ok) {
+        return await response.blob();
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  };
+
+  // Computed values
+  const hasError = skillError || versionsError;
+  const isLoading = isSkillLoading || isVersionsLoading;
+  const latestVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version)) : 0;
+  const sortedVersions = [...versions].sort((a, b) => b.version - a.version);
+
+  // Event handlers
+  const handleGoBack = () => {
+    navigate(`/skills/${skillId}`);
+  };
+
+  const handleCreateVersion = () => {
+    setIsCreateModalOpen(true);
+  };
+
+  const handleCreateVersionSubmit = async (data: CreateSkillVersionDTO) => {
+    try {
+      await createVersion({
+        id: skillId,
+        body: data
+      }).unwrap();
+      message.success('Версия создана');
+      setIsCreateModalOpen(false);
+      refetchVersions();
+    } catch (error) {
+      message.error(extractErrMessage(error) || 'Ошибка создания версии');
+    }
+  };
+
+  const handleDownloadVersion = async (versionId: string, fileId: string) => {
+    try {
+      const blob = await downloadFileById(fileId);
+      
+      if (blob) {
+        const version = versions.find(v => v.id === versionId);
+        const file = version?.files.find(f => f.id === fileId);
+        
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = file?.filename || file?.name || 'download';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        message.success('Файл загружен');
+      } else {
+        message.error('Не удалось загрузить файл');
+      }
+    } catch (error) {
+      message.error(extractErrMessage(error) || 'Ошибка загрузки файла');
+    }
+  };
+
+  const handleDeleteVersion = async (versionId: string) => {
+    try {
+      await deleteVersion({ id: skillId, versionId }).unwrap();
+      message.success('Версия удалена');
+      refetchVersions();
+    } catch (error) {
+      message.error(extractErrMessage(error) || 'Ошибка удаления версии');
+    }
+  };
+
+  // Render states
+  if (hasError) {
+    return (
+      <div style={{ padding: '24px' }}>
+        <Alert
+          message="Ошибка загрузки"
+          description="Не удалось загрузить информацию о версиях навыка"
+          type="error"
+          showIcon
+          action={
+            <Button size="small" onClick={handleGoBack}>
+              Вернуться к навыку
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '400px' 
+      }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: '24px' }}>
+      <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        {/* Header */}
+        <div>
+          <Button 
+            type="text" 
+            icon={<ArrowLeftOutlined />} 
+            onClick={handleGoBack}
+            style={{ marginBottom: '16px' }}
+          >
+            Вернуться к навыку
+          </Button>
+          
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'flex-start' 
+          }}>
+            <div>
+              <Title level={2} style={{ margin: 0 }}>
+                Версии навыка
+              </Title>
+              <Text type="secondary">
+                {skill?.title} • Всего версий: {versions.length}
+              </Text>
+            </div>
+            
+            <Button 
+              type="primary" 
+              icon={<PlusOutlined />}
+              loading={isCreatingVersion}
+              onClick={handleCreateVersion}
+            >
+              Создать версию
+            </Button>
+          </div>
+        </div>
+
+        {/* Versions list */}
+        {versions.length === 0 ? (
+          <Empty
+            description="Нет версий"
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+          />
+        ) : (
+          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+            {sortedVersions.map((version: SkillVersionDTO) => (
+              <SkillVersionCard
+                key={version.id}
+                version={version}
+                isLatest={version.version === latestVersion}
+                totalVersions={versions.length}
+                onDownload={handleDownloadVersion}
+                onDelete={handleDeleteVersion}
+                canDelete={true} // TODO: проверка прав доступа
+                isDeleting={isDeletingVersion}
+              />
+            ))}
+          </Space>
+        )}
+      </Space>
+
+      <CreateVersionModal
+        open={isCreateModalOpen}
+        onCancel={() => setIsCreateModalOpen(false)}
+        onSubmit={handleCreateVersionSubmit}
+        loading={isCreatingVersion}
+        skillId={skillId}
+      />
+    </div>
+  );
+};
+
+export default SkillVersionsContainer;

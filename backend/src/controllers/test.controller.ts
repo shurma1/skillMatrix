@@ -19,7 +19,9 @@ class TestController {
 
 	async startTest(req: Request, res: Response, next: NextFunction) {
 		try {
-			const { userId, testId } = req.body;
+			const { testId } = req.body;
+			
+			const userId = req.authUser!.id;
 			
 			const session = await TestService.startTest(testId, userId);
 			res.status(200).json(session);
@@ -30,7 +32,9 @@ class TestController {
 	
 	async endTest(req: Request, res: Response, next: NextFunction) {
 		try {
-			const { userId, sessionId } = req.body;
+			const { sessionId } = req.body;
+			
+			const userId = req.authUser!.id;
 			
 			await TestService.endTest(sessionId, userId);
 			res.status(200).send();
@@ -41,9 +45,10 @@ class TestController {
 
 	async sendAnswer(req: Request, res: Response, next: NextFunction) {
 		try {
-			const { skillId, testId } = req.body;
+			const { sessionId } = req.body;
+			const userId = req.authUser!.id;
 			const dto = req.body as SendAnswerDTO;
-			const result = await TestService.sendAnswer(skillId, testId, dto);
+			const result = await TestService.sendAnswer(sessionId, userId, dto);
 			res.status(200).json(result);
 		} catch (err) {
 			next(err);

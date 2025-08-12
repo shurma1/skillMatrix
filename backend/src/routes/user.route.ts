@@ -166,7 +166,8 @@ router.put(
 	'/:id',
 	permissionMiddleware({
 		needAuth: true,
-		permission: ['EDIT_ALL']
+		permission: ['EDIT_ALL'],
+		allowSelfAccess: true
 	}),
 	validateSchema(checkID(), ['params']),
 	validateSchema(updateUser()),

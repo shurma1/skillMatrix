@@ -2,7 +2,7 @@ import {SkillInstance} from '../models/entities/Skill';
 import {TagInstance} from '../models/entities/Tag';
 import {SkillType} from "../dtos/skillWithCurrentVersion.dto";
 import {updateModel} from "../utils/updateModel";
-import {SkillVersion, TagToSkill, Tag, Skill, File} from "../models";
+import {SkillVersion, TagToSkill, Tag, Skill, File, FileToSkillVersion} from "../models";
 import {SkillVersionInstance} from "../models/entities/SkillVersion";
 import {loadSql} from "../utils/loadSql";
 import {Sequelize} from '../models/index';
@@ -25,6 +25,7 @@ export interface SkillCreation {
 	verifierId: string;
 	authorId: string | null;
 	isActive: boolean;
+	fileId?: string
 }
 
 interface TagType {
@@ -56,9 +57,13 @@ class SkillRepository {
 			version: 1,
 		})
 		
+		if(skillData.fileId) {
+			await FileToSkillVersion.create({fileId: skillData.fileId!, skillVersionId: skillVersion.id})
+		}
+		
 		const testId = await TestRepository.getTestIdBySkill(skill.id);
 
-		return this.unionSkill(skill, skillVersion, [], testId || undefined);
+		return this.unionSkill(skill, skillVersion, [], skillData.fileId || undefined, testId || undefined);
 	}
 	
 	async update(id: string, data: {
@@ -102,18 +107,24 @@ class SkillRepository {
 			where: {
 				skillId: id
 			},
-			order: [['version', 'DESC']] // Сортируем по версии в убывающем порядке
-		});
+			include: [{
+				model: File,
+				order: [['createdAt', 'DESC']],
+			}],
+			order: [['version', 'DESC']]
+		}) as SkillVersionInstance & {files: FileInstance[]};
 		
 		if(! skillVersion) {
 			return null;
 		}
 		
+		const fileId = skillVersion.files.length ? skillVersion.files[0].id : undefined;
+		
 		const tags = skill.tag;
 		
 		const testId = await TestRepository.getTestIdBySkill(skill.id);
 		
-		return this.unionSkill(skill, skillVersion, tags, testId || undefined);
+		return this.unionSkill(skill, skillVersion, tags, fileId, testId || undefined);
 	}
 	
 	async getLastVersion(id: string) {
@@ -155,6 +166,8 @@ class SkillRepository {
 		verifierIds,
 		approvedDatesArray,
 		auditDatesArray,
+		limit,
+		offset
 	}: {
 		query: string,
 		tags?: string[],
@@ -162,29 +175,40 @@ class SkillRepository {
 		verifierIds?: string[],
 		approvedDatesArray?: Date[],
 		auditDatesArray?: Date[],
+		limit: number,
+		offset: number,
 	}) {
 		const sql = loadSql('search_skills');
 		
 		const [approvedDateStart, approvedDateEnd] = getDateRange(approvedDatesArray);
 		const [auditDateStart, auditDateEnd] = getDateRange(auditDatesArray);
 		
-		return await Sequelize.query(
-			sql,
-			{
-				replacements: {
-					query: query ? `%${query}%` : null,
-					tags: tags && tags.length ? tags : null,
-					tagsLength: tags ? tags.length : 0,
-					authorIds: authorIds && authorIds.length ? authorIds : null,
-					verifierIds: verifierIds && verifierIds.length ? verifierIds : null,
-					approvedDateStart,
-					approvedDateEnd,
-					auditDateStart,
-					auditDateEnd,
-				},
-				type: QueryTypes.SELECT,
-			}
-		);
+		const authorIdsJson = authorIds?.length ? JSON.stringify(authorIds) : JSON.stringify([]);
+		const verifierIdsJson = verifierIds?.length ? JSON.stringify(verifierIds) : JSON.stringify([]);
+		const tagIdsJson = tags?.length ? JSON.stringify(tags) : JSON.stringify([]);
+		
+		return await Sequelize.query(sql, {
+			replacements: {
+				query: query ? `%${query}%` : null,
+				
+				hasAuthorIds: !!authorIds?.length,
+				hasVerifierIds: !!verifierIds?.length,
+				hasTagIds: !!tags?.length,
+				
+				authorIdsJson,
+				verifierIdsJson,
+				tagIdsJson,
+				
+				approvedDateStart,
+				approvedDateEnd,
+				auditDateStart,
+				auditDateEnd,
+				limit,
+				offset
+			},
+			type: QueryTypes.SELECT,
+			plain: true
+		});
 	}
 	
 	async getAllUsers(skillId: string): Promise<UserSkillSearch[]> {
@@ -200,9 +224,13 @@ class SkillRepository {
 		);
 	}
 	
-	async createVersion(skillId: string, approvedDate: Date, auditDate: Date, version: number, verifierId: string, authorId?: string): Promise<SkillVersionInstance> {
+	async createVersion(skillId: string, approvedDate: Date, auditDate: Date, version: number, verifierId: string, authorId?: string, fileId?: string): Promise<SkillVersionInstance> {
 		
 		const skillVersion = await SkillVersion.create({skillId, authorId, verifierId, auditDate, approvedDate, version});
+		
+		if(fileId) {
+			await FileToSkillVersion.create({fileId: fileId, skillVersionId: skillVersion.id})
+		}
 		
 		return skillVersion;
 	}
@@ -257,7 +285,7 @@ class SkillRepository {
 	}
 	
 	
-	private unionSkill(skill: SkillInstance, skillVersion: SkillVersionInstance, tags: TagType[], testId?: string): SkillWithVersion  {
+	private unionSkill(skill: SkillInstance, skillVersion: SkillVersionInstance, tags: TagType[], fileId?: string, testId?: string): SkillWithVersion  {
 		return {
 			id: skill.id,
 			type: skill.type,
@@ -269,6 +297,7 @@ class SkillRepository {
 			verifierId: skillVersion.verifierId,
 			version: skillVersion.version,
 			tags,
+			fileId,
 			testId
 		}
 	}

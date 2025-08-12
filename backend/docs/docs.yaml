@@ -1152,6 +1152,20 @@
               type: "string"
           - 
             in: "query"
+            name: "limit"
+            required: false
+            schema: 
+              type: "integer"
+            description: "Page size (default depends on server settings)"
+          - 
+            in: "query"
+            name: "page"
+            required: false
+            schema: 
+              type: "integer"
+            description: "Page number starting from 1"
+          - 
+            in: "query"
             name: "tags"
             schema: 
               type: "string"
@@ -1180,13 +1194,18 @@
             description: "Comma-separated ISO dates"
         responses: 
           200: 
-            description: "Array of skills"
+            description: "Paginated skills"
             content: 
               application/json: 
                 schema: 
-                  type: "array"
-                  items: 
-                    $ref: "#/components/schemas/SkillWithCurrentVersionDTO"
+                  type: "object"
+                  properties: 
+                    count: 
+                      type: "integer"
+                    rows: 
+                      type: "array"
+                      items: 
+                        $ref: "#/components/schemas/SkillWithCurrentVersionDTO"
     /api/skill: 
       post: 
         summary: "Create a skill"
