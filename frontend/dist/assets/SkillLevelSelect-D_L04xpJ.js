@@ -1,1 +1,0 @@
-import{j as t,ap as L}from"./index-C2zTCuKe.js";const e=[{value:1,label:"1 - Начальный"},{value:2,label:"2 - Продвинутый"},{value:5,label:"5 - Автор"}],o=[{value:0,label:"0 - Отсутствует"},...e],n=({placeholder:l="Выберите уровень",isFull:a=!1,...s})=>t.jsx(L,{...s,options:a?o:e,placeholder:l});export{n as S,e as a};
