@@ -1,33 +1,40 @@
 # -- Build stage --
 FROM node:20-alpine AS build
 WORKDIR /app
+
+# Copy package files
 COPY package.json pnpm-lock.yaml* package-lock.json* yarn.lock* ./
 
-# Prefer pnpm if lock exists, else npm
+# Install dependencies
 RUN if [ -f pnpm-lock.yaml ]; then npm i -g pnpm@10 && pnpm i --frozen-lockfile; \
     elif [ -f yarn.lock ]; then corepack enable && yarn install --frozen-lockfile; \
     elif [ -f package-lock.json ]; then npm ci; else npm install; fi
 
+# Copy source code
 COPY . .
-RUN npm run lint || true
+
+# Build the application
 RUN npm run build
 
 # -- Runtime stage --
 FROM node:20-alpine AS runtime
 WORKDIR /app
+
+# Set environment
 ENV NODE_ENV=production
 
-RUN apk update --no-cache && \
-    apk add --no-cache --virtual .deps postgresql-client || \
-    (sleep 5 && apk add --no-cache postgresql-client) && \
-    apk del .deps
+# Install runtime dependencies
+RUN apk add --no-cache postgresql-client
 
+# Copy built application and dependencies
 COPY --from=build /app/package.json ./
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/config ./config
 COPY --from=build /app/docs ./docs
 COPY --from=build /app/scripts ./scripts
-COPY --from=build /app/node_modules ./node_modules
+
+# Install only production dependencies
+RUN npm install --only=production
 
 # Copy and make executable the init script
 COPY scripts/init-db.sh ./
