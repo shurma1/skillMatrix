@@ -1,5 +1,5 @@
 # -- Build stage --
-FROM node:20-slim AS build
+FROM node:20-alpine AS build
 WORKDIR /app
 
 # Copy package files
@@ -17,16 +17,13 @@ COPY . .
 RUN npm run build
 
 # -- Runtime stage --
-FROM node:20-slim AS runtime
+FROM node:20-alpine AS runtime
 WORKDIR /app
 
 # Set environment
 ENV NODE_ENV=production
 
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
-
-# Copy built application and dependencies
+# Copy built application
 COPY --from=build /app/package.json ./
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/config ./config
@@ -37,7 +34,7 @@ COPY --from=build /app/scripts ./scripts
 RUN npm install --only=production
 
 # Copy and make executable the init script
-COPY scripts/init-db.sh ./
+COPY scripts/init-db-simple.sh ./init-db.sh
 RUN chmod +x ./init-db.sh
 
 EXPOSE 8080
