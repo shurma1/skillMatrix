@@ -157,7 +157,7 @@ router.post(
  *               $ref: '#/components/schemas/UserTestResultDTO'
  */
 router.get(
-	'/result',
+	'/:testId/result',
 	permissionMiddleware({
 		needAuth: true,
 	}),

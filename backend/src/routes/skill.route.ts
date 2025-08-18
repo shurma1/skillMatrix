@@ -226,6 +226,9 @@ router.put(
  */
 router.get(
 	'/:id',
+	permissionMiddleware({
+		needAuth: true,
+	}),
 	SkillController.get
 );
 

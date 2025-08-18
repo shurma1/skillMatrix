@@ -8,6 +8,8 @@ import {FileDTO} from "../dtos/file.dto";
 import {UserSkillSearchDto} from "../dtos/userSkillSearch.dto";
 import TestRepository from "../repositories/test.repository";
 import {PaginationDTO} from "../dtos/Pagination.dto";
+import UserService from "./user.service";
+import {SkillConfirmType} from "../models/types/SkillConfirmType";
 
 const MOUNTS_BEFORE_AUDIT = config.get<number>('times.MOUNTS_BEFORE_AUDIT');
 
@@ -78,6 +80,10 @@ class SkillService {
 		}
 		
 		return skill as SkillWithCurrentVersionDTO;
+	}
+	
+	async readSkill(id: string, userId: string) {
+		await SkillRepository.readSkill(userId, id);
 	}
 	
 	async update(id: string, title: string, isActive: boolean) {
@@ -213,6 +219,47 @@ class SkillService {
 		await this.checkSkillExist(skillId);
 		
 		await SkillRepository.getTags(skillId);
+	}
+	
+	async confirmFileStudy(fileId: string, userId: string) {
+		await FileService.checkFileExist(fileId);
+		await UserService.checkIsUserExist(userId);
+		
+		const skill = await SkillRepository.getByFile(fileId);
+		
+		if(! skill) {
+			throw ApiError.errorByType('SKILL_NOT_FOUND');
+		}
+		
+		const confirmations = await UserService.getConfirmations(userId, skill.id);
+		
+		const currentLevel = confirmations.length === 0 ? 0 : confirmations[0].level;
+		
+		if(currentLevel > 0) {
+			throw ApiError.errorByType('ALREADY_CONFIRM')
+		}
+		
+		const isDebuffed = confirmations.length === 0 ? false : confirmations[0].type === SkillConfirmType.Debuff;
+		const maxLevel = confirmations.length === 0 ? 0 :
+			(() => {
+				const Confirmation = confirmations.find(
+					conf =>
+						conf.type === SkillConfirmType.Acquired
+						|| conf.type === SkillConfirmType.AdminSet
+				);
+				return Confirmation
+					? Confirmation.level
+					: 0;
+			})();
+		
+		const levelForFileStudyConfirmation = 1;
+		
+		await UserService.addConfirmation(
+			userId,
+			skill.id,
+			SkillConfirmType.Acquired,
+			isDebuffed ? maxLevel : levelForFileStudyConfirmation
+		)
 	}
 	
 	async checkExpirationDateOfTheSkills() {

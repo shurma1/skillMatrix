@@ -2,9 +2,9 @@ import {Test, Question, AnswerVariant, UserTestResult, UserTest, SkillVersion} f
 import { TestInstance } from '../models/entities/Test';
 import {QuestionInstance} from "../models/entities/Question";
 import {AnswerVariantInstance} from "../models/entities/AnswerVariant";
-import {redis} from "../index";
 import {UserTestInstance} from "../models/entities/UserTest";
 import {UserTestResultInstance} from "../models/entities/UserTestResult";
+import MemoryStorageService from "../services/memoryStorage.service";
 
 export interface CreateTestData {
   skillVersionId: string;
@@ -36,6 +36,7 @@ export interface TestSession {
 	timeLimit: number,
 	startTime: number;
 	questionsCount: number,
+	timer: NodeJS.Timeout
 }
 
 interface UserAnswer {
@@ -127,21 +128,21 @@ class TestRepository {
 	}
 	
 	async saveTestSession(sessionId: string, session: TestSession) {
-		await redis.set(sessionId, JSON.stringify(session));
+		MemoryStorageService.set(sessionId, session);
 	}
 	
-	async getTestSession(sessionId: string): Promise<TestSession | null> {
-		const session = await redis.get(sessionId);
+	getTestSession(sessionId: string): TestSession | null{
+		const session = MemoryStorageService.get<TestSession>(sessionId);
 		
 		if(! session) {
 			return null;
 		}
 		
-		return JSON.parse(session) as TestSession;
+		return session;
 	}
 	
 	async removeTestSession(sessionId: string): Promise<void> {
-		await redis.del(sessionId);
+		MemoryStorageService.destroy(sessionId);
 	}
 
 	async getUserTestId(userId: string, testId: string) {
@@ -185,6 +186,10 @@ class TestRepository {
 		return await Test.findOne({where: {
 			id
 		}})
+	}
+	
+	async isTestAlreadyPassed(userId: string, testId: string) {
+		return !! await UserTest.findOne({where: {userId, testId}});
 	}
 }
 

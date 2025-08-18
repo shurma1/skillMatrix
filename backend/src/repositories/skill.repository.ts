@@ -2,7 +2,7 @@ import {SkillInstance} from '../models/entities/Skill';
 import {TagInstance} from '../models/entities/Tag';
 import {SkillType} from "../dtos/skillWithCurrentVersion.dto";
 import {updateModel} from "../utils/updateModel";
-import {SkillVersion, TagToSkill, Tag, Skill, File, FileToSkillVersion} from "../models";
+import {SkillVersion, TagToSkill, Tag, Skill, File, FileToSkillVersion, UserSkillView} from "../models";
 import {SkillVersionInstance} from "../models/entities/SkillVersion";
 import {loadSql} from "../utils/loadSql";
 import {Sequelize} from '../models/index';
@@ -64,6 +64,24 @@ class SkillRepository {
 		const testId = await TestRepository.getTestIdBySkill(skill.id);
 
 		return this.unionSkill(skill, skillVersion, [], skillData.fileId || undefined, testId || undefined);
+	}
+	
+	async readSkill(userId: string, skillId: string) {
+		const lastSkillVersion = await this.getLastVersion(skillId);
+		
+		if(!lastSkillVersion) {
+			return;
+		}
+		
+		const version = lastSkillVersion.version;
+		
+		const isAlreadyViewed = !! await UserSkillView.findOne({where: {userId, skillId, version}})
+		
+		if(isAlreadyViewed) {
+			return;
+		}
+		
+		await UserSkillView.create({userId, skillId, version, date: new Date(Date.now())});
 	}
 	
 	async update(id: string, data: {
@@ -265,6 +283,37 @@ class SkillRepository {
 		}) as (SkillVersionInstance & {files: FileInstance[]})[];
 		
 		return skillVersions;
+	}
+	
+	async getByFile(fileId: string) {
+		const versionWithFile = await SkillVersion.findOne({
+			attributes: ['id', 'skillId', 'version', 'approvedDate', 'auditDate'],
+			include: [
+				{
+					model: File,
+					where: { id: fileId },
+					attributes: [],
+				}
+			]
+		}) as SkillVersionInstance | null;
+
+		if (!versionWithFile) return null;
+		
+		const latestVersion = await this.getLastVersion(versionWithFile.skillId) as SkillVersionInstance | null;
+		if (!latestVersion || latestVersion.version !== versionWithFile.version) return null;
+		
+		const skill = await Skill.findOne({
+			where: { id: versionWithFile.skillId },
+			include: { model: Tag }
+		}) as (SkillInstance & { tag: TagInstance[] }) | null;
+
+		if (!skill) return null;
+
+		const tags = skill.tag as unknown as TagType[];
+		
+		const testId = await TestRepository.getTestIdBySkill(skill.id);
+
+		return this.unionSkill(skill, latestVersion, tags, fileId, testId || undefined);
 	}
 	
 	async deleteVersion(versionId: string) {

@@ -8,14 +8,10 @@ import {Logger} from "./utils/logger";
 import YAML from 'yamljs';
 import swaggerUi from 'swagger-ui-express'
 import {errorHandlingMiddleware} from "./middlewares/errorHandling.middleware";
-import Redis from 'ioredis';
 import {DailyTaskService} from "./services/dailyTask.service";
 import SkillService from "./services/skill.service";
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-
-export const redis = new Redis();
-
 initEnv();
 
 export const ROOT_PATH = path.resolve(__dirname, '..');
@@ -23,15 +19,16 @@ export const UPLOAD_PATH = path.resolve(ROOT_PATH, 'upload');
 
 export const isDev = process.env.mode === "development";
 
-const PORT = config.get("server.PORT") || 8000;
-const HOST = config.get("server.HOST") || 'localhost';
+const PORT = Number(process.env.PORT || config.get("server.PORT") || 8000);
+const HOST = process.env.HOST || config.get("server.HOST") || '0.0.0.0';
 
 const app = express();
 
 app.use(cookieParser());
 
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
 app.use(cors({
-	origin: 'http://localhost:5173',
+	origin: FRONTEND_ORIGIN,
 	credentials: true,
 	methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 	allowedHeaders: ['Content-Type', 'Authorization']
@@ -54,6 +51,7 @@ if(isDev) {
 }
 
 app.use(express.json());
+app.use('/api/health', (_req, res) => res.json({ ok: true }));
 app.use('/api', router);
 app.use(errorHandlingMiddleware);
 
@@ -64,6 +62,7 @@ const start  = async () => {
 	
 	app.listen(
 		PORT,
+		HOST as any,
 		() => {
 			Logger.log(`Server started on http://localhost:${PORT}/api/ [${isDev ? 'Development': 'Production'}]`);
 			if(isDev) {

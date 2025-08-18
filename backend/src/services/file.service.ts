@@ -1,6 +1,7 @@
 import {ApiError} from "../error/apiError";
 import FileRepository from "../repositories/file.repository";
 import {FileDTO} from "../dtos/file.dto";
+import SkillService from "./skill.service";
 
 class FileService {
 	async upload(name: string, file?: Express.Multer.File) {
@@ -30,6 +31,15 @@ class FileService {
 			throw ApiError.errorByType('FILE_NOT_FOUND');
 		}
 	}
+	
+	
+	// async confirm(fileId: string, userId: string) {
+	// 	const fileInfo = await SkillService.get(id);
+	//
+	// 	if (!fileInfo) {
+	// 		throw ApiError.errorByType('FILE_NOT_FOUND');
+	// 	}
+	// }
 
 }
 

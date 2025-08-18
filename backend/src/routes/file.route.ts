@@ -119,4 +119,14 @@ router.post(
 	FileController.upload
 );
 
+
+
+router.get(
+	'/:id/confirm',
+	permissionMiddleware({
+		needAuth: true
+	}),
+	FileController.confirm
+);
+
 export default router;

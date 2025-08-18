@@ -7,6 +7,7 @@ import FileRoute from "./file.route";
 import TagRoute from "./tag.route";
 import TestRoute from "./test.route";
 import AuthRoute from "./auth.route";
+import MeRoute from "./me.route";
 
 const router = express.Router();
 
@@ -18,6 +19,7 @@ router.use('/file', FileRoute);
 router.use('/tag', TagRoute);
 router.use('/test', TestRoute);
 router.use('/auth', AuthRoute);
+router.use('/me', MeRoute);
 
 
 export default router;

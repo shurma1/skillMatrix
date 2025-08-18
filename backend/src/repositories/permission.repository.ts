@@ -1,4 +1,5 @@
 import Permission from '../models/entities/Permission';
+import {UserToPermission} from "../models";
 
 class PermissionRepository {
 	async create(name: string, description: string) {
@@ -6,6 +7,10 @@ class PermissionRepository {
 	}
 	async getByID(id: string) {
 		return await Permission.findOne({ where: { id } });
+	}
+	
+	async getAll() {
+		return await Permission.findAll();
 	}
 	
 	async getByName(name: string) {
@@ -17,6 +22,10 @@ class PermissionRepository {
 	async delete(id: string) {
 		const deletedCount = await Permission.destroy({ where: { id } });
 		return deletedCount > 0;
+	}
+	
+	async add(userId: string, permissionId: string) {
+		await UserToPermission.create({userId, permissionId});
 	}
 }
 

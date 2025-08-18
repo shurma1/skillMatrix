@@ -1,0 +1,14 @@
+{
+  "server": {
+    "PORT": "PORT",
+    "HOST": "HOST"
+  },
+  "database": {
+    "NAME": "POSTGRES_DB",
+    "USER": "POSTGRES_USER",
+    "PASSWORD": "POSTGRES_PASSWORD",
+    "HOST": "POSTGRES_HOST",
+    "PORT": "POSTGRES_PORT",
+    "LOGGING": "DB_LOGGING"
+  }
+}

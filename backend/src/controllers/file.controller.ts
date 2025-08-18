@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import FileService from "../services/file.service";
 import path from "path";
 import {getFileExtension} from "../utils/getFileExtension";
+import SkillService from "../services/skill.service";
 
 class FileController {
 	async upload(req: Request, res: Response, next: NextFunction) {
@@ -70,6 +71,19 @@ class FileController {
 			const fileInfo = await FileService.getInfo(id);
 			
 			res.send(fileInfo);
+		} catch (err) {
+			next(err);
+		}
+	}
+	
+	async confirm(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { id } = req.params;
+			const userId = req.authUser!.id;
+			
+			await SkillService.confirmFileStudy(id, userId);
+			
+			res.status(200).send();
 		} catch (err) {
 			next(err);
 		}

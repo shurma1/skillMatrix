@@ -1,5 +1,12 @@
 
-export const PERMISSIONS = {
+interface IPermissionList {
+	[key: string]: {
+		key: string,
+		name: string
+	}
+}
+
+export const PERMISSIONS: IPermissionList = {
 	VIEW_ALL: {
 		key: 'VIEW_ALL',
 		name: 'Просмотр всех данных (пользователи, навыки, должности, теги, файлы, тесты и т.д.)',

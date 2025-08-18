@@ -1,14 +1,14 @@
-import { UserInstance } from '../models/entities/User';
+import {UserInstance} from '../models/entities/User';
 import bcrypt from 'bcrypt';
 import {ApiError} from "../error/apiError";
 import ImageRepository from '../repositories/image.repository';
-import { validate as isValidUUID } from 'uuid';
+import {validate as isValidUUID} from 'uuid';
 import {UserDTO} from "../dtos/user.dto";
 import {PaginationDTO} from "../dtos/Pagination.dto";
 import UserRepository from "../repositories/user.repossitory";
+import UserRepossitory from "../repositories/user.repossitory";
 import {UserSkillDto} from "../dtos/userSkill.dto";
 import SkillRepository from "../repositories/skill.repository";
-import UserRepossitory from "../repositories/user.repossitory";
 import {ConfirmationDTO} from "../dtos/confirmation.dto";
 import {UserSkillSearchDto} from "../dtos/userSkillSearch.dto";
 import {UserJobRoleSearchDTO} from "../dtos/userJobRoleSearch.dto";
@@ -24,8 +24,8 @@ class UserService {
 		lastname: string;
 		patronymic: string;
 		password: string;
-		email: string,
-		avatar_id: string,
+		email?: string,
+		avatar_id?: string,
   }): Promise<UserDTO> {
 		
 		const user = await UserRepository.getByLogin(data.login);
@@ -246,19 +246,28 @@ class UserService {
 		userId: string,
 		skillId: string,
 		type: string,
-		level: number,
-		version: number,
+		level: number
 	) {
 		await this.checkIsUserExist(userId);
 		await this.checkIsSkillExist(skillId);
 		
-		if(type !== SkillConfirmType.Acquired && type !== SkillConfirmType.Debuff) {
+		const lastVersion = await SkillRepository.getLastVersion(skillId);
+		
+		if(! lastVersion) {
+			throw ApiError.errorByType('SKILL_VERSION_NOT_FOUND');
+		}
+		
+		if(
+			type !== SkillConfirmType.Acquired
+			&& type !== SkillConfirmType.Debuff
+			&& type != SkillConfirmType.AdminSet
+		) {
 			throw ApiError.errorByType('INVALID_CONFIRM_TYPE');
 		}
 		
 		const nowDate = new Date(Date.now());
 		
-		const confirmation = await UserRepository.addConfirmation(userId, skillId, type, level, nowDate, version);
+		const confirmation = await UserRepository.addConfirmation(userId, skillId, type, level, nowDate, lastVersion.version);
 		
 		return new ConfirmationDTO(confirmation.id, confirmation.type, confirmation.level, confirmation.date, confirmation.version);
 	}
@@ -274,6 +283,44 @@ class UserService {
 		
 		return confirmations.map(confirmation => new ConfirmationDTO(confirmation.id, confirmation.type, confirmation.level, confirmation.date, confirmation.version))
 	}
+	
+	// calculateCurrentConfirmationLevel(confirmations: ConfirmationDTO[]) {
+	// 	let level = 0;
+	// 	let mayRestore = false;
+	// 	let maxLevel = 0;
+	//
+	// 	confirmations.reverse().forEach(confirmation => {
+	// 		switch (confirmation.type) {
+	// 		case SkillConfirmType.AdminSet: {
+	// 			mayRestore = false;
+	//
+	// 			maxLevel = confirmation.level;
+	// 			level = confirmation.level;
+	// 			break;
+	// 		}
+	// 		case SkillConfirmType.Debuff: {
+	// 			mayRestore = true;
+	// 			level = confirmation.level;
+	// 			break;
+	// 		}
+	// 		case SkillConfirmType.Acquired: {
+	// 			if(mayRestore) {
+	// 				level = Math.max(confirmation.level, maxLevel);
+	// 				mayRestore = false;
+	// 			}
+	// 			else {
+	// 				level = confirmation.level;
+	// 			}
+	//
+	// 			break;
+	// 		}
+	// 		}
+	//
+	// 		if(level > maxLevel) maxLevel = level;
+	// 	})
+	//
+	// 	return level;
+	// }
 	
 	async deleteConfirmations(
 		userId: string,

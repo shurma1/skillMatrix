@@ -99,6 +99,11 @@ const API_ERROR = {
 		description: 'The job already hasnt this skill.',
 		code: 400,
 	},
+	TEST_ALREADY_PASSED: {
+		type: 'TEST_ALREADY_PASSED',
+		description: 'The test has already been passed',
+		code: 400,
+	},
 	TAG_NOT_FOUND: {
 		type: 'TAG_NOT_FOUND',
 		description: 'The tag not found.',
@@ -149,6 +154,22 @@ const API_ERROR = {
 		description: 'You don\'t have enough permissions.',
 		code: 403,
 	},
+	PERMISSION_ALREADY_EXISTS: {
+		type: 'PERMISSION_ALREADY_EXISTS',
+		description: 'Permission already exists.',
+		code: 400,
+	},
+	PERMISSION_NOT_FOUND: {
+		type: 'PERMISSION_NOT_FOUND',
+		description: 'Permission not found.',
+		code: 400,
+	},
+	ALREADY_CONFIRM: {
+		type: 'ALREADY_CONFIRM',
+		description: 'The skill already confirm',
+		code: 400,
+	},
+	
 };
 
 type ErrorKeys = keyof typeof API_ERROR;

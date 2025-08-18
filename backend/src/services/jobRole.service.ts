@@ -52,6 +52,11 @@ class JobRoleService {
 		return await JobRoleRepository.delete(id);
 	}
 	
+	async getAllByUserId(userId: string): Promise<JobRoleSearchDTO[]> {
+		const jobRoles = await JobRoleRepository.getAllByUserId(userId);
+		return jobRoles.map(this.instanceToJobRoleSearchDTO);
+	}
+	
 	async getUsers(jobId: string) {
 		const jobUsers = await JobRoleRepository.getUsers(jobId);
 		
@@ -176,6 +181,14 @@ class JobRoleService {
 		)
 		
 		return await Promise.all(promises);
+	}
+	
+	async checkIsUserHasThisJobrole(jobId: string, userId: string): Promise<void> {
+		const isUserHasThisJobrole = await JobRoleRepository.isUserHasJobrole(jobId, userId);
+		
+		if(! isUserHasThisJobrole) {
+			throw ApiError.errorByType('JOBROLE_NOT_FOUND')
+		}
 	}
 	
 	private instanceToJobRoleDTO(instance: JobRoleInstance): JobRoleDTO {

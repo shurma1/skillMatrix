@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import UserService from '../services/user.service';
 import { ApiError } from '../error/apiError';
 import calcPageLimitAndOffset from "../utils/calcPageLimitAndOffset";
+import {SkillConfirmType} from "../models/types/SkillConfirmType";
 
 class UserController {
 	async create(req: Request, res: Response, next: NextFunction) {
@@ -109,6 +110,18 @@ class UserController {
 			const { id } = req.params;
 	
 			const skills = await UserService.getAllSkills(id);
+			
+			res.json(skills);
+		} catch (err) {
+			next(err);
+		}
+	}
+	
+	async getMyAllSkills(req: Request, res: Response, next: NextFunction) {
+		try {
+			const userId = req.authUser!.id;
+			
+			const skills = await UserService.getAllSkills(userId);
 			
 			res.json(skills);
 		} catch (err) {
@@ -224,9 +237,11 @@ class UserController {
 		try {
 			const { id, skillId } = req.params;
 			
-			const { type, level, version } = req.body;
+			const { level } = req.body;
 			
-			const confirmation = await UserService.addConfirmation(id, skillId, type, level, version);
+			const type = SkillConfirmType.AdminSet; // устанавливается админом вручную
+			
+			const confirmation = await UserService.addConfirmation(id, skillId, type, level);
 			
 			res.json(confirmation);
 		} catch (err) {
@@ -252,6 +267,57 @@ class UserController {
 			await UserService.deleteConfirmations(id, skillId, confirmationId);
 			
 			res.status(204).send();
+			
+		} catch (err) {
+			next(err);
+		}
+	}
+	
+	async getMe(req: Request, res: Response, next: NextFunction) {
+		try {
+			const userId = req.authUser!.id;
+			
+			const user = await UserService.getByID(userId);
+			
+			res.json(user);
+			
+		} catch (err) {
+			next(err);
+		}
+	}
+	
+	async updateMe(req: Request, res: Response, next: NextFunction) {
+		try {
+			try {
+				const userId = req.authUser!.id;
+				
+				const {
+					login,
+					firstname,
+					lastname,
+					patronymic,
+					password,
+					email,
+					avatar_id
+				} = req.body;
+				
+				const user = await UserService.update(
+					userId,
+					{
+						login,
+						firstname,
+						lastname,
+						patronymic,
+						password,
+						email,
+						avatar_id
+					}
+				);
+				
+				res.json(user);
+			} catch (err) {
+				next(err);
+			}
 			
 		} catch (err) {
 			next(err);

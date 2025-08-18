@@ -14,6 +14,7 @@ class FileRepository {
 	async get(id: string): Promise<FileInstance | null> {
 		return await File.findOne({where: {id} });
 	}
+	
 }
 
 export default new FileRepository();

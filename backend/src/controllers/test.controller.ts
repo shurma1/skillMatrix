@@ -58,8 +58,8 @@ class TestController {
 	async getUserTestResult(req: Request, res: Response, next: NextFunction) {
 		try {
 			const userId = req.authUser!.id;
-			const { skillId } = req.query;
-			const result = await TestService.getUserTestResult(skillId as string, userId);
+			const { testId } = req.params;
+			const result = await TestService.getUserTestResult(testId, userId);
 			res.status(200).json(result);
 		} catch (err) {
 			next(err);

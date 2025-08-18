@@ -3,6 +3,7 @@ import JobRoleService from '../services/jobRole.service';
 import { JobRoleDTO } from '../dtos/jobRole.dto';
 import { ApiError } from '../error/apiError';
 import calcPageLimitAndOffset from "../utils/calcPageLimitAndOffset";
+import UserService from "../services/user.service";
 
 class JobRoleController {
 	async create(req: Request, res: Response, next: NextFunction) {
@@ -152,6 +153,32 @@ class JobRoleController {
 			next(err);
 		}
 	}
+	
+	async getMyJobroles(req: Request, res: Response, next: NextFunction) {
+		try {
+			const userId = req.authUser!.id;
+			const jobRoles = await JobRoleService.getAllByUserId(userId);
+			res.json(jobRoles);
+		} catch (err) {
+			next(err);
+		}
+	}
+	
+	async getMySkillsByJobrole(req: Request, res: Response, next: NextFunction) {
+		try {
+			const {id} = req.params;
+			const userId = req.authUser!.id;
+			
+			await JobRoleService.checkIsUserHasThisJobrole(id, userId);
+			
+			const skills = await UserService.getAllSkillsByJobrole(userId, id);
+			
+			res.json(skills);
+		} catch (err) {
+			next(err);
+		}
+	}
+	
 }
 
 export default new JobRoleController();

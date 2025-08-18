@@ -42,6 +42,16 @@ class JobRoleRepository {
 			offset
 		});
 	}
+	
+	async getAllByUserId(userId: string) {
+		return await JobRole.findAll({
+			include: [{
+				model: User,
+				where: { id: userId },
+				through: { attributes: [] }
+			}]
+		});
+	}
 
 	async delete(id: string): Promise<boolean> {
 		const deletedCount = await JobRole.destroy({ where: { id } });
@@ -63,6 +73,10 @@ class JobRoleRepository {
 			},
 			
 		}) as (JobRoleInstance & {users: (UserInstance & {userToJobRole: {createdAt: Date}})[]});
+	}
+	
+	async isUserHasJobrole(jobId: string, userId: string) {
+		return !! await UserToJobRole.findOne({where: {jobRoleId: jobId, userId}});
 	}
 	
 	async getUser(jobId: string, userId: string) {

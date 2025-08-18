@@ -5,10 +5,13 @@
   "main": "index.js",
   "scripts": {
     "start:dev": "nodemon src/index.ts env mode=development",
+    "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "generate:doc": "node scripts/generate-doc.js",
     "lint": "eslint src --ext .ts,.js",
-    "lint:fix": "eslint src --ext .ts,.js --fix"
+    "lint:fix": "eslint src --ext .ts,.js --fix",
+    "create:admin": "ts-node scripts/create-admin.ts",
+    "create:permissions": "ts-node scripts/create-permissions.ts"
   },
   "keywords": [],
   "author": "",
@@ -40,7 +43,6 @@
     "express": "^5.1.0",
     "express-validator": "^7.2.1",
     "i": "^0.3.7",
-    "ioredis": "^5.7.0",
     "json2yaml": "^1.1.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",

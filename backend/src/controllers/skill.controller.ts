@@ -59,8 +59,11 @@ class SkillController {
 	async get(req: Request, res: Response, next: NextFunction) {
 		try {
 			const { id } = req.params;
+			const userId = req.authUser!.id;
 			
 			const skill = await SkillService.get(id);
+			
+			await SkillService.readSkill(id, userId);
 			
 			res.send(skill);
 		} catch (err) {
@@ -109,7 +112,6 @@ class SkillController {
 			next(err);
 		}
 	}
-	
 	
 	async getAllUsers(req: Request, res: Response, next: NextFunction) {
 		try {

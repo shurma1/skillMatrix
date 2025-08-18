@@ -5,7 +5,7 @@ SELECT
   COALESCE(ucs.level, 0) AS level,
   jrts."targetLevel",
   CASE WHEN ucs.level >= jrts."targetLevel" THEN true ELSE false END AS "isConfirmed",
-  CASE WHEN usv.version = sv.version THEN false ELSE true END AS "isNew",
+  CASE WHEN usv.version = last_sv.version THEN false ELSE true END AS "isNew",
   test.id AS "testId",
   COALESCE(
     (

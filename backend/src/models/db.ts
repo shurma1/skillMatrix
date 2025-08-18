@@ -1,6 +1,12 @@
 import {Sequelize} from "sequelize"
 import config from "config";
 
+const dbPortRaw = config.get("database.PORT") as unknown as string | number;
+const dbLoggingRaw = config.get("database.LOGGING") as unknown as string | boolean;
+
+const dbPort = typeof dbPortRaw === 'string' ? Number(dbPortRaw) : dbPortRaw;
+const dbLogging = typeof dbLoggingRaw === 'string' ? ['1', 'true', 'yes', 'on'].includes(dbLoggingRaw.toLowerCase()) : !!dbLoggingRaw;
+
 export default new Sequelize(
 	config.get("database.NAME"),
 	config.get("database.USER"),
@@ -8,7 +14,7 @@ export default new Sequelize(
 	{
 		dialect: 'postgres',
 		host: config.get("database.HOST"),
-		port: config.get("database.PORT"),
-		logging: config.get("database.LOGGING")
+		port: dbPort,
+		logging: dbLogging
 	}
 )

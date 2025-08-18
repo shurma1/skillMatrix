@@ -15,7 +15,6 @@ import SkillRepository from "../repositories/skill.repository";
 import {SkillVersionInstance} from "../models/entities/SkillVersion";
 import {ApiError} from "../error/apiError";
 import UserService from "./user.service";
-import TimerManager from "../utils/TimerManager";
 
 class TestService {
 	async createTest(skillId: string, dto: CreateTestDTO) {
@@ -53,6 +52,12 @@ class TestService {
 			throw ApiError.errorByType('TEST_NOT_FOUND')
 		}
 		
+		const isTestAlreadyPassed = await TestRepository.isTestAlreadyPassed(userId, testId);
+		
+		if(isTestAlreadyPassed) {
+			throw ApiError.errorByType('TEST_ALREADY_PASSED')
+		}
+		
 		const questions = Array.isArray(testFull.questions)
 			? testFull.questions.map((q: QuestionDTO) => new QuestionDTO(q.id, q.text, Array.isArray(q.answerVariants) ? q.answerVariants.map((a: AnswerVariantDTO) => new AnswerVariantDTO(a.id, a.text, false)) : []))
 			: [];
@@ -62,7 +67,7 @@ class TestService {
 		const testDTO = new TestDTO(testFull.id, testFull.questionsCount, testFull.needScore, testFull.timeLimit, questions);
 		const sessionId = `test:${userId}:${testFull.id}`;
 		
-		const isSessionAlreadyCreate = !! await TestRepository.getTestSession(sessionId);
+		const isSessionAlreadyCreate = !! TestRepository.getTestSession(sessionId);
 		
 		if(isSessionAlreadyCreate) {
 			return { sessionId, test: testDTO, startTime };
@@ -72,10 +77,7 @@ class TestService {
 			await this.endTest(sessionId, userId);
 		}
 		
-		const timerId = setTimeout(onTestTimeIsOver, testDTO.timeLimit * 1000);
-		
-		// Сохраняем таймер отдельно
-		TimerManager.setTimer(sessionId, timerId);
+		const timer = setTimeout(onTestTimeIsOver, testDTO.timeLimit * 1000);
 		
 		await TestRepository.saveTestSession(
 			sessionId,
@@ -85,7 +87,8 @@ class TestService {
 				timeLimit: testFull.timeLimit,
 				questionsCount: testFull.questionsCount,
 				startTime,
-				userId
+				userId,
+				timer
 			}
 		);
 		
@@ -116,8 +119,7 @@ class TestService {
 			throw ApiError.errorByType('SESSION_NOT_FOUND');
 		}
 		
-		// Очищаем таймер через TimerManager
-		TimerManager.clearTimer(sessionId);
+		clearTimeout(session.timer);
 		
 		let score = 0;
 		
@@ -159,7 +161,7 @@ class TestService {
 			throw ApiError.errorByType('TEST_NOT_FOUND')
 		}
 		
-		const session = await TestRepository.getTestSession(sessionId) as TestSession;
+		const session = TestRepository.getTestSession(sessionId) as TestSession;
 		
 		if(! session) {
 			throw ApiError.errorByType('SESSION_NOT_FOUND');

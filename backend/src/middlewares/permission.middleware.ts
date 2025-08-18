@@ -81,6 +81,8 @@ export default function permissionMiddleware(options: PermissionMiddlewareOption
 				if (userPermissions.includes('ADMIN')) {
 					return next();
 				}
+				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+				// @ts-expect-error
 				const hasAny = permissionsRequired.some((perm) => userPermissions.includes(perm));
 				if (!hasAny) {
 					throw ApiError.errorByType('PERMISSION_DENIED');
