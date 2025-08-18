@@ -53,7 +53,7 @@ const SkillInfoCard: React.FC<SkillInfoCardProps> = ({
             {skill.approvedDate ? new Date(skill.approvedDate).toLocaleDateString() : '—'}
           </Paragraph>
           <Paragraph style={{ margin: 0 }}>
-            <Text strong>Аудит: </Text>
+            <Text strong>Ревизия: </Text>
             {skill.auditDate ? new Date(skill.auditDate).toLocaleDateString() : '—'}
           </Paragraph>
           <Paragraph style={{ margin: 0 }}>

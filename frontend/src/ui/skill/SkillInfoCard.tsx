@@ -13,7 +13,7 @@ const SkillInfoCard: React.FC<SkillInfoCardProps> = ({ skill, loading, versionCo
         <Text type="secondary">Тип: {skill.type === 'document' ? 'Документ' : 'Навык'}</Text>
         <Paragraph style={{ margin: 0 }}>Текущая версия: {skill.version}</Paragraph>
         <Paragraph style={{ margin: 0 }}>Утверждено: {skill.approvedDate ? new Date(skill.approvedDate).toLocaleDateString() : '—'}</Paragraph>
-        <Paragraph style={{ margin: 0 }}>Аудит: {skill.auditDate ? new Date(skill.auditDate).toLocaleDateString() : '—'}</Paragraph>
+        <Paragraph style={{ margin: 0 }}>Ревизия: {skill.auditDate ? new Date(skill.auditDate).toLocaleDateString() : '—'}</Paragraph>
         <Space wrap>
           {(skill.tags ?? []).map(t => <Tag key={t.id}>{t.name}</Tag>)}
         </Space>

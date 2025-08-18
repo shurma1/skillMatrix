@@ -2,7 +2,7 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { message, Typography, Button, Space, Spin } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
-import { useGetFullTestQuery } from '@/store/endpoints';
+import { useGetTestQuery } from '@/store/endpoints';
 import type { CreateTestDTO } from '@/types/api/test';
 import TestForm from './TestForm';
 
@@ -19,7 +19,7 @@ const TestEditContainer: React.FC = () => {
     data: test, 
     isLoading: isTestLoading,
     error: testError 
-  } = useGetFullTestQuery(testId, { skip: !testId });
+  } = useGetTestQuery(testId, { skip: !testId });
 
   const handleSubmit = async (values: CreateTestDTO) => {
     try {
@@ -68,10 +68,10 @@ const TestEditContainer: React.FC = () => {
 
   // Преобразование данных теста для формы
   const initialValues: Partial<CreateTestDTO> = {
-    title: '', // Заглушка - TestDTO не содержит title
+    title: test.title || '',
     needScore: test.needScore,
     timeLimit: test.timeLimit,
-    questions: test.questions || []
+    // PreviewTestDto doesn't include questions; keep empty to edit via UI
   };
 
   return (

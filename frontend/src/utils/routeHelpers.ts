@@ -1,6 +1,7 @@
 import React from 'react';
 import type { RouteObject } from 'react-router-dom';
 import type { RouteMeta } from '../config/route';
+import type { StringKey } from '@/assets/strings';
 
 type AppRouteObject = { meta: RouteMeta } & RouteObject;
 
@@ -34,15 +35,15 @@ export const createPublicRoute = (
  * Создает мета-данные для маршрута
  */
 export const createRouteMeta = (
-  titleKey: string,
-  descriptionKey: string,
+  titleKey: StringKey,
+  descriptionKey: StringKey,
   options: {
-    navNameKey?: string;
+    navNameKey?: StringKey;
     showInNav?: boolean;
   } = {}
 ): RouteMeta => ({
-  titleKey: titleKey as any,
-  descriptionKey: descriptionKey as any,
-  navNameKey: options.navNameKey as any,
+  titleKey,
+  descriptionKey,
+  navNameKey: options.navNameKey,
   showInNav: options.showInNav ?? false,
 });

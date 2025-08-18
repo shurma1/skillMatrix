@@ -13,6 +13,7 @@ export const strings = {
 	TestEditTitle: 'Редактирование теста | SkillMatrix',
 	TestTakeTitle: 'Прохождение теста | SkillMatrix',
 	TestResultTitle: 'Результаты теста | SkillMatrix',
+	TestResultViewTitle: 'Просмотр результатов теста | SkillMatrix',
 	
 	// Descriptions
 	LoginDescription: 'Авторизация | SkillMatrix',
@@ -28,6 +29,7 @@ export const strings = {
 	TestEditDescription: 'Редактирование теста | SkillMatrix',
 	TestTakeDescription: 'Прохождение теста | SkillMatrix',
 	TestResultDescription: 'Результаты прохождения теста | SkillMatrix',
+	TestResultViewDescription: 'Просмотр детальных результатов теста | SkillMatrix',
 	
 	// navNames
 	HomeNavName: 'Главная',

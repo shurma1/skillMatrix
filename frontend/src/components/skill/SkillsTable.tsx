@@ -32,7 +32,7 @@ const SkillsTable: FC<SkillsTableProps> = ({
       render: (value: string) => value ? new Date(value).toLocaleDateString() : '-'
     },
     {
-      title: 'Дата аудита',
+      title: 'Дата ревизии',
       dataIndex: 'auditDate',
       key: 'auditDate',
       render: (value: string) => value ? new Date(value).toLocaleDateString() : '-'

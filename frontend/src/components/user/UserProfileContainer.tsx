@@ -2,6 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { message, Space } from 'antd';
 import { getUserInitials } from '@/utils/user';
+import { useAppSelector, useAppDispatch } from '@/hooks/storeHooks';
+import { updateUserAvatar } from '@/store/authSlice';
 import type { UserUpdateDTO } from '@/types/api/user';
 import {
   useGetUserQuery,
@@ -27,10 +29,21 @@ import UpdateUserSkillTargetModal from '../modals/skill/UpdateUserSkillTargetMod
 
 type AnyJobrole = { id?: string; jobRoleId?: string; title: string };
 
-const normalizeJobroleId = (jr: AnyJobrole): string => jr.id || jr.jobRoleId || '';
+const hasId = (jr: unknown): jr is { id: string } =>
+  typeof jr === 'object' && jr !== null && 'id' in jr && typeof (jr as { id: unknown }).id === 'string';
+const hasJobRoleId = (jr: unknown): jr is { jobRoleId: string } =>
+  typeof jr === 'object' && jr !== null && 'jobRoleId' in jr && typeof (jr as { jobRoleId: unknown }).jobRoleId === 'string';
+
+const normalizeJobroleId = (jr: unknown): string => {
+  if (hasId(jr)) return jr.id;
+  if (hasJobRoleId(jr)) return jr.jobRoleId;
+  return '';
+};
 
 const UserProfileContainer: React.FC = () => {
   const { userId = '' } = useParams<{ userId: string }>();
+  const dispatch = useAppDispatch();
+  const currentUser = useAppSelector(state => state.auth.user);
   
   // Data queries
   const { data: user, isFetching: isUserLoading } = useGetUserQuery(
@@ -71,7 +84,7 @@ const UserProfileContainer: React.FC = () => {
   const initials = useMemo(() => user ? getUserInitials(user) : '', [user]);
   const existingSkillIds = userSkills.map(s => s.skillId);
   const existingJobroleIds = userJobroles
-    .map(j => normalizeJobroleId(j as AnyJobrole))
+    .map(j => normalizeJobroleId(j))
     .filter(Boolean);
 
   // Error handling utility
@@ -93,6 +106,11 @@ const UserProfileContainer: React.FC = () => {
       await updateUser({ id: userId, body: data }).unwrap();
       message.success('Изменения сохранены');
       setEditOpen(false);
+      
+      // Если обновляется аватар самого пользователя, обновляем сессию
+  if (data.avatar_id && currentUser && String(currentUser.id) === userId) {
+        dispatch(updateUserAvatar(data.avatar_id));
+      }
     } catch (error) {
       message.error(extractErrMessage(error) || 'Ошибка обновления');
     }
@@ -186,6 +204,7 @@ const UserProfileContainer: React.FC = () => {
       <UserSkillsSection
         skills={userSkills}
         loading={isSkillsLoading}
+        userId={userId}
         onAdd={() => setAddSkillOpen(true)}
         onDelete={handleDeleteSkill}
         onEditTarget={setEditSkillTarget}

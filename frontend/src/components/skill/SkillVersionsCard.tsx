@@ -41,7 +41,7 @@ const SkillVersionsCard: React.FC<SkillVersionsCardProps> = ({
               title={`Версия ${version.version}`}
               description={`Утверждено: ${
                 version.approvedDate ? new Date(version.approvedDate).toLocaleDateString() : '—'
-              } | Аудит: ${
+              } | Ревизия: ${
                 version.auditDate ? new Date(version.auditDate).toLocaleDateString() : '—'
               }`}
             />

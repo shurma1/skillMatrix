@@ -19,15 +19,22 @@ import {
 import UserInfoSection from './UserInfoSection';
 import UserJobRolesSection from './UserJobRolesSection';
 import UserSkillsSection from './UserSkillsSection';
-import JobRoleSkillsList from './JobRoleSkillsList';
+import JobRoleSkillsList from './jobrole/JobRoleSkillsList';
 import EditUserModal from './modals/EditUserModal';
 import AddJobRoleModal from './modals/AddJobRoleModal';
 import AddSkillModal from './modals/AddSkillModal';
 import UpdateUserSkillTargetModal from './modals/UpdateUserSkillTargetModal';
 
-type AnyJobrole = { id?: string; jobRoleId?: string; title: string };
+const hasId = (jr: unknown): jr is { id: string } =>
+  typeof jr === 'object' && jr !== null && 'id' in jr && typeof (jr as { id: unknown }).id === 'string';
+const hasJobRoleId = (jr: unknown): jr is { jobRoleId: string } =>
+  typeof jr === 'object' && jr !== null && 'jobRoleId' in jr && typeof (jr as { jobRoleId: unknown }).jobRoleId === 'string';
 
-const normalizeJobroleId = (jr: AnyJobrole): string => jr.id || jr.jobRoleId || '';
+const normalizeJobroleId = (jr: unknown): string => {
+  if (hasId(jr)) return jr.id;
+  if (hasJobRoleId(jr)) return jr.jobRoleId;
+  return '';
+};
 
 const UserProfileContainer: React.FC = () => {
   const { userId = '' } = useParams<{ userId: string }>();
@@ -71,7 +78,7 @@ const UserProfileContainer: React.FC = () => {
   const initials = useMemo(() => user ? getUserInitials(user) : '', [user]);
   const existingSkillIds = userSkills.map(s => s.skillId);
   const existingJobroleIds = userJobroles
-    .map(j => normalizeJobroleId(j as AnyJobrole))
+    .map(j => normalizeJobroleId(j))
     .filter(Boolean);
 
   // Error handling utility

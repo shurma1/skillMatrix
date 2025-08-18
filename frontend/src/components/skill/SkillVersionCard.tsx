@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Tag, Button, Tooltip, Space, Typography, Popconfirm } from 'antd';
+import { Card, Tag, Button, Tooltip, Space, Typography, Popconfirm, theme } from 'antd';
 import { DownloadOutlined, DeleteOutlined, CalendarOutlined } from '@ant-design/icons';
 import type { SkillVersionDTO } from '@/types/api/skill';
 import { formatDate } from '../../utils/dateHelpers';
@@ -29,6 +29,7 @@ const SkillVersionCard: React.FC<SkillVersionCardProps> = ({
   canDelete,
   isDeleting
 }) => {
+  const { token } = theme.useToken();
   const hasFiles = version.files && version.files.length > 0;
   const hasTest = Boolean(version.testId);
   
@@ -96,7 +97,7 @@ const SkillVersionCard: React.FC<SkillVersionCardProps> = ({
             <div>
               <Space>
                 <CalendarOutlined />
-                <Text type="secondary">Аудит до:</Text>
+                <Text type="secondary">Ревизия до:</Text>
                 <Text>{formatDate(version.auditDate)}</Text>
               </Space>
             </div>
@@ -114,7 +115,7 @@ const SkillVersionCard: React.FC<SkillVersionCardProps> = ({
                 <Card 
                   key={file.id} 
                   size="small" 
-                  style={{ backgroundColor: '#fafafa' }}
+                  style={{ backgroundColor: token.colorFillSecondary }}
                   bodyStyle={{ padding: '8px 12px' }}
                 >
                   <div style={{ 
@@ -133,7 +134,7 @@ const SkillVersionCard: React.FC<SkillVersionCardProps> = ({
                       </div>
                       <div>
                         <Text type="secondary" style={{ fontSize: '12px' }}>
-                          Загружен: {formatDate(file.createdAt)}
+                          Загружен: {file.createdAt ? formatDate(file.createdAt) : 'Дата неизвестна'}
                         </Text>
                       </div>
                     </div>

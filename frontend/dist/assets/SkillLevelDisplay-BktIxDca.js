@@ -1,0 +1,1 @@
+import{j as e}from"./index-C2zTCuKe.js";import{a as o}from"./SkillLevelSelect-D_L04xpJ.js";const p=({level:r,className:i,style:n})=>{const s=o.find(l=>l.value===r);return s?e.jsx("span",{className:i,style:n,children:s.label}):e.jsx("span",{className:i,style:n,children:r})};export{p as S};

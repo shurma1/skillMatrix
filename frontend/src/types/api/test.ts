@@ -5,7 +5,7 @@ export interface StartTestDTO { userId: string; testId: string; }
 export interface EndTestDTO { userId: string; sessionId: string; }
 export interface SendAnswerDTO { sessionId: string; questionId: string; answerId: string; }
 export interface AnswerResultDTO { answerId: string; answerText: string; isTrue: boolean; isPicked: boolean; }
-export interface QuestionResultDTO { questionId: string; questionText: string; answers: AnswerResultDTO[]; }
+export interface QuestionResultDTO { QuestionID: string; QuestionText: string; answers: AnswerResultDTO[]; }
 export interface UserTestResultDTO { id: string; title: string; userId: string; testId: string; score: number; needScore: number; questions: QuestionResultDTO[]; }
 export interface TestDTO { id: string; skillId: string; questionsCount: number; needScore: number; timeLimit: number; questions: QuestionDTO[]; }
 export interface PreviewTestDto { id: string; needScore: number; title: string; timeLimit: number; questionsCount: number; }

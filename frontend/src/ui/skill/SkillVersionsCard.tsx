@@ -17,7 +17,7 @@ const SkillVersionsCard: React.FC<SkillVersionsCardProps> = ({ versions, loading
           ]}>
             <List.Item.Meta
               title={`Версия ${v.version}`}
-              description={`Утверждено: ${v.approvedDate ? new Date(v.approvedDate).toLocaleDateString() : '—'} | Аудит: ${v.auditDate ? new Date(v.auditDate).toLocaleDateString() : '—'}`}
+              description={`Утверждено: ${v.approvedDate ? new Date(v.approvedDate).toLocaleDateString() : '—'} | Ревизия: ${v.auditDate ? new Date(v.auditDate).toLocaleDateString() : '—'}`}
             />
           </List.Item>
         )}

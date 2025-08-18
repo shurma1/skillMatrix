@@ -50,6 +50,16 @@ const authSlice = createSlice({
       state.refreshToken = action.payload.refresh_token;
       persist(state);
     },
+    setUser(state, action: PayloadAction<UserDTO>) {
+      state.user = action.payload;
+      persist(state);
+    },
+    updateUserAvatar(state, action: PayloadAction<string>) {
+      if (state.user) {
+        state.user.avatar_id = action.payload;
+        persist(state);
+      }
+    },
     logout(state) {
       state.accessToken = null;
       state.refreshToken = null;
@@ -59,5 +69,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setAuth, setTokens, logout } = authSlice.actions;
+export const { setAuth, setTokens, setUser, updateUserAvatar, logout } = authSlice.actions;
 export default authSlice.reducer;

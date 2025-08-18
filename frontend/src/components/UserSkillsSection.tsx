@@ -3,7 +3,7 @@ import { Typography, Card, Button, Skeleton, List, Tag, Flex, Popconfirm } from 
 import { Link } from 'react-router-dom';
 import { LinkOutlined } from '@ant-design/icons';
 import type { UserSkillSearchDto } from '@/types/api/user';
-import SkillProgressBar from './SkillProgressBar';
+import SkillProgressBar from './shared/SkillProgressBar';
 
 const { Title } = Typography;
 

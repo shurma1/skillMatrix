@@ -3,13 +3,15 @@ import { Typography, Card, Button, Skeleton, List, Tag, Flex, Popconfirm } from 
 import { Link } from 'react-router-dom';
 import { LinkOutlined } from '@ant-design/icons';
 import type { UserSkillSearchDto } from '@/types/api/user';
-import SkillProgressBar from './SkillProgressBar';
+import SkillProgressBar from '../shared/SkillProgressBar';
+import SkillConfirmationsContainer from './SkillConfirmationsContainer';
 
 const { Title } = Typography;
 
 interface UserSkillsSectionProps {
   skills: UserSkillSearchDto[];
   loading: boolean;
+  userId: string;
   onAdd: () => void;
   onDelete: (id: string) => void;
   onEditTarget: (skill: { skillId: string; targetLevel: number }) => void;
@@ -18,6 +20,7 @@ interface UserSkillsSectionProps {
 const UserSkillsSection: React.FC<UserSkillsSectionProps> = ({
   skills,
   loading,
+  userId,
   onAdd,
   onDelete,
   onEditTarget
@@ -112,6 +115,12 @@ const UserSkillsSection: React.FC<UserSkillsSectionProps> = ({
               <SkillProgressBar
                 level={skill.level}
                 target={skill.targetLevel}
+              />
+              <SkillConfirmationsContainer
+                userId={userId}
+                skillId={skill.skillId}
+                skillTitle={skill.title}
+                currentLevel={skill.level}
               />
             </List.Item>
           )}

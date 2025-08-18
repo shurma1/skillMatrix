@@ -8,6 +8,10 @@
 export const formatDate = (dateString: string): string => {
   try {
     const date = new Date(dateString);
+    // Проверяем, что дата валидна
+    if (isNaN(date.getTime())) {
+      return dateString;
+    }
     return date.toLocaleDateString('ru-RU', {
       year: 'numeric',
       month: '2-digit',
@@ -24,6 +28,10 @@ export const formatDate = (dateString: string): string => {
 export const formatDateTime = (dateString: string): string => {
   try {
     const date = new Date(dateString);
+    // Проверяем, что дата валидна
+    if (isNaN(date.getTime())) {
+      return dateString;
+    }
     return date.toLocaleString('ru-RU', {
       year: 'numeric',
       month: '2-digit',
@@ -42,6 +50,10 @@ export const formatDateTime = (dateString: string): string => {
 export const isDateOverdue = (dateString: string): boolean => {
   try {
     const date = new Date(dateString);
+    // Проверяем, что дата валидна
+    if (isNaN(date.getTime())) {
+      return false;
+    }
     const now = new Date();
     return date < now;
   } catch {
@@ -55,6 +67,10 @@ export const isDateOverdue = (dateString: string): boolean => {
 export const getRelativeTime = (dateString: string): string => {
   try {
     const date = new Date(dateString);
+    // Проверяем, что дата валидна
+    if (isNaN(date.getTime())) {
+      return dateString;
+    }
     const now = new Date();
     const diffInMs = now.getTime() - date.getTime();
     const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));

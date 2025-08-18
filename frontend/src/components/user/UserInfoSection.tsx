@@ -1,7 +1,7 @@
 import React from 'react';
 import { Typography, Card, Button, Skeleton, Flex } from 'antd';
 import type { UserUpdateDTO } from '@/types/api/user';
-import UserAvatarEditor from './UserAvatarEditor';
+import AvatarEditor from '../shared/AvatarEditor';
 
 const { Title } = Typography;
 
@@ -29,7 +29,7 @@ const UserInfoSection: React.FC<UserInfoSectionProps> = ({
         <Skeleton active avatar paragraph={{ rows: 4 }} />
       ) : (
         <Flex gap={32} align="start">
-          <UserAvatarEditor
+          <AvatarEditor
             avatarId={user.avatar_id}
             initials={initials}
             onChange={onAvatarChange}

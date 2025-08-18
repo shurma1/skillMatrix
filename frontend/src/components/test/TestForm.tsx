@@ -1,7 +1,7 @@
 import React from 'react';
 import { Form, Input, InputNumber, Button, Card, Space, Typography } from 'antd';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
-import type { CreateTestDTO } from '@/types/api/test';
+import type { CreateTestDTO, AnswerVariantDTO } from '@/types/api/test';
 
 const { Title } = Typography;
 
@@ -42,7 +42,7 @@ const TestForm: React.FC<TestFormProps> = ({
       
       if (!currentValue) {
         // Если делаем ответ правильным, то все остальные делаем неправильными
-        currentQuestion.answerVariants.forEach((_: any, idx: number) => {
+        currentQuestion.answerVariants.forEach((_: AnswerVariantDTO, idx: number) => {
           form.setFieldValue(
             ['questions', questionIndex, 'answerVariants', idx, 'isTrue'], 
             idx === answerIndex
@@ -76,7 +76,7 @@ const TestForm: React.FC<TestFormProps> = ({
           
           if (updatedQuestion && updatedQuestion.answerVariants && updatedQuestion.answerVariants.length > 0) {
             // Проверяем, есть ли еще правильные ответы
-            const hasCorrectAnswer = updatedQuestion.answerVariants.some((answer: any) => answer.isTrue);
+            const hasCorrectAnswer = updatedQuestion.answerVariants.some((answer: AnswerVariantDTO) => answer.isTrue);
             
             if (!hasCorrectAnswer) {
               // Если нет правильных ответов, делаем первый правильным
@@ -278,7 +278,7 @@ const TestForm: React.FC<TestFormProps> = ({
                               validator() {
                                 const currentQuestion = getFieldValue(['questions', name]);
                                 const hasCorrect = currentQuestion?.answerVariants?.some(
-                                  (answer: { isTrue: boolean }) => answer.isTrue
+                                  (answer: AnswerVariantDTO) => answer.isTrue
                                 );
                                 if (!hasCorrect) {
                                   return Promise.reject(

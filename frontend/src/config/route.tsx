@@ -3,9 +3,7 @@ import LoginPageAsync from "@/pages/LoginPage/LoginPage.async.ts";
 import type {StringKey} from "@/assets/strings.ts";
 import ProtectedRoute from '@/components/hoc/ProtectedRoute';
 import PublicRoute from '@/components/hoc/PublicRoute';
-import HomePage from '@/components/pages/HomePage';
-import ProfilePage from '@/components/pages/ProfilePage';
-import JobRolesPage from '@/components/pages/JobRolesPage';
+import HomePageAsync from '@/pages/HomePage/HomePage.async';
 import SkillVersionsPage from '@/components/pages/SkillVersionsPage';
 import SkillPageAsync from "@/pages/SkillPage/SkillPage.async.ts";
 import UsersSearchPageAsync from "@/pages/UsersSearchPage/UsersSearchPage.async.ts";
@@ -16,6 +14,10 @@ import TestCreatePageAsync from "@/pages/TestCreatePage/TestCreatePage.async.ts"
 import TestEditPageAsync from "@/pages/TestEditPage/TestEditPage.async.ts";
 import TestTakePageAsync from "@/pages/TestTakePage/TestTakePage.async.ts";
 import TestResultPageAsync from "@/pages/TestResultPage/TestResultPage.async";
+import TestResultViewPageAsync from "@/pages/TestResultViewPage/TestResultViewPage.async";
+import ProfilePageAsync from "@/pages/ProfilePage/ProfilePage.async.ts";
+import JobroleSearchPageAsync from "@/pages/JobroleSearchPage/JobroleSearchPage.async.ts";
+import JobrolePageAsync from "@/pages/JobrolePage/JobrolePage.async.ts";
 
 export enum AppRoutes {
 	Login = 'Login',
@@ -27,11 +29,13 @@ export enum AppRoutes {
 	SkillDocument = 'SkillDocument',
 	SkillVersions = 'SkillVersions',
 	JobRoles = 'JobRoles',
+	JobRole = 'JobRole',
 	Profile = 'Profile',
 	TestCreate = 'TestCreate',
 	TestEdit = 'TestEdit',
 	TestTake = 'TestTake',
 	TestResult = 'TestResult',
+	TestResultView = 'TestResultView',
 }
 
 export interface RouteMeta {
@@ -55,10 +59,12 @@ export const RoutePaths: Record<AppRoutes, string> = {
 	[AppRoutes.SkillDocument]: '/skills/:skillId/document',
 	[AppRoutes.SkillVersions]: '/skills/:skillId/versions',
 	[AppRoutes.JobRoles]: '/jobroles',
+	[AppRoutes.JobRole]: '/jobroles/:jobroleId',
 	[AppRoutes.TestCreate]: '/skills/:skillId/test/create',
 	[AppRoutes.TestEdit]: '/skills/:skillId/test/:testId/edit',
 	[AppRoutes.TestTake]: '/test/:testId/take',
 	[AppRoutes.TestResult]: '/test/:testId/result',
+	[AppRoutes.TestResultView]: '/test/:testId/result/view',
 };
 
 export const RouteKeysByPath: Record<string, AppRoutes> = Object.entries(RoutePaths).reduce(
@@ -87,7 +93,7 @@ export const routeConfig: Record<AppRoutes, AppRouteObject> = {
 		path: RoutePaths.Home,
 		element: (
 			<ProtectedRoute>
-				<HomePage />
+				<HomePageAsync />
 			</ProtectedRoute>
 		),
 		meta: {
@@ -101,7 +107,7 @@ export const routeConfig: Record<AppRoutes, AppRouteObject> = {
 		path: RoutePaths.Profile,
 		element: (
 			<ProtectedRoute>
-				<ProfilePage />
+				<ProfilePageAsync />
 			</ProtectedRoute>
 		),
 		meta: {
@@ -194,7 +200,7 @@ export const routeConfig: Record<AppRoutes, AppRouteObject> = {
 		path: RoutePaths.JobRoles,
 		element: (
 			<ProtectedRoute>
-				<JobRolesPage />
+				<JobroleSearchPageAsync />
 			</ProtectedRoute>
 		),
 		meta: {
@@ -202,6 +208,20 @@ export const routeConfig: Record<AppRoutes, AppRouteObject> = {
 			descriptionKey: 'JobRolesDescription',
 			navNameKey: 'JobroleNavName',
 			showInNav: true
+		}
+	},
+	[AppRoutes.JobRole]: {
+		path: RoutePaths.JobRole,
+		element: (
+			<ProtectedRoute>
+				<JobrolePageAsync />
+			</ProtectedRoute>
+		),
+		meta: {
+			titleKey: 'JobRolesTitle',
+			descriptionKey: 'JobRolesDescription',
+			navNameKey: 'JobroleNavName',
+			showInNav: false
 		}
 	},
 	[AppRoutes.TestCreate]: {
@@ -253,6 +273,19 @@ export const routeConfig: Record<AppRoutes, AppRouteObject> = {
 		meta: {
 			titleKey: 'TestResultTitle',
 			descriptionKey: 'TestResultDescription',
+			showInNav: false
+		}
+	},
+	[AppRoutes.TestResultView]: {
+		path: RoutePaths.TestResultView,
+		element: (
+			<ProtectedRoute>
+				<TestResultViewPageAsync />
+			</ProtectedRoute>
+		),
+		meta: {
+			titleKey: 'TestResultViewTitle',
+			descriptionKey: 'TestResultViewDescription',
 			showInNav: false
 		}
 	},

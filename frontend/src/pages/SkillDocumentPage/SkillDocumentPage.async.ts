@@ -1,2 +1,2 @@
 import { lazy } from 'react';
-export default lazy(() => import('./SkillDocumentPage.tsx'));
+export default lazy(() => import('./SkillDocumentPage'));

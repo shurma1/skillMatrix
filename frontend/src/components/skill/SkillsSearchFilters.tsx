@@ -89,7 +89,7 @@ const SkillsSearchFilters: FC<SkillsSearchFiltersProps> = ({
     
     <DatePicker.RangePicker
       onChange={(dates) => onAuditRangeChange(dates as [Dayjs, Dayjs] | null)}
-      placeholder={['Аудировано от', 'Аудировано до']}
+      placeholder={['Ревизия от', 'Ревизия до']}
     />
     
     <Button

@@ -12,6 +12,7 @@ import {
   useUploadFileMutation
 } from '@/store/endpoints';
 import type { SkillWithCurrentVersionDTO, CreateSkillDTO } from '@/types/api/skill';
+import type { TagDTO } from '@/types/api/tag';
 import SkillsSearchFilters from '../skill/SkillsSearchFilters';
 import SkillsTable from '../skill/SkillsTable';
 import CreateSkillModal, { type CreateSkillModalFormData } from '../modals/skill/CreateSkillModal';
@@ -36,7 +37,9 @@ const SkillsSearchContainer: React.FC = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   // Data queries
-  const { data: tags = [], isFetching: isTagsLoading } = useSearchTagsQuery({ query: '' });
+  const { data: tagsResp = [], isFetching: isTagsLoading } = useSearchTagsQuery({ query: '' });
+  const tags: TagDTO[] = tagsResp.map(t => ({ id: t.id, name: t.name, skillsCount: 0 }));
+  
   const { data: usersResp, isFetching: isUsersLoading } = useSearchUsersQuery({ query: '' });
   const users = usersResp?.rows || [];
   
@@ -164,7 +167,7 @@ const SkillsSearchContainer: React.FC = () => {
         verifierIds={verifierIds}
         approvedRange={approvedRange}
         auditRange={auditRange}
-        tags={tags}
+        tags={tagsResp}
         users={users}
         isTagsLoading={isTagsLoading}
         isUsersLoading={isUsersLoading}

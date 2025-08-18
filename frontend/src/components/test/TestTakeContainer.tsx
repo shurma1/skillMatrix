@@ -103,7 +103,7 @@ const TestTakeContainer: React.FC = () => {
       
       // Перенаправляем на страницу результатов через некоторое время
       setTimeout(() => {
-        navigate(`/test/${testId}/result`);
+        navigate(`/test/${testId}/result/view`);
       }, 2000);
     } catch (error) {
       console.error('Error ending test:', error);
@@ -172,11 +172,12 @@ const TestTakeContainer: React.FC = () => {
         <Title level={2}>Готовы начать тест?</Title>
         
         <div style={{ 
-          backgroundColor: '#f6f6f6', 
           padding: '24px', 
           borderRadius: '8px', 
           marginBottom: '32px',
-          textAlign: 'left'
+          textAlign: 'left',
+          border: '1px solid',
+          borderColor: 'var(--ant-color-border)'
         }}>
           <Title level={4}>Правила прохождения теста:</Title>
           <ul style={{ paddingLeft: '20px' }}>

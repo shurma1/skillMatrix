@@ -1,7 +1,7 @@
 import { Table } from 'antd';
 import type { FC } from 'react';
 import type { UserDTO } from '@/types/api/auth';
-import UserAvatar from './UserAvatar';
+import UserAvatar from './shared/UserAvatar';
 
 interface UsersTableProps {
   data: UserDTO[];

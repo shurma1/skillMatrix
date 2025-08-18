@@ -255,9 +255,9 @@ const TestTakeUI: React.FC<TestTakeProps> = ({
           <div style={{ 
             marginTop: 16, 
             padding: '8px 12px', 
-            backgroundColor: '#fff2e8', 
-            border: '1px solid #ffbb96',
-            borderRadius: 4 
+            borderRadius: 4,
+            border: '1px solid var(--ant-color-warning-border)',
+            backgroundColor: 'var(--ant-color-warning-bg)'
           }}>
             <Text type="warning">
               Предупреждений: {violations}/{maxViolations}
@@ -297,7 +297,7 @@ const TestTakeUI: React.FC<TestTakeProps> = ({
                 value={answer.id}
                 style={{ 
                   padding: '12px', 
-                  border: '1px solid #d9d9d9',
+                  border: '1px solid var(--ant-color-border)',
                   borderRadius: 4,
                   marginBottom: 8,
                   width: '100%'
