@@ -2,7 +2,6 @@ import express from 'express';
 import UserController from '../controllers/user.controller';
 import permissionMiddleware from "../middlewares/permission.middleware";
 import JobRoleController from "../controllers/jobRole.controller";
-import SkillController from "../controllers/skill.controller";
 
 const router = express.Router();
 

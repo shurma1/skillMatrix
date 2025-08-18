@@ -1,7 +1,6 @@
 import {ApiError} from "../error/apiError";
 import FileRepository from "../repositories/file.repository";
 import {FileDTO} from "../dtos/file.dto";
-import SkillService from "./skill.service";
 
 class FileService {
 	async upload(name: string, file?: Express.Multer.File) {

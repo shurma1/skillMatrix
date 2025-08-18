@@ -174,7 +174,7 @@ class JobRoleRepository {
 			include: [{
 				model: Skill,
 				through: {
-					// @ts-ignore
+					// @ts-expect-error Sequelize typing issue with through attributes
 					model: JobRoleToSkills,
 					attributes: ['targetLevel']
 				},

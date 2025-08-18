@@ -42,7 +42,7 @@ class TagRepository {
 
 	async getSkillsCount(id: string): Promise<number> {
 		const tag = await Tag.findByPk(id, { include: ['skills'] });
-		// @ts-ignore
+		// @ts-expect-error Sequelize association typing issue
 		return tag && tag.skills ? tag.skills.length : 0;
 	}
 }
