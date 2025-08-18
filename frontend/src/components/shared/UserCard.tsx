@@ -1,7 +1,7 @@
 import React from 'react';
 import { Typography } from 'antd';
 import { Link } from 'react-router-dom';
-import UserAvatar from '@/components/user/UserAvatar';
+import UserAvatar from '@/components/shared/UserAvatar';
 import type { UserDTO } from '@/types/api/auth';
 
 const { Text } = Typography;

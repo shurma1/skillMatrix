@@ -1,21 +1,25 @@
 import { useState } from 'react';
-import { Modal, Form, Input, Select, DatePicker, Upload } from 'antd';
+import { Modal, Form, Input, Select, DatePicker, Upload, message } from 'antd';
 import type { FC } from 'react';
 import type { Dayjs } from 'dayjs';
 import type { UploadProps } from 'antd';
 import type { UserDTO } from '@/types/api/auth';
 import type { CreateSkillDTO } from '@/types/api/skill';
-
-interface Tag {
-  id: string;
-  name: string;
-}
+import type { TagDTO, TagCreateDTO, TagUpdateDTO } from '@/types/api/tag';
+import {
+  useCreateTagMutation,
+  useUpdateTagMutation,
+  useSearchTagsQuery
+} from '@/store/endpoints';
+import TagSelectWithActions from '../../shared/TagSelectWithActions';
+import CreateTagModal from '../tag/CreateTagModal';
+import EditTagModal from '../tag/EditTagModal';
 
 interface CreateSkillModalProps {
   open: boolean;
   confirmLoading: boolean;
   users: UserDTO[];
-  tags: Tag[];
+  tags: TagDTO[];
   onCancel: () => void;
   onSubmit: (values: CreateSkillModalFormData) => void;
 }
@@ -37,7 +41,18 @@ const CreateSkillModal: FC<CreateSkillModalProps> = ({
   const [form] = Form.useForm<CreateSkillModalFormData>();
   const [selectedCreateTags, setSelectedCreateTags] = useState<string[]>([]);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  
+  // Tag modals state
+  const [isCreateTagOpen, setIsCreateTagOpen] = useState(false);
+  const [isEditTagOpen, setIsEditTagOpen] = useState(false);
+  const [editingTag, setEditingTag] = useState<TagDTO | null>(null);
+  
   const typeValue = Form.useWatch<'skill' | 'document'>('type', form);
+
+  // Tag mutations
+  const [createTag, { isLoading: isCreatingTag }] = useCreateTagMutation();
+  const [updateTag, { isLoading: isUpdatingTag }] = useUpdateTagMutation();
+  const { refetch: refetchTags } = useSearchTagsQuery({ query: '' });
 
   const handleOk = () => {
     form.submit();
@@ -58,6 +73,36 @@ const CreateSkillModal: FC<CreateSkillModalProps> = ({
     onCancel();
   };
 
+  const handleCreateTag = async (values: TagCreateDTO) => {
+    try {
+      await createTag(values).unwrap();
+      message.success('Тег создан');
+      setIsCreateTagOpen(false);
+      refetchTags();
+    } catch {
+      message.error('Ошибка создания тега');
+    }
+  };
+
+  const handleEditTag = async (values: TagUpdateDTO) => {
+    if (!editingTag) return;
+    
+    try {
+      await updateTag({ id: editingTag.id, body: values }).unwrap();
+      message.success('Тег обновлен');
+      setIsEditTagOpen(false);
+      setEditingTag(null);
+      refetchTags();
+    } catch {
+      message.error('Ошибка обновления тега');
+    }
+  };
+
+  const handleEditTagClick = (tag: TagDTO) => {
+    setEditingTag(tag);
+    setIsEditTagOpen(true);
+  };
+
   const draggerProps: UploadProps = {
     beforeUpload: (file) => {
       setUploadedFile(file);
@@ -74,106 +119,124 @@ const CreateSkillModal: FC<CreateSkillModalProps> = ({
   };
 
   return (
-    <Modal
-      open={open}
-      title="Добавить навык"
-      onCancel={handleCancel}
-      onOk={handleOk}
-      confirmLoading={confirmLoading}
-	  destroyOnHidden
-    >
-      <Form
-        form={form}
-        layout="vertical"
-        initialValues={{ type: 'skill' }}
-        onFinish={handleFinish}
+    <>
+      <Modal
+        open={open}
+        title="Добавить навык"
+        onCancel={handleCancel}
+        onOk={handleOk}
+        confirmLoading={confirmLoading}
+        destroyOnHidden
       >
-        <Form.Item
-          name="title"
-          label="Название"
-          rules={[
-            { required: true, whitespace: true, message: 'Введите название' }
-          ]}
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={{ type: 'skill' }}
+          onFinish={handleFinish}
         >
-          <Input />
-        </Form.Item>
-        
-        <Form.Item
-          name="type"
-          label="Тип"
-          rules={[{ required: true, message: 'Выберите тип' }]}
-        >
-          <Select
-            options={[
-              { value: 'skill', label: 'Навык' },
-              { value: 'document', label: 'Документ' }
+          <Form.Item
+            name="title"
+            label="Название"
+            rules={[
+              { required: true, whitespace: true, message: 'Введите название' }
             ]}
-          />
-        </Form.Item>
-        
-        <Form.Item
-          name="approvedDate"
-          label="Дата утверждения"
-          rules={[{ required: true, message: 'Укажите дату утверждения' }]}
-        >
-          <DatePicker style={{ width: '100%' }} />
-        </Form.Item>
-        
-        <Form.Item
-          name="verifierId"
-          label="Проверяющий"
-          rules={[{ required: true, message: 'Укажите проверяющего' }]}
-        >
-          <Select
-            showSearch
-            options={users.map(user => ({
-              value: user.id,
-              label: `${user.lastname} ${user.firstname}`.trim()
-            }))}
-          />
-        </Form.Item>
-        
-        <Form.Item name="authorId" label="Автор">
-          <Select
-            allowClear
-            showSearch
-            options={users.map(user => ({
-              value: user.id,
-              label: `${user.lastname} ${user.firstname}`.trim()
-            }))}
-          />
-        </Form.Item>
-        
-        <Form.Item label="Теги">
-          <Select
-            mode="multiple"
-            value={selectedCreateTags}
-            onChange={setSelectedCreateTags}
-            options={tags.map(tag => ({
-              value: tag.id,
-              label: tag.name
-            }))}
-          />
-        </Form.Item>
-        
-        {typeValue === 'document' && (
-          <>
-            <Form.Item label="Имя файла">
-              <Input
-                placeholder="Название документа"
-                value={uploadedFile?.name}
-                disabled
-              />
-            </Form.Item>
-            <Upload.Dragger {...draggerProps}>
-              <p className="ant-upload-drag-icon">📄</p>
-              <p className="ant-upload-text">Перетащите файл или кликните</p>
-              <p className="ant-upload-hint">Файл обязателен</p>
-            </Upload.Dragger>
-          </>
-        )}
-      </Form>
-    </Modal>
+          >
+            <Input />
+          </Form.Item>
+          
+          <Form.Item
+            name="type"
+            label="Тип"
+            rules={[{ required: true, message: 'Выберите тип' }]}
+          >
+            <Select
+              options={[
+                { value: 'skill', label: 'Навык' },
+                { value: 'document', label: 'Документ' }
+              ]}
+            />
+          </Form.Item>
+          
+          <Form.Item
+            name="approvedDate"
+            label="Дата утверждения"
+            rules={[{ required: true, message: 'Укажите дату утверждения' }]}
+          >
+            <DatePicker style={{ width: '100%' }} />
+          </Form.Item>
+          
+          <Form.Item
+            name="verifierId"
+            label="Проверяющий"
+            rules={[{ required: true, message: 'Укажите проверяющего' }]}
+          >
+            <Select
+              showSearch
+              options={users.map(user => ({
+                value: user.id,
+                label: `${user.lastname} ${user.firstname}`.trim()
+              }))}
+            />
+          </Form.Item>
+          
+          <Form.Item name="authorId" label="Автор">
+            <Select
+              allowClear
+              showSearch
+              options={users.map(user => ({
+                value: user.id,
+                label: `${user.lastname} ${user.firstname}`.trim()
+              }))}
+            />
+          </Form.Item>
+          
+          <Form.Item label="Теги">
+            <TagSelectWithActions
+              value={selectedCreateTags}
+              onChange={setSelectedCreateTags}
+              tags={tags}
+              onEditTag={handleEditTagClick}
+              onCreateTag={() => setIsCreateTagOpen(true)}
+            />
+          </Form.Item>
+          
+          {typeValue === 'document' && (
+            <>
+              <Form.Item label="Имя файла">
+                <Input
+                  placeholder="Название документа"
+                  value={uploadedFile?.name}
+                  disabled
+                />
+              </Form.Item>
+              <Upload.Dragger {...draggerProps}>
+                <p className="ant-upload-drag-icon">📄</p>
+                <p className="ant-upload-text">Перетащите файл или кликните</p>
+                <p className="ant-upload-hint">Файл обязателен</p>
+              </Upload.Dragger>
+            </>
+          )}
+        </Form>
+      </Modal>
+
+      <CreateTagModal
+        open={isCreateTagOpen}
+        confirmLoading={isCreatingTag}
+        onCancel={() => setIsCreateTagOpen(false)}
+        onSubmit={handleCreateTag}
+      />
+
+      <EditTagModal
+        open={isEditTagOpen}
+        confirmLoading={isUpdatingTag}
+        tag={editingTag}
+        onCancel={() => {
+          setIsEditTagOpen(false);
+          setEditingTag(null);
+        }}
+        onSubmit={handleEditTag}
+      />
+    </>
   );
 };
 

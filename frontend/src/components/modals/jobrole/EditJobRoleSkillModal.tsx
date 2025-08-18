@@ -1,25 +1,25 @@
-import React from 'react';
 import { Modal, Form } from 'antd';
 import SkillLevelSelect from '@/components/shared/SkillLevelSelect';
+import type { FC } from 'react';
 
-interface UpdateUserSkillTargetModalProps {
+interface EditJobRoleSkillModalProps {
   open: boolean;
-  currentTarget: number;
+  currentTargetLevel: number;
+  confirmLoading?: boolean;
   onCancel: () => void;
   onSubmit: (targetLevel: number) => void;
-  confirmLoading?: boolean;
 }
 
 interface FormData {
   targetLevel: number;
 }
 
-const UpdateUserSkillTargetModal: React.FC<UpdateUserSkillTargetModalProps> = ({
+const EditJobRoleSkillModal: FC<EditJobRoleSkillModalProps> = ({
   open,
-  currentTarget,
+  currentTargetLevel,
+  confirmLoading,
   onCancel,
-  onSubmit,
-  confirmLoading
+  onSubmit
 }) => {
   const [form] = Form.useForm<FormData>();
 
@@ -48,7 +48,7 @@ const UpdateUserSkillTargetModal: React.FC<UpdateUserSkillTargetModalProps> = ({
         layout="vertical"
         preserve={false}
         initialValues={{
-          targetLevel: currentTarget
+          targetLevel: currentTargetLevel
         }}
       >
         <Form.Item
@@ -58,11 +58,11 @@ const UpdateUserSkillTargetModal: React.FC<UpdateUserSkillTargetModalProps> = ({
             { required: true, message: 'Укажите целевой уровень' }
           ]}
         >
-          <SkillLevelSelect placeholder="Выберите целевой уровень" />
+          <SkillLevelSelect placeholder="Выберите требуемый уровень" />
         </Form.Item>
       </Form>
     </Modal>
   );
 };
 
-export default UpdateUserSkillTargetModal;
+export default EditJobRoleSkillModal;

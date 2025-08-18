@@ -2,28 +2,17 @@ import React, { useCallback } from 'react';
 import { List, Skeleton } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import type { UserSkillSearchDto } from '@/types/api/user';
-import { useListUserSkillsInJobroleQuery } from '@/store/endpoints';
+import { useListProfileSkillsInJobroleQuery } from '@/store/endpoints';
 import SkillListItem from '../shared/SkillListItem';
 
-interface JobRoleSkillsListProps {
-  userId: string;
+interface ProfileJobRoleSkillsListProps {
   jobroleId: string;
 }
 
-const JobRoleSkillsList: React.FC<JobRoleSkillsListProps> = ({
-  userId,
+const ProfileJobRoleSkillsList: React.FC<ProfileJobRoleSkillsListProps> = ({
   jobroleId
 }) => {
-  const { data, isFetching } = useListUserSkillsInJobroleQuery({
-    id: userId,
-    jobroleId
-  });
-
-  const navigate = useNavigate();
-  const handleOpenSkill = useCallback(
-    (skillId: string) => navigate(`/skills/${skillId}`),
-    [navigate]
-  );
+  const { data, isFetching } = useListProfileSkillsInJobroleQuery(jobroleId);
 
   if (isFetching) {
     return <Skeleton active paragraph={{ rows: 2 }} />;
@@ -33,6 +22,12 @@ const JobRoleSkillsList: React.FC<JobRoleSkillsListProps> = ({
     return <div>Нет навыков</div>;
   }
 
+  const navigate = useNavigate();
+  const handleOpenSkill = useCallback(
+    (skillId: string) => navigate(`/skills/${skillId}`),
+    [navigate]
+  );
+
   return (
     <List
       dataSource={data}
@@ -41,12 +36,10 @@ const JobRoleSkillsList: React.FC<JobRoleSkillsListProps> = ({
           key={skill.skillId}
           skill={skill}
           onOpenSkill={handleOpenSkill}
-          showConfirmations
-          userId={userId}
         />
       )}
     />
   );
 };
 
-export default JobRoleSkillsList;
+export default ProfileJobRoleSkillsList;

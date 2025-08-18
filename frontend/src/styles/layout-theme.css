@@ -1,0 +1,14 @@
+/* Переопределяем стили Sider для корректной работы с темами */
+.ant-layout-sider {
+  background: var(--ant-color-bg-container) !important;
+}
+
+/* Убираем жестко заданный фон для темной темы */
+.ant-layout {
+  background: var(--ant-color-bg-layout) !important;
+}
+
+/* Стили для Content */
+.ant-layout-content {
+  background: var(--ant-color-bg-layout) !important;
+}

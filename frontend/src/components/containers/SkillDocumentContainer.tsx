@@ -1,10 +1,17 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Spin, Alert, Button, Space, Typography, Checkbox, Card, message } from 'antd';
+import { Spin, Alert, Button, Space, Typography, Checkbox, Card, message, Table } from 'antd';
 import { ArrowLeftOutlined, FileOutlined, CheckOutlined } from '@ant-design/icons';
-import { useGetSkillQuery, useGetFileInfoQuery } from '@/store/endpoints';
+import { 
+  useGetSkillQuery, 
+  useGetFileInfoQuery, 
+  useGetUserSkillQuery,
+  useConfirmFileAcknowledgmentMutation 
+} from '@/store/endpoints';
 import DocumentViewer from '../document/DocumentViewer';
 import { extractErrMessage } from '../../utils/errorHelpers';
+import SkillLevelDisplay from '../shared/SkillLevelDisplay';
+import { useAppSelector } from '@/hooks/storeHooks';
 
 const { Title, Text } = Typography;
 
@@ -16,9 +23,13 @@ const SkillDocumentContainer: React.FC = () => {
   const { skillId = '' } = useParams<{ skillId: string }>();
   const navigate = useNavigate();
 
+  // Получаем текущего пользователя из состояния
+  const currentUser = useAppSelector(state => state.auth.user);
+  const currentUserId = currentUser?.id?.toString() || '';
+
   // Local state for acknowledgment
   const [isAcknowledged, setIsAcknowledged] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSuccessfullyConfirmed, setIsSuccessfullyConfirmed] = useState(false);
 
   // API запросы
   const { 
@@ -35,11 +46,33 @@ const SkillDocumentContainer: React.FC = () => {
     skip: !skill?.fileId 
   });
 
+  // Получаем информацию о навыке текущего пользователя
+  const { 
+    data: userSkill, 
+    isFetching: isUserSkillLoading
+  } = useGetUserSkillQuery(
+    { id: currentUserId, skillId }, 
+    { skip: !skillId || !currentUserId }
+  );
+
+  // Мутация для подтверждения ознакомления с файлом
+  const [confirmFileAcknowledgment, { isLoading: isConfirmingAcknowledgment }] = 
+    useConfirmFileAcknowledgmentMutation();
+
   // Computed values
   const hasError = skillError || fileError;
-  const isLoading = isSkillLoading || isFileInfoLoading;
+  const isLoading = isSkillLoading || isFileInfoLoading || isUserSkillLoading;
   const hasFile = Boolean(skill?.fileId && fileInfo);
   const isDocumentType = skill?.type === 'document';
+  
+  // Определяем уровень на основе массива confirmations
+  const confirmations = userSkill?.confirmations || [];
+  const currentLevel = confirmations.length === 0 ? 0 : 
+    [...confirmations].reverse()[0]?.level || 0;
+  
+  // Определяем, нужно ли показывать форму подтверждения или таблицу ознакомления
+  const shouldShowAcknowledgmentForm = currentLevel === 0 && !isSuccessfullyConfirmed;
+  const isAlreadyAcknowledged = currentLevel > 0 || isSuccessfullyConfirmed;
 
   // Event handlers
   const handleGoBack = () => {
@@ -50,12 +83,76 @@ const SkillDocumentContainer: React.FC = () => {
     setIsAcknowledged(checked);
   };
 
-  const handleSubmitAcknowledgment = () => {
-    // TODO: Implement API call to submit acknowledgment
-    console.log('Submitting acknowledgment for skill:', skillId);
-    
-    setIsSubmitted(true);
-    message.success('Ознакомление с документом подтверждено');
+  const handleSubmitAcknowledgment = async () => {
+    if (!skill?.fileId) {
+      message.error('Файл не найден');
+      return;
+    }
+
+    try {
+      await confirmFileAcknowledgment(skill.fileId).unwrap();
+      
+      setIsSuccessfullyConfirmed(true);
+      setIsAcknowledged(false); // Сбрасываем чекбокс
+    } catch (error) {
+      const errorMessage = 
+        error && 
+        typeof error === 'object' && 
+        'data' in error &&
+        typeof (error as { data?: { message?: string } }).data?.message === 'string'
+          ? (error as { data: { message: string } }).data.message
+          : 'Ошибка подтверждения ознакомления';
+      
+      message.error(errorMessage);
+    }
+  };
+
+  // Компонент таблицы ознакомления
+  const AcknowledgmentTable = () => {
+    const columns = [
+      {
+        title: 'Статус',
+        key: 'status',
+        render: () => (
+          <span style={{ color: '#52c41a' }}>
+            <CheckOutlined /> Ознакомлен
+          </span>
+        )
+      },
+      {
+        title: 'Текущий уровень',
+        key: 'level',
+        render: () => (
+          <SkillLevelDisplay level={currentLevel} />
+        )
+      },
+      {
+        title: 'Дата последнего подтверждения',
+        key: 'date',
+        render: () => {
+          if (confirmations.length === 0) return '-';
+          
+          const lastConfirmation = [...confirmations].reverse()[0];
+          
+          if (!lastConfirmation) return '-';
+          
+          try {
+            return new Date(lastConfirmation.date).toLocaleDateString('ru-RU');
+          } catch {
+            return lastConfirmation.date;
+          }
+        }
+      }
+    ];
+
+    return (
+      <Table 
+        columns={columns}
+        dataSource={[{ key: 'user-acknowledgment' }]}
+        pagination={false}
+        size="small"
+      />
+    );
   };
 
   // Render loading state
@@ -68,6 +165,25 @@ const SkillDocumentContainer: React.FC = () => {
         minHeight: '400px' 
       }}>
         <Spin size="large" />
+      </div>
+    );
+  }
+
+  // Render authentication required state
+  if (!currentUser) {
+    return (
+      <div style={{ padding: '24px' }}>
+        <Alert
+          message="Необходима авторизация"
+          description="Для просмотра документа и подтверждения ознакомления необходимо войти в систему"
+          type="warning"
+          showIcon
+          action={
+            <Button size="small" onClick={() => navigate('/login')}>
+              Войти
+            </Button>
+          }
+        />
       </div>
     );
   }
@@ -157,40 +273,55 @@ const SkillDocumentContainer: React.FC = () => {
         <Card 
           title="Подтверждение ознакомления" 
           style={{ marginTop: '24px' }}
-          extra={isSubmitted && <CheckOutlined style={{ color: '#52c41a' }} />}
+          extra={isAlreadyAcknowledged && <CheckOutlined style={{ color: '#52c41a' }} />}
         >
-          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-            <Checkbox
-              checked={isAcknowledged}
-              onChange={(e) => handleAcknowledgmentChange(e.target.checked)}
-              disabled={isSubmitted}
-              style={{ fontSize: '16px' }}
-            >
-              Я ознакомился с документом
-            </Checkbox>
-            
-            <div style={{ textAlign: 'center' }}>
-              <Button
-                type="primary"
-                size="large"
-                onClick={handleSubmitAcknowledgment}
-                disabled={!isAcknowledged || isSubmitted}
-                icon={isSubmitted ? <CheckOutlined /> : undefined}
-                style={{ minWidth: '200px' }}
-              >
-                {isSubmitted ? 'Подтверждено' : 'Отправить'}
-              </Button>
-            </div>
-
-            {isSubmitted && (
+          {shouldShowAcknowledgmentForm ? (
+            // Показываем форму для подтверждения ознакомления (если level = 0)
+            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+              {isConfirmingAcknowledgment ? (
+                // Состояние загрузки
+                <div style={{ textAlign: 'center', padding: '20px' }}>
+                  <Spin size="large" />
+                  <div style={{ marginTop: '16px', fontSize: '16px' }}>
+                    Подтверждение ознакомления...
+                  </div>
+                </div>
+              ) : (
+                // Форма подтверждения
+                <>
+                  <Checkbox
+                    checked={isAcknowledged}
+                    onChange={(e) => handleAcknowledgmentChange(e.target.checked)}
+                    style={{ fontSize: '16px' }}
+                  >
+                    Я ознакомился с документом
+                  </Checkbox>
+                  
+                  <div style={{ textAlign: 'center' }}>
+                    <Button
+                      type="primary"
+                      size="large"
+                      onClick={handleSubmitAcknowledgment}
+                      disabled={!isAcknowledged}
+                      style={{ minWidth: '200px' }}
+                    >
+                      Подтвердить ознакомление
+                    </Button>
+                  </div>
+                </>
+              )}
+            </Space>
+          ) : (
+            // Показываем таблицу с информацией об ознакомлении (если level > 0 или успешно подтверждено)
+            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
               <Alert
-                message="Ознакомление подтверждено"
+                message={isSuccessfullyConfirmed ? "Ознакомление с документом успешно подтверждено" : "Вы уже ознакомлены с этим документом"}
                 type="success"
                 showIcon
-                style={{ marginTop: '16px' }}
               />
-            )}
-          </Space>
+              {!isSuccessfullyConfirmed && <AcknowledgmentTable />}
+            </Space>
+          )}
         </Card>
       </Space>
     </div>
