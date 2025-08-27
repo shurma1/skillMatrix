@@ -1,7 +1,8 @@
 import React from 'react';
-import { Typography, Card, Button, Skeleton, Flex } from 'antd';
+import { Typography, Card, Button, Skeleton, Flex, Space } from 'antd';
 import type { UserUpdateDTO } from '@/types/api/user';
 import AvatarEditor from '../shared/AvatarEditor';
+import PermissionButton from "@/components/shared/PermissionButton.tsx";
 
 const { Title } = Typography;
 
@@ -11,6 +12,8 @@ interface UserInfoSectionProps {
   initials: string;
   onEdit: () => void;
   onAvatarChange: (id: string) => void;
+  onManagePermissions?: () => void;
+  usePermissionButton?: boolean;
 }
 
 const UserInfoSection: React.FC<UserInfoSectionProps> = ({
@@ -18,7 +21,9 @@ const UserInfoSection: React.FC<UserInfoSectionProps> = ({
   loading,
   initials,
   onEdit,
-  onAvatarChange
+  onAvatarChange,
+  onManagePermissions,
+  usePermissionButton = false
 }) => (
   <div>
     <Title level={3} style={{ marginTop: 0 }}>
@@ -55,13 +60,34 @@ const UserInfoSection: React.FC<UserInfoSectionProps> = ({
                   <b>Email:</b> {user.email || '—'}
                 </p>
               </div>
-              <Button
-                type="primary"
-                onClick={onEdit}
-                style={{ whiteSpace: 'nowrap' }}
-              >
-                Редактировать
-              </Button>
+              <Space>
+                {onManagePermissions && (
+                  <PermissionButton
+                    requiredPermission="PERMISSION_MANAGE"
+                    onClick={onManagePermissions}
+                    style={{ whiteSpace: 'nowrap' }}
+                  >
+                    Разрешения
+                  </PermissionButton>
+                )}
+                {
+                  usePermissionButton
+                  ? <PermissionButton
+                      type="primary"
+                      onClick={onEdit}
+                      style={{ whiteSpace: 'nowrap' }}
+                    >
+                      Редактировать
+                    </PermissionButton>
+                  : <Button
+                      type="primary"
+                      onClick={onEdit}
+                      style={{ whiteSpace: 'nowrap' }}
+                    >
+                      Редактировать
+                    </Button>
+                }
+              </Space>
             </Flex>
           </div>
         </Flex>

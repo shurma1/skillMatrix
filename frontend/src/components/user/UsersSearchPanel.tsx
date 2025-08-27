@@ -1,4 +1,5 @@
-import { Button } from 'antd';
+// import { Button } from 'antd';
+import PermissionButton from '@/components/shared/PermissionButton';
 import type { FC } from 'react';
 import UserSearchInput from './UserSearchInput';
 
@@ -31,13 +32,13 @@ const UsersSearchPanel: FC<UsersSearchPanelProps> = ({
         loading={loading}
       />
     </div>
-    <Button
+    <PermissionButton
       type="primary"
       onClick={onCreateClick}
       style={{ whiteSpace: 'nowrap' }}
     >
       Добавить нового пользователя
-    </Button>
+    </PermissionButton>
   </div>
 );
 

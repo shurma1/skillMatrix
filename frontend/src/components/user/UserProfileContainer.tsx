@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import { useParams } from 'react-router-dom';
 import { message, Space } from 'antd';
 import { getUserInitials } from '@/utils/user';
@@ -26,8 +26,7 @@ import EditUserModal from '../modals/user/EditUserModal';
 import AddJobRoleModal from '../modals/jobrole/AddJobRoleModal';
 import AddSkillModal from '../modals/skill/AddSkillModal';
 import UpdateUserSkillTargetModal from '../modals/skill/UpdateUserSkillTargetModal';
-
-type AnyJobrole = { id?: string; jobRoleId?: string; title: string };
+import { UserPermissionsModal } from '../modals/UserPermissionsModal';
 
 const hasId = (jr: unknown): jr is { id: string } =>
   typeof jr === 'object' && jr !== null && 'id' in jr && typeof (jr as { id: unknown }).id === 'string';
@@ -50,19 +49,28 @@ const UserProfileContainer: React.FC = () => {
     userId,
     { skip: !userId }
   );
+  
   const {
     data: userJobroles = [],
     isFetching: isJobrolesLoading,
     refetch: refetchJobroles
   } = useListUserJobrolesQuery(userId, { skip: !userId });
+  
   const {
     data: userSkills = [],
     isFetching: isSkillsLoading,
     refetch: refetchSkills
   } = useListUserSkillsQuery(userId, { skip: !userId });
+  
   const { data: allSkillsSearch } = useSearchSkillsQuery({ query: '' });
   const { data: allJobrolesSearch } = useSearchJobRolesQuery({ query: '' });
-
+	
+	useEffect(() => {
+		if (userSkills.length > 0) {
+			console.log('User skills updated:', userSkills.length, userSkills);
+		}
+	}, [userSkills.length]); // Only depend on length to reduce noise
+  
   // Mutations
   const [updateUser, { isLoading: isUpdatingUser }] = useUpdateUserMutation();
   const [addUserJobrole, { isLoading: isAddingJobrole }] = useAddUserJobroleMutation();
@@ -75,6 +83,7 @@ const UserProfileContainer: React.FC = () => {
   const [editOpen, setEditOpen] = useState(false);
   const [addJobroleOpen, setAddJobroleOpen] = useState(false);
   const [addSkillOpen, setAddSkillOpen] = useState(false);
+  const [permissionsOpen, setPermissionsOpen] = useState(false);
   const [editSkillTarget, setEditSkillTarget] = useState<{
     skillId: string;
     targetLevel: number;
@@ -190,6 +199,8 @@ const UserProfileContainer: React.FC = () => {
         initials={initials}
         onEdit={() => setEditOpen(true)}
         onAvatarChange={(avatar_id) => handleUpdateUser({ avatar_id })}
+        onManagePermissions={() => setPermissionsOpen(true)}
+		usePermissionButton
       />
       
       <UserJobRolesSection
@@ -243,6 +254,15 @@ const UserProfileContainer: React.FC = () => {
           onCancel={() => setEditSkillTarget(null)}
           confirmLoading={isUpdatingSkillTarget}
           onSubmit={handleUpdateSkillTarget}
+        />
+      )}
+
+      {user && (
+        <UserPermissionsModal
+          isOpen={permissionsOpen}
+          onClose={() => setPermissionsOpen(false)}
+          userId={userId}
+          userName={`${user.lastname} ${user.firstname} ${user.patronymic}`}
         />
       )}
     </Space>

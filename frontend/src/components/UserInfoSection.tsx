@@ -1,7 +1,9 @@
 import React from 'react';
-import { Typography, Card, Button, Skeleton, Flex } from 'antd';
+import { Typography, Card, Skeleton, Flex } from 'antd';
+import PermissionButton from '@/components/shared/PermissionButton';
 import type { UserUpdateDTO } from '@/types/api/user';
 import AvatarEditor from './shared/AvatarEditor';
+import {Permissions} from "@/constants/permissions.ts";
 
 const { Title } = Typography;
 
@@ -55,13 +57,13 @@ const UserInfoSection: React.FC<UserInfoSectionProps> = ({
                   <b>Email:</b> {user.email || '—'}
                 </p>
               </div>
-              <Button
+              <PermissionButton
                 type="primary"
                 onClick={onEdit}
                 style={{ whiteSpace: 'nowrap' }}
               >
-                Редактировать
-              </Button>
+                Редактировать1
+              </PermissionButton>
             </Flex>
           </div>
         </Flex>
