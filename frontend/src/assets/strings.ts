@@ -36,6 +36,7 @@ export const strings = {
 	UsersNavName: 'Пользователи',
 	SkillsNavName: 'Навыки',
 	JobroleNavName: 'Должности',
+	AnalyticsNavName: 'Аналитика',
 	
 	// Form strings
 	

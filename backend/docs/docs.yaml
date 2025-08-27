@@ -151,6 +151,24 @@
           assignedAt: 
             type: "string"
             format: "date-time"
+      PaginationDTO: 
+        type: "object"
+        properties: 
+          count: 
+            type: "integer"
+          rows: 
+            type: "array"
+            items: 
+              type: "object"
+      PermissionDto: 
+        type: "object"
+        properties: 
+          id: 
+            type: "string"
+          name: 
+            type: "string"
+          description: 
+            type: "string"
       SkillVersionDTO: 
         type: "object"
         properties: 
@@ -235,22 +253,19 @@
         properties: 
           name: 
             type: "string"
-      AnswerVariantDTO: 
+      PreviewTestDto: 
         type: "object"
         properties: 
-          text: 
+          id: 
             type: "string"
-          isTrue: 
-            type: "boolean"
-      QuestionDTO: 
-        type: "object"
-        properties: 
-          text: 
+          needScore: 
+            type: "integer"
+          title: 
             type: "string"
-          answerVariants: 
-            type: "array"
-            items: 
-              $ref: "#/components/schemas/AnswerVariantDTO"
+          timeLimit: 
+            type: "integer"
+          questionsCount: 
+            type: "integer"
       CreateTestDTO: 
         type: "object"
         required: 
@@ -269,6 +284,26 @@
             type: "array"
             items: 
               $ref: "#/components/schemas/QuestionDTO"
+      QuestionDTO: 
+        type: "object"
+        properties: 
+          id: 
+            type: "string"
+          text: 
+            type: "string"
+          answerVariants: 
+            type: "array"
+            items: 
+              $ref: "#/components/schemas/AnswerVariantDTO"
+      AnswerVariantDTO: 
+        type: "object"
+        properties: 
+          id: 
+            type: "string"
+          text: 
+            type: "string"
+          isTrue: 
+            type: "boolean"
       StartTestDTO: 
         type: "object"
         required: 
@@ -292,41 +327,16 @@
       SendAnswerDTO: 
         type: "object"
         required: 
-          - "skillId"
           - "testId"
-          - "questIonId"
+          - "questionId"
           - "answerId"
         properties: 
-          skillId: 
-            type: "string"
           testId: 
             type: "string"
-          questIonId: 
+          questionId: 
             type: "string"
           answerId: 
             type: "string"
-      AnswerResultDTO: 
-        type: "object"
-        properties: 
-          answerId: 
-            type: "string"
-          answerText: 
-            type: "string"
-          isTrue: 
-            type: "boolean"
-          isPicked: 
-            type: "boolean"
-      QuestionResultDTO: 
-        type: "object"
-        properties: 
-          questIonId: 
-            type: "string"
-          questionText: 
-            type: "string"
-          answers: 
-            type: "array"
-            items: 
-              $ref: "#/components/schemas/AnswerResultDTO"
       UserTestResultDTO: 
         type: "object"
         properties: 
@@ -346,6 +356,28 @@
             type: "array"
             items: 
               $ref: "#/components/schemas/QuestionResultDTO"
+      QuestionResultDTO: 
+        type: "object"
+        properties: 
+          questIonId: 
+            type: "string"
+          questionText: 
+            type: "string"
+          answers: 
+            type: "array"
+            items: 
+              $ref: "#/components/schemas/AnswerResultDTO"
+      AnswerResultDTO: 
+        type: "object"
+        properties: 
+          answerId: 
+            type: "string"
+          answerText: 
+            type: "string"
+          isTrue: 
+            type: "boolean"
+          isPicked: 
+            type: "boolean"
       TestDTO: 
         type: "object"
         properties: 
@@ -361,19 +393,6 @@
             type: "array"
             items: 
               $ref: "#/components/schemas/QuestionDTO"
-      PreviewTestDto: 
-        type: "object"
-        properties: 
-          id: 
-            type: "string"
-          needScore: 
-            type: "integer"
-          title: 
-            type: "string"
-          timeLimit: 
-            type: "integer"
-          questionsCount: 
-            type: "integer"
       StartTestResponseDTO: 
         type: "object"
         properties: 
@@ -696,6 +715,27 @@
             description: "No file uploaded"
           403: 
             description: "Permission denied"
+    /api/file/{id}/confirm: 
+      get: 
+        summary: "Confirm file availability"
+        description: "Returns 200 if the file is available and confirmed in storage."
+        tags: 
+          - "File"
+        security: 
+          - 
+            JWT: []
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+        responses: 
+          200: 
+            description: "File confirmed"
+          404: 
+            description: "File not found"
     /api/image/upload: 
       post: 
         summary: "Upload image"
@@ -729,10 +769,6 @@
         summary: "Get image by id"
         tags: 
           - "Image"
-        security: 
-          - 
-            JWT: []
-        x-permissions: []
         parameters: 
           - 
             in: "path"
@@ -1133,6 +1169,116 @@
         responses: 
           204: 
             description: "Deleted"
+    /api/me/profile: 
+      get: 
+        summary: "Get current user's profile"
+        tags: 
+          - "Me"
+        security: 
+          - 
+            JWT: []
+        responses: 
+          200: 
+            description: "Current user profile"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/UserDTO"
+      put: 
+        summary: "Update current user's profile"
+        tags: 
+          - "Me"
+        security: 
+          - 
+            JWT: []
+        requestBody: 
+          required: true
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/UserUpdateDTO"
+        responses: 
+          200: 
+            description: "Updated profile"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/UserDTO"
+    /api/me/permissions: 
+      get: 
+        summary: "Get current user's permissions"
+        tags: 
+          - "Me"
+        security: 
+          - 
+            JWT: []
+        responses: 
+          200: 
+            description: "List of permissions"
+            content: 
+              application/json: 
+                schema: 
+                  type: "array"
+                  items: 
+                    $ref: "#/components/schemas/PermissionDto"
+    /api/me/jobrole: 
+      get: 
+        summary: "Get job roles of current user"
+        tags: 
+          - "Me"
+        security: 
+          - 
+            JWT: []
+        responses: 
+          200: 
+            description: "List of job roles"
+            content: 
+              application/json: 
+                schema: 
+                  type: "array"
+                  items: 
+                    $ref: "#/components/schemas/JobRoleDTO"
+    /api/me/jobrole/{id}/skills: 
+      get: 
+        summary: "Get my skills for a specific job role"
+        tags: 
+          - "Me"
+        security: 
+          - 
+            JWT: []
+        parameters: 
+          - 
+            in: "path"
+            name: "id"
+            required: true
+            schema: 
+              type: "string"
+        responses: 
+          200: 
+            description: "List of skills for the job role"
+            content: 
+              application/json: 
+                schema: 
+                  type: "array"
+                  items: 
+                    $ref: "#/components/schemas/UserSkillSearchDto"
+    /api/me/skills: 
+      get: 
+        summary: "Get all my skills"
+        tags: 
+          - "Me"
+        security: 
+          - 
+            JWT: []
+        responses: 
+          200: 
+            description: "List of all my skills"
+            content: 
+              application/json: 
+                schema: 
+                  type: "array"
+                  items: 
+                    $ref: "#/components/schemas/UserSkillSearchDto"
     /api/skill/search: 
       get: 
         summary: "Search skills with filters"
@@ -1225,7 +1371,6 @@
                 required: 
                   - "type"
                   - "title"
-                  - "isActive"
                 properties: 
                   type: 
                     type: "string"
@@ -1237,15 +1382,10 @@
                   approvedDate: 
                     type: "string"
                     format: "date-time"
-                  auditDate: 
-                    type: "string"
-                    format: "date-time"
                   verifierId: 
                     type: "string"
                   authorId: 
                     type: "string"
-                  isActive: 
-                    type: "boolean"
         responses: 
           200: 
             description: "Created skill"
@@ -1698,6 +1838,10 @@
         responses: 
           200: 
             description: "Session started"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/StartTestResponseDTO"
     /api/test/end: 
       post: 
         summary: "End test session"
@@ -1734,9 +1878,13 @@
         responses: 
           200: 
             description: "Current result"
-    /api/test/result: 
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/UserTestResultDTO"
+    /api/test/{testId}/result: 
       get: 
-        summary: "Get user test result by skill"
+        summary: "Get test result by test session id"
         tags: 
           - "Test"
         security: 
@@ -1745,17 +1893,11 @@
         x-permissions: []
         parameters: 
           - 
-            in: "query"
-            name: "skillId"
+            in: "path"
+            name: "testId"
             required: true
             schema: 
               type: "string"
-        requestBody: 
-          required: true
-          content: 
-            application/json: 
-              schema: 
-                $ref: "#/components/schemas/UserIdDTO"
         responses: 
           200: 
             description: "User test result"
@@ -1765,7 +1907,7 @@
                   $ref: "#/components/schemas/UserTestResultDTO"
     /api/test/{testId}: 
       get: 
-        summary: "Get test"
+        summary: "Get test by id"
         tags: 
           - "Test"
         security: 
