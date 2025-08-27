@@ -5,7 +5,7 @@ import { ArrowLeftOutlined, FileOutlined, CheckOutlined } from '@ant-design/icon
 import { 
   useGetSkillQuery, 
   useGetFileInfoQuery, 
-  useGetUserSkillQuery,
+  useListUserSkillConfirmationsQuery,
   useConfirmFileAcknowledgmentMutation 
 } from '@/store/endpoints';
 import DocumentViewer from '../document/DocumentViewer';
@@ -46,11 +46,12 @@ const SkillDocumentContainer: React.FC = () => {
     skip: !skill?.fileId 
   });
 
-  // Получаем информацию о навыке текущего пользователя
+  // Получаем список подтверждений пользователя по навыку
   const { 
-    data: userSkill, 
-    isFetching: isUserSkillLoading
-  } = useGetUserSkillQuery(
+    data: confirmations = [], 
+    isFetching: isConfirmationsLoading,
+    refetch: refetchConfirmations
+  } = useListUserSkillConfirmationsQuery(
     { id: currentUserId, skillId }, 
     { skip: !skillId || !currentUserId }
   );
@@ -61,14 +62,16 @@ const SkillDocumentContainer: React.FC = () => {
 
   // Computed values
   const hasError = skillError || fileError;
-  const isLoading = isSkillLoading || isFileInfoLoading || isUserSkillLoading;
+  const isLoading = isSkillLoading || isFileInfoLoading || isConfirmationsLoading;
   const hasFile = Boolean(skill?.fileId && fileInfo);
   const isDocumentType = skill?.type === 'document';
   
-  // Определяем уровень на основе массива confirmations
-  const confirmations = userSkill?.confirmations || [];
-  const currentLevel = confirmations.length === 0 ? 0 : 
-    [...confirmations].reverse()[0]?.level || 0;
+  // Определяем уровень на основе списка подтверждений
+  // Получаем последнее подтверждение (последний элемент в отсортированном по дате массиве)
+  const lastConfirmation = confirmations.length > 0 
+    ? [...confirmations].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
+    : null;
+  const currentLevel = lastConfirmation?.level || 0;
   
   // Определяем, нужно ли показывать форму подтверждения или таблицу ознакомления
   const shouldShowAcknowledgmentForm = currentLevel === 0 && !isSuccessfullyConfirmed;
@@ -94,6 +97,9 @@ const SkillDocumentContainer: React.FC = () => {
       
       setIsSuccessfullyConfirmed(true);
       setIsAcknowledged(false); // Сбрасываем чекбокс
+      
+      // Обновляем список подтверждений после успешного подтверждения
+      refetchConfirmations();
     } catch (error) {
       const errorMessage = 
         error && 
@@ -132,7 +138,9 @@ const SkillDocumentContainer: React.FC = () => {
         render: () => {
           if (confirmations.length === 0) return '-';
           
-          const lastConfirmation = [...confirmations].reverse()[0];
+          // Получаем последнее подтверждение (сортируем по дате)
+          const lastConfirmation = [...confirmations]
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
           
           if (!lastConfirmation) return '-';
           

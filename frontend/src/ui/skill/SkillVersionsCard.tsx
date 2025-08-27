@@ -1,5 +1,6 @@
 import React from 'react';
-import { Card, Skeleton, List, Button, Popconfirm } from 'antd';
+import { Card, Skeleton, List, Popconfirm } from 'antd';
+import PermissionButton from '@/components/shared/PermissionButton';
 import type { SkillVersionDTO } from '@/types/api/skill';
 
 interface SkillVersionsCardProps { versions: SkillVersionDTO[]; loading: boolean; onDeleteVersion: (v: SkillVersionDTO) => void; deleting: boolean; }
@@ -12,7 +13,7 @@ const SkillVersionsCard: React.FC<SkillVersionsCardProps> = ({ versions, loading
         renderItem={v => (
           <List.Item actions={[
             <Popconfirm key="del" title="Удалить версию?" okText="Да" cancelText="Нет" onConfirm={() => onDeleteVersion(v)}>
-              <Button size="small" danger loading={deleting}>Удалить</Button>
+              <PermissionButton size="small" danger loading={deleting}>Удалить</PermissionButton>
             </Popconfirm>
           ]}>
             <List.Item.Meta

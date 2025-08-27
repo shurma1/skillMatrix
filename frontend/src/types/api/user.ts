@@ -11,3 +11,21 @@ export interface ConfirmationCreateDTO { date: string; level: number; }
 export interface ConfirmationAddResponseDTO { /* server returns added confirmation; reuse ConfirmationDTO */ }
 export interface UserSkillDto { skillId: string; title: string; type: string; level: number; targetLevel: number; isConfirmed: boolean; isNew: boolean; tags: TagDTO[]; userId: string; login: string; firstname: string; patronymic: string; avatarId: string; confirmations: ConfirmationDTO[]; testId?: string | null; }
 export interface UserSkillSearchDto { skillId: string; title: string; type: string; level: number; targetLevel: number; isConfirmed: boolean; isNew: boolean; tags: TagDTO[]; userId: string; login: string; firstname: string; patronymic: string; avatarId: string; testId?: string | null; }
+
+// Preview of user results for login page popup
+export interface UserResultPreviewDTO {
+	userId: string;
+	firstname: string;
+	lastname: string;
+	patronymic: string;
+	level: number;
+	targetLevel: number;
+	percent: number; // completion percent
+}
+
+// User statistics for home page
+export interface UserStatsDTO {
+	needLevel: number;
+	userLevel: number;
+	percent: number;
+}

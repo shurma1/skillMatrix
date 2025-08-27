@@ -14,7 +14,8 @@ export interface SkillWithCurrentVersionDTO {
   version: number; 
   tags: TagDTO[]; 
   testId?: string | null; 
-  fileId?: string; 
+  fileId?: string;
+  documentId?: string;
 }
 export interface CreateSkillDTO { 
   type: 'skill' | 'document'; 
@@ -22,7 +23,10 @@ export interface CreateSkillDTO {
   approvedDate: string; 
   verifierId: string; 
   authorId?: string; 
-  fileId?: string; 
+  fileId?: string;
+  documentId?: string;
 }
-export interface UpdateSkillDTO { title?: string; isActive?: boolean; }
-export interface CreateSkillVersionDTO { fileId?: string; authorId: string; verifierid: string; }
+export interface UpdateSkillDTO { title?: string; isActive?: boolean; tags?: string[]; documentId?: string; }
+export interface CreateSkillVersionDTO { fileId?: string; authorId: string; verifierid: string; approvedDate?: string }
+// For updating a version, fields are optional; omit unchanged values
+export type UpdateSkillVersionDTO = Partial<CreateSkillVersionDTO>;

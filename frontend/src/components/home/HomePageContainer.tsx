@@ -1,15 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Card,
-  List,
-  Tag,
-  Typography,
-  Button,
-  Space,
-  theme,
-  Skeleton,
-  Progress,
+	Card,
+	List,
+	Tag,
+	Typography,
+	Button,
+	theme,
+	Skeleton,
+	Progress, Flex,
 } from 'antd';
 import {
   useGetMyJobrolesQuery,
@@ -18,6 +17,7 @@ import {
 } from '@/store/endpoints';
 import type { UserSkillSearchDto } from '@/types/api/user';
 import { useAppDispatch } from '@/hooks/storeHooks';
+import UserStatsCard from '@/components/UserStatsCard';
 
 const { Text } = Typography;
 
@@ -104,8 +104,17 @@ const HomePageContainer: React.FC = () => {
   const handleGoToSkill = useCallback((id: string) => navigate(`/skills/${id}`), [navigate]);
 
   return (
-    <Space direction="vertical" size={24} style={{ width: '100%', padding: 24 }}>
-      <Card title="Мои навыки">
+		<Flex vertical>
+		<Typography.Title
+			level={3}
+			style={{ marginTop: 0, marginBottom: 16 }}
+		>
+			Должности
+		</Typography.Title>
+		
+		<UserStatsCard />
+		
+      <Card>
         <List
           dataSource={items}
           loading={loading}
@@ -193,7 +202,7 @@ const HomePageContainer: React.FC = () => {
           <Skeleton active paragraph={{ rows: 3 }} />
         )}
       </Card>
-    </Space>
+    </Flex>
   );
 };
 

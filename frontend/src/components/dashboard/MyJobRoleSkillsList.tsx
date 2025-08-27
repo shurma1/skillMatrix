@@ -1,6 +1,5 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { List, Skeleton } from 'antd';
-import { useNavigate } from 'react-router-dom';
 import type { UserSkillSearchDto } from '@/types/api/user';
 import { useGetMySkillsInJobroleQuery } from '@/store/endpoints';
 import SkillListItem from '../shared/SkillListItem';
@@ -22,12 +21,6 @@ const MyJobRoleSkillsList: React.FC<MyJobRoleSkillsListProps> = ({
     return <div>Нет навыков по данной должности</div>;
   }
 
-  const navigate = useNavigate();
-  const handleOpenSkill = useCallback(
-    (skillId: string) => navigate(`/skills/${skillId}`),
-    [navigate]
-  );
-
   return (
     <List
       dataSource={data}
@@ -35,7 +28,6 @@ const MyJobRoleSkillsList: React.FC<MyJobRoleSkillsListProps> = ({
         <SkillListItem
           key={skill.skillId}
           skill={skill}
-          onOpenSkill={handleOpenSkill}
         />
       )}
     />

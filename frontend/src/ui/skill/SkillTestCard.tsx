@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Card, Skeleton, Button, Form, InputNumber, Input, Space } from 'antd';
+import PermissionButton from '@/components/shared/PermissionButton';
 import type { PreviewTestDto, CreateTestDTO } from '@/types/api/test';
 
 interface SkillTestCardProps {
@@ -19,7 +20,7 @@ const SkillTestCard: React.FC<SkillTestCardProps> = ({ test, creating, onCreateT
   return (
     <Card
       title="Тест"
-      extra={<Space>{test && <Button onClick={onOpenTest}>Открыть</Button>}<Button onClick={onRefresh}>Обновить</Button>{!test && <Button type="primary" onClick={() => setShowCreate(s => !s)}>{showCreate ? 'Отмена' : 'Создать'}</Button>}</Space>}
+  extra={<Space>{test && <Button onClick={onOpenTest}>Открыть</Button>}<Button onClick={onRefresh}>Обновить</Button>{!test && <PermissionButton type="primary" onClick={() => setShowCreate(s => !s)}>{showCreate ? 'Отмена' : 'Создать'}</PermissionButton>}</Space>}
     >
       {test ? (
         <div>
@@ -40,7 +41,7 @@ const SkillTestCard: React.FC<SkillTestCardProps> = ({ test, creating, onCreateT
             <InputNumber min={10} />
           </Form.Item>
           <Form.Item shouldUpdate>
-            {() => <Button type="primary" htmlType="submit" loading={creating}>Создать</Button>}
+            {() => <PermissionButton type="primary" htmlType="submit" loading={creating}>Создать</PermissionButton>}
           </Form.Item>
         </Form>
       ) : <Skeleton active paragraph={{ rows: 3 }} />}

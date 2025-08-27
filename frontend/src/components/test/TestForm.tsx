@@ -1,5 +1,6 @@
 import React from 'react';
 import { Form, Input, InputNumber, Button, Card, Space, Typography } from 'antd';
+import PermissionButton from '@/components/shared/PermissionButton';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import type { CreateTestDTO, AnswerVariantDTO } from '@/types/api/test';
 
@@ -181,7 +182,7 @@ const TestForm: React.FC<TestFormProps> = ({
                   title={`Вопрос ${name + 1}`}
                   extra={
                     fields.length > 1 && (
-                      <Button
+                      <PermissionButton
                         type="text"
                         danger
                         icon={<DeleteOutlined />}
@@ -191,7 +192,7 @@ const TestForm: React.FC<TestFormProps> = ({
                         }}
                       >
                         Удалить
-                      </Button>
+                      </PermissionButton>
                     )
                   }
                   style={{ marginBottom: 16 }}
@@ -221,14 +222,14 @@ const TestForm: React.FC<TestFormProps> = ({
                           marginBottom: 8 
                         }}>
                           <span>Варианты ответов:</span>
-                          <Button
+                          <PermissionButton
                             type="dashed"
                             size="small"
                             onClick={() => addAnswer({ text: '', isTrue: false })}
                             icon={<PlusOutlined />}
                           >
                             Добавить вариант
-                          </Button>
+                          </PermissionButton>
                         </div>
 
                         {answerFields.map(({ key: answerKey, name: answerName, ...answerRestField }) => (
@@ -260,7 +261,7 @@ const TestForm: React.FC<TestFormProps> = ({
                               </Form.Item>
 
                               {answerFields.length > 2 && (
-                                <Button
+                                <PermissionButton
                                   danger
                                   icon={<DeleteOutlined />}
                                   onClick={() => handleRemoveAnswer(name, answerName, removeAnswer)}
@@ -299,7 +300,7 @@ const TestForm: React.FC<TestFormProps> = ({
               ))}
               
               <div style={{ textAlign: 'center', marginTop: 16 }}>
-                <Button
+                <PermissionButton
                   type="dashed"
                   onClick={() => add({
                     text: '',
@@ -312,21 +313,21 @@ const TestForm: React.FC<TestFormProps> = ({
                   size="large"
                 >
                   Добавить вопрос
-                </Button>
+                </PermissionButton>
               </div>
             </>
           )}
         </Form.List>
 
         <Form.Item>
-          <Button 
+          <PermissionButton 
             type="primary" 
             htmlType="submit" 
             loading={loading}
             size="large"
           >
             {initialValues ? 'Сохранить изменения' : 'Создать тест'}
-          </Button>
+          </PermissionButton>
         </Form.Item>
       </Form>
     </Card>
