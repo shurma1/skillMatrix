@@ -6,6 +6,8 @@ SELECT
   uts."targetLevel",
   CASE WHEN ucs.level >= uts."targetLevel" THEN true ELSE false END AS "isConfirmed",
   CASE WHEN usv.version = last_sv.version THEN false ELSE true END AS "isNew",
+  last_sv."auditDate" AS "auditDate",
+  last_sv."approvedDate" AS "approvedDate",
   test.id AS "testId",
   COALESCE(
     (
@@ -42,7 +44,7 @@ LEFT JOIN "userToConfirmSkills" ucs
 LEFT JOIN "userSkillViews" usv
   ON usv."userId" = uts."userId" AND usv."skillId" = uts."skillId"
 LEFT JOIN LATERAL (
-  SELECT sv.id, sv.version
+  SELECT sv.id, sv.version, sv."auditDate", sv."approvedDate"
   FROM "skillVersions" sv
   WHERE sv."skillId" = s.id
   ORDER BY sv.version DESC
@@ -50,4 +52,4 @@ LEFT JOIN LATERAL (
 ) last_sv ON TRUE
 LEFT JOIN tests test ON test."skillVersionId" = last_sv.id
 WHERE uts."userId" = :userId AND uts."skillId" = :skillId
-LIMIT 1
+LIMIT 1;

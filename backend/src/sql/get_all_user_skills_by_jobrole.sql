@@ -1,11 +1,14 @@
 SELECT
   s.id AS "skillId",
   s.title,
+  s."isActive",
   s.type,
   COALESCE(ucs.level, 0) AS level,
   jrts."targetLevel",
   CASE WHEN ucs.level >= jrts."targetLevel" THEN true ELSE false END AS "isConfirmed",
   CASE WHEN usv.version = last_sv.version THEN false ELSE true END AS "isNew",
+  last_sv."auditDate" AS "auditDate",
+  last_sv."approvedDate" AS "approvedDate",
   test.id AS "testId",
   COALESCE(
     (
@@ -45,7 +48,7 @@ LEFT JOIN (
   GROUP BY "skillId"
 ) sv ON sv."skillId" = s.id
 LEFT JOIN LATERAL (
-  SELECT sv.id, sv.version
+  SELECT sv.id, sv.version, sv."auditDate", sv."approvedDate"
   FROM "skillVersions" sv
   WHERE sv."skillId" = s.id
   ORDER BY sv.version DESC
@@ -54,3 +57,4 @@ LEFT JOIN LATERAL (
 LEFT JOIN tests test ON test."skillVersionId" = last_sv.id
 WHERE utjr."userId" = :userId
   AND utjr."jobRoleId" = :jobRoleId
+  AND s."isActive" = TRUE;

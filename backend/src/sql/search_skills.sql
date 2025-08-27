@@ -11,6 +11,7 @@ skills_with_latest AS (
         s."type",
         s."title",
         s."isActive",
+        s."documentId",
         sv."approvedDate",
         sv."auditDate",
         sv."authorId",
@@ -20,7 +21,7 @@ skills_with_latest AS (
     JOIN latest_versions lv
         ON sv."skillId" = lv."skillId" AND sv."version" = lv.max_version
     JOIN "skills" s
-        ON sv."skillId" = s."id" AND s."isActive" = TRUE
+        ON sv."skillId" = s."id" -- AND s."isActive" = TRUE
 ),
 base AS (
     SELECT
@@ -28,6 +29,7 @@ base AS (
         swl."type",
         swl."title",
         swl."isActive",
+        swl."documentId",
         swl."approvedDate",
         swl."auditDate",
         swl."authorId",
@@ -35,12 +37,25 @@ base AS (
         swl."version",
         test."id" AS "testId",
         COALESCE(
-            JSON_AGG(
-                DISTINCT JSONB_BUILD_OBJECT(
-                    'id', t."id",
-                    'name', t."name"
+            (
+                SELECT JSONB_AGG(
+                    JSONB_BUILD_OBJECT(
+                        'id', x."id",
+                        'name', x."name"
+                    )
+                    ORDER BY x."createdAt" ASC, x."id" ASC
                 )
-            ) FILTER (WHERE t."id" IS NOT NULL),
+                FROM (
+                    SELECT DISTINCT ON (t0."id")
+                        t0."id",
+                        t0."name",
+                        tts0."createdAt"
+                    FROM "tagToSkills" tts0
+                    JOIN "tags" t0 ON t0."id" = tts0."tagId"
+                    WHERE tts0."skillId" = swl."skillId"
+                    ORDER BY t0."id", tts0."createdAt" DESC
+                ) AS x
+            ),
             '[]'
         ) AS "tags"
     FROM skills_with_latest swl
@@ -81,6 +96,7 @@ base AS (
         swl."type",
         swl."title",
         swl."isActive",
+        swl."documentId",
         swl."approvedDate",
         swl."auditDate",
         swl."authorId",
@@ -107,6 +123,7 @@ SELECT JSONB_BUILD_OBJECT(
             'type', "type",
             'title', "title",
             'isActive', "isActive",
+            'documentId', "documentId",
             'approvedDate', "approvedDate",
             'auditDate', "auditDate",
             'authorId', "authorId",
