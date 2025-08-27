@@ -7,6 +7,7 @@ interface SkillAttributes {
   type: SkillType;
   title: string;
   isActive: boolean;
+  documentId?: string;
 }
 
 type SkillCreationAttributes = Omit<SkillAttributes, 'id'>;
@@ -31,6 +32,10 @@ const Skill = sequelize.define<SkillInstance>('skill', {
 		type: DataTypes.BOOLEAN,
 		allowNull: false,
 	},
+	documentId: {
+		type: DataTypes.STRING,
+		allowNull: true
+	}
 });
 
 export default Skill;

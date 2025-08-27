@@ -20,6 +20,7 @@ export interface UserSkillSearch {
 	level: number,
 	targetLevel: number,
 	isConfirmed: boolean,
+	isActive: boolean,
 	isNew: boolean,
 	tags: {
 		id: string,
@@ -32,6 +33,16 @@ export interface UserSkillSearch {
 	testId?: string;
 
 }
+
+interface UserPreview {
+	firstname: string;
+	lastname: string;
+	patronymic: string;
+	percent: number;
+	level: number;
+	targetLevel: number;
+}
+
 
 interface UserSkill extends UserSkillSearch{
 	confirmations: {
@@ -107,6 +118,19 @@ class UserRepository {
 			limit,
 			offset
 		});
+	}
+	
+	async getResultPreview(query: string) {
+		const sql = loadSql('get_users_preview');
+		
+		return await Sequelize.query<UserPreview>(
+			sql,
+			{
+				replacements: { query },
+				type: QueryTypes.SELECT
+			}
+		);
+		
 	}
 	
 	async delete(id: string): Promise<boolean> {
@@ -266,6 +290,10 @@ class UserRepository {
 		version: number,
 	): Promise<UserToConfirmSkillsInstance> {
 		return await UserToConfirmSkills.create({userId, skillId, type, level, date, version})
+	}
+	
+	async getAll() {
+		return await User.findAll();
 	}
 	
 	async getConfirmations(

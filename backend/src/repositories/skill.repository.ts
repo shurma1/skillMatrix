@@ -2,7 +2,16 @@ import {SkillInstance} from '../models/entities/Skill';
 import {TagInstance} from '../models/entities/Tag';
 import {SkillType} from "../dtos/skillWithCurrentVersion.dto";
 import {updateModel} from "../utils/updateModel";
-import {SkillVersion, TagToSkill, Tag, Skill, File, FileToSkillVersion, UserSkillView} from "../models";
+import {
+	SkillVersion,
+	TagToSkill,
+	Tag,
+	Skill,
+	File,
+	FileToSkillVersion,
+	UserSkillView,
+	UserToConfirmSkills
+} from "../models";
 import {SkillVersionInstance} from "../models/entities/SkillVersion";
 import {loadSql} from "../utils/loadSql";
 import {Sequelize} from '../models/index';
@@ -11,11 +20,26 @@ import {getDateRange} from "../utils/getDateRange";
 import {UserSkillSearch} from "./user.repossitory";
 import {FileInstance} from "../models/entities/File";
 import TestRepository from "./test.repository";
+import user from "../models/entities/User";
 
 export interface SkillWithTagsInstance extends SkillInstance {
 	tags: TagInstance[];
 }
 
+export interface UserSkillsWithAuthorAndVerifier extends UserSkillSearch {
+	verifierId: string;
+	authorId: string | null;
+	documentId?: string;
+	version: number;
+	approvedDate: Date,
+	auditDate: Date
+}
+
+export interface UserSkillMatrixResult {
+	skillId: string;
+	userId: string;
+	level: number;
+}
 
 export interface SkillCreation {
 	type: SkillType;
@@ -25,6 +49,7 @@ export interface SkillCreation {
 	verifierId: string;
 	authorId: string | null;
 	isActive: boolean;
+	documentId?: string;
 	fileId?: string
 }
 
@@ -46,6 +71,7 @@ class SkillRepository {
 			type: skillData.type,
 			title: skillData.title,
 			isActive: skillData.isActive,
+			documentId: skillData.documentId || undefined
 		});
 		
 		const skillVersion = await SkillVersion.create({
@@ -87,6 +113,7 @@ class SkillRepository {
 	async update(id: string, data: {
 		title?: string;
 		isActive?: boolean;
+		documentId?: string;
 	}) {
 		const skill = await this.getByID(id);
 		
@@ -115,8 +142,9 @@ class SkillRepository {
 			where: { id },
 			include: {
 				model: Tag,
+				order: [['createdAt', 'DESC']],
 			}
-		}) as SkillInstance & {tag: TagInstance[]};
+		}) as SkillInstance & {tags: TagInstance[]};
 		
 		if(! skill) {
 			return null;
@@ -138,11 +166,11 @@ class SkillRepository {
 		
 		const fileId = skillVersion.files.length ? skillVersion.files[0].id : undefined;
 		
-		const tags = skill.tag;
+		const tags = skill.tags.reverse();
 		
 		const testId = await TestRepository.getTestIdBySkill(skill.id);
 		
-		return this.unionSkill(skill, skillVersion, tags, fileId, testId || undefined);
+		return this.unionSkill(skill, skillVersion, tags || [], fileId, testId || undefined);
 	}
 	
 	async getLastVersion(id: string) {
@@ -252,6 +280,33 @@ class SkillRepository {
 		
 		return skillVersion;
 	}
+
+	async updateVersion(skillVersionId: string, approvedDate: Date, auditDate: Date, verifierId: string, authorId?: string, fileId?: string): Promise<SkillVersionInstance | null> {
+		const skillVersion = await SkillVersion.findByPk(skillVersionId) as SkillVersionInstance | null;
+		if (!skillVersion) return null;
+
+		skillVersion.approvedDate = approvedDate;
+		skillVersion.auditDate = auditDate;
+		if (verifierId !== undefined && verifierId !== null) {
+			skillVersion.verifierId = verifierId;
+		}
+		if (authorId !== undefined) {
+			skillVersion.authorId = authorId ?? skillVersion.authorId;
+		}
+		await skillVersion.save();
+
+		if (fileId) {
+			const oldFiles = await FileToSkillVersion.findAll({where: {skillVersionId}});
+			
+			await Promise.all(oldFiles.map(async oldFile => {
+				await FileToSkillVersion.destroy({where: {fileId: oldFile.fileId}});
+			}));
+			
+			await FileToSkillVersion.create({ fileId, skillVersionId });
+		}
+
+		return skillVersion;
+	}
 	
 	async getVersion(id: string) {
 		
@@ -321,6 +376,11 @@ class SkillRepository {
 		return deletedCount > 0;
 	}
 	
+	async deleteSkillVersionConfirms(versionId: string) {
+		const version = await this.getVersion(versionId);
+		await UserToConfirmSkills.destroy({where: {skillId: version.skillId, version: version.version}})
+	}
+	
 	async addTag(skillId: string, tagId: string) {
 		await TagToSkill.create({skillId, tagId});
 	}
@@ -331,6 +391,67 @@ class SkillRepository {
 	
 	async deleteTag(skillId: string, tagId: string) {
 		await TagToSkill.destroy({where: {skillId, tagId}});
+	}
+	
+	async getAll() {
+		const sql = loadSql('get_all_skills_with_version');
+		
+		return await Sequelize.query<UserSkillsWithAuthorAndVerifier>(
+			sql,
+			{
+				type: QueryTypes.SELECT
+			}
+		);
+	}
+	
+	async getUserLevelMatrixBySkills(userIds: string[], skillIds: string[]): Promise<number[][]> {
+		const sql = loadSql('get_user_skill_matrix');
+		
+		const results = await Sequelize.query<UserSkillMatrixResult>(
+			sql,
+			{
+				replacements: {
+					userIds,
+					skillIds
+				},
+				type: QueryTypes.SELECT
+			}
+		);
+
+		// Преобразуем результат в матрицу: skillIds.length строк на userIds.length столбцов
+		const matrix: number[][] = [];
+		
+		for (let skillIndex = 0; skillIndex < skillIds.length; skillIndex++) {
+			const row: number[] = [];
+			const skillId = skillIds[skillIndex];
+			
+			for (let userIndex = 0; userIndex < userIds.length; userIndex++) {
+				const userId = userIds[userIndex];
+				const result = results.find(r => r.skillId === skillId && r.userId === userId);
+				row.push(result?.level || 0);
+			}
+			
+			matrix.push(row);
+		}
+		
+		return matrix;
+	}
+	
+	async isAuthorOrVerifier(userId: string, skillId: string | null = null): Promise<boolean> {
+		const sql = loadSql('check_is_user_an_author_or_verifier');
+		
+		const results = await Sequelize.query(
+			sql,
+			{
+				replacements: {
+					userId,
+					skillId
+				},
+				type: QueryTypes.SELECT
+			}
+		);
+		
+		return !! results.length;
 	}
 	
 	
@@ -345,6 +466,7 @@ class SkillRepository {
 			authorId: skillVersion.authorId,
 			verifierId: skillVersion.verifierId,
 			version: skillVersion.version,
+			documentId: skill.documentId,
 			tags,
 			fileId,
 			testId
