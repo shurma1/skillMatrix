@@ -1,4 +1,4 @@
-import type { RouteObject } from 'react-router-dom';
+import type {RouteObject} from 'react-router-dom';
 import LoginPageAsync from "@/pages/LoginPage/LoginPage.async.ts";
 import type {StringKey} from "@/assets/strings.ts";
 import ProtectedRoute from '@/components/hoc/ProtectedRoute';
@@ -18,10 +18,15 @@ import TestResultViewPageAsync from "@/pages/TestResultViewPage/TestResultViewPa
 import ProfilePageAsync from "@/pages/ProfilePage/ProfilePage.async.ts";
 import JobroleSearchPageAsync from "@/pages/JobroleSearchPage/JobroleSearchPage.async.ts";
 import JobrolePageAsync from "@/pages/JobrolePage/JobrolePage.async.ts";
+import {Permissions} from "@/constants/permissions.ts";
+import RequirePermission from '@/components/RequirePermission';
+import PermissionDeniedPageAsync from '@/pages/PermissionDeniedPage/PermissionDeniedPage.async';
+import AnalyticsPageAsync from "@/pages/AnalyticsPage/AnalyticsPage.async.ts";
 
 export enum AppRoutes {
 	Login = 'Login',
 	Home = 'Home',
+	PermissionDenied = 'PermissionDenied',
 	Users = 'Users',
 	User = 'User',
 	Skills = 'Skills',
@@ -36,6 +41,7 @@ export enum AppRoutes {
 	TestTake = 'TestTake',
 	TestResult = 'TestResult',
 	TestResultView = 'TestResultView',
+	Analytics = 'Analytics',
 }
 
 export interface RouteMeta {
@@ -45,12 +51,17 @@ export interface RouteMeta {
 	showInNav?: boolean;
 }
 
-type AppRouteObject = { meta: RouteMeta } & RouteObject;
+interface RoutePermissions {
+	permissionsNeed?: Permissions[];
+}
+
+type AppRouteObject = { meta: RouteMeta } & RouteObject & RoutePermissions;
 
 
 export const RoutePaths: Record<AppRoutes, string> = {
 	[AppRoutes.Login]: '/login',
 	[AppRoutes.Home]: '/',
+	[AppRoutes.PermissionDenied]: '/403',
 	[AppRoutes.Profile]: '/profile',
 	[AppRoutes.Users]: '/users',
 	[AppRoutes.User]: '/users/:userId',
@@ -65,6 +76,7 @@ export const RoutePaths: Record<AppRoutes, string> = {
 	[AppRoutes.TestTake]: '/test/:testId/take',
 	[AppRoutes.TestResult]: '/test/:testId/result',
 	[AppRoutes.TestResultView]: '/test/:testId/result/view',
+	[AppRoutes.Analytics]: '/analytics'
 };
 
 export const RouteKeysByPath: Record<string, AppRoutes> = Object.entries(RoutePaths).reduce(
@@ -76,6 +88,15 @@ export const RouteKeysByPath: Record<string, AppRoutes> = Object.entries(RoutePa
 );
 
 export const routeConfig: Record<AppRoutes, AppRouteObject> = {
+	[AppRoutes.PermissionDenied]: {
+		path: RoutePaths.PermissionDenied,
+		element: <PermissionDeniedPageAsync />,
+		meta: {
+			titleKey: 'HomeTitle',
+			descriptionKey: 'HomeDescription',
+			showInNav: false,
+		},
+	},
 	[AppRoutes.Login]: {
 		path: RoutePaths.Login,
 		element: (
@@ -120,7 +141,9 @@ export const routeConfig: Record<AppRoutes, AppRouteObject> = {
 		path: RoutePaths.Users,
 		element: (
 			<ProtectedRoute>
-				<UsersSearchPageAsync />
+				<RequirePermission need={[Permissions.VIEW_ALL]}>
+					<UsersSearchPageAsync />
+				</RequirePermission>
 			</ProtectedRoute>
 		),
 		meta: {
@@ -128,26 +151,32 @@ export const routeConfig: Record<AppRoutes, AppRouteObject> = {
 			descriptionKey: 'UsersDescription',
 			navNameKey: 'UsersNavName',
 			showInNav: true
-		}
+		},
+		permissionsNeed: [Permissions.VIEW_ALL]
 	},
 	[AppRoutes.User]: {
 		path: RoutePaths.User,
 		element: (
 			<ProtectedRoute>
-				<UserPageAsync />
+				<RequirePermission need={[Permissions.VIEW_ALL]}>
+					<UserPageAsync />
+				</RequirePermission>
 			</ProtectedRoute>
 		),
 		meta: {
 			titleKey: 'UserTitle',
 			descriptionKey: 'UserDescription',
 			showInNav: false
-		}
+		},
+		permissionsNeed: [Permissions.VIEW_ALL]
 	},
 	[AppRoutes.Skills]: {
 		path: RoutePaths.Skills,
 		element: (
 			<ProtectedRoute>
-				<SkillsSearchPageAsync />
+				<RequirePermission need={[Permissions.VIEW_ALL]}>
+					<SkillsSearchPageAsync />
+				</RequirePermission>
 			</ProtectedRoute>
 		),
 		meta: {
@@ -155,7 +184,8 @@ export const routeConfig: Record<AppRoutes, AppRouteObject> = {
 			descriptionKey: 'SkillsDescription',
 			navNameKey: 'SkillsNavName',
 			showInNav: true
-		}
+		},
+		permissionsNeed: [Permissions.VIEW_ALL]
 	},
 	[AppRoutes.Skill]: {
 		path: RoutePaths.Skill,
@@ -168,39 +198,47 @@ export const routeConfig: Record<AppRoutes, AppRouteObject> = {
 			titleKey: 'SkillTitle',
 			descriptionKey: 'SkillDescription',
 			showInNav: false
-		}
+		},
 	},
 	[AppRoutes.SkillDocument]: {
 		path: RoutePaths.SkillDocument,
 		element: (
 			<ProtectedRoute>
-				<SkillDocumentPageAsync />
+				<RequirePermission need={[Permissions.VIEW_ALL]}>
+					<SkillDocumentPageAsync />
+				</RequirePermission>
 			</ProtectedRoute>
 		),
 		meta: {
 			titleKey: 'SkillTitle',
 			descriptionKey: 'SkillDescription',
 			showInNav: false
-		}
+		},
+		permissionsNeed: [Permissions.VIEW_ALL]
 	},
 	[AppRoutes.SkillVersions]: {
 		path: RoutePaths.SkillVersions,
 		element: (
 			<ProtectedRoute>
-				<SkillVersionsPage />
+				<RequirePermission need={[Permissions.VIEW_ALL]}>
+					<SkillVersionsPage />
+				</RequirePermission>
 			</ProtectedRoute>
 		),
 		meta: {
 			titleKey: 'SkillVersionsTitle',
 			descriptionKey: 'SkillVersionsDescription',
 			showInNav: false
-		}
+		},
+		permissionsNeed: [Permissions.VIEW_ALL]
 	},
 	[AppRoutes.JobRoles]: {
 		path: RoutePaths.JobRoles,
 		element: (
 			<ProtectedRoute>
-				<JobroleSearchPageAsync />
+				<RequirePermission need={[Permissions.VIEW_ALL]}>
+					<JobroleSearchPageAsync />
+				</RequirePermission>
 			</ProtectedRoute>
 		),
 		meta: {
@@ -208,13 +246,16 @@ export const routeConfig: Record<AppRoutes, AppRouteObject> = {
 			descriptionKey: 'JobRolesDescription',
 			navNameKey: 'JobroleNavName',
 			showInNav: true
-		}
+		},
+		permissionsNeed: [Permissions.VIEW_ALL]
 	},
 	[AppRoutes.JobRole]: {
 		path: RoutePaths.JobRole,
 		element: (
 			<ProtectedRoute>
-				<JobrolePageAsync />
+				<RequirePermission need={[Permissions.VIEW_ALL]}>
+					<JobrolePageAsync />
+				</RequirePermission>
 			</ProtectedRoute>
 		),
 		meta: {
@@ -222,33 +263,40 @@ export const routeConfig: Record<AppRoutes, AppRouteObject> = {
 			descriptionKey: 'JobRolesDescription',
 			navNameKey: 'JobroleNavName',
 			showInNav: false
-		}
+		},
+		permissionsNeed: [Permissions.VIEW_ALL]
 	},
 	[AppRoutes.TestCreate]: {
 		path: RoutePaths.TestCreate,
 		element: (
 			<ProtectedRoute>
-				<TestCreatePageAsync />
+				<RequirePermission need={[Permissions.EDIT_ALL]}>
+					<TestCreatePageAsync />
+				</RequirePermission>
 			</ProtectedRoute>
 		),
 		meta: {
 			titleKey: 'TestCreateTitle',
 			descriptionKey: 'TestCreateDescription',
 			showInNav: false
-		}
+		},
+		permissionsNeed: [Permissions.EDIT_ALL]
 	},
 	[AppRoutes.TestEdit]: {
 		path: RoutePaths.TestEdit,
 		element: (
 			<ProtectedRoute>
-				<TestEditPageAsync />
+				<RequirePermission need={[Permissions.EDIT_ALL]}>
+					<TestEditPageAsync />
+				</RequirePermission>
 			</ProtectedRoute>
 		),
 		meta: {
 			titleKey: 'TestEditTitle',
 			descriptionKey: 'TestEditDescription',
 			showInNav: false
-		}
+		},
+		permissionsNeed: [Permissions.EDIT_ALL]
 	},
 	[AppRoutes.TestTake]: {
 		path: RoutePaths.TestTake,
@@ -287,6 +335,20 @@ export const routeConfig: Record<AppRoutes, AppRouteObject> = {
 			titleKey: 'TestResultViewTitle',
 			descriptionKey: 'TestResultViewDescription',
 			showInNav: false
+		}
+	},
+	[AppRoutes.Analytics]: {
+		path: RoutePaths.Analytics,
+		element: (
+			<ProtectedRoute>
+				<AnalyticsPageAsync />
+			</ProtectedRoute>
+		),
+		meta: {
+			titleKey: 'TestResultViewTitle',
+			descriptionKey: 'TestResultViewDescription',
+			navNameKey: 'AnalyticsNavName',
+			showInNav: true
 		}
 	},
 };

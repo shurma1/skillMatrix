@@ -1,4 +1,6 @@
-import {Layout as ANTDLayout, Menu, type MenuProps, Typography, theme} from 'antd';
+import {Layout as ANTDLayout, Menu, type MenuProps, Typography, theme, Tooltip, Button} from 'antd';
+import { blue } from '@ant-design/colors';
+import { LockOutlined } from '@ant-design/icons';
 import { AppRoutes, routeConfig, RouteKeysByPath, RoutePaths } from '@/config/route.tsx';
 import type {FC, ReactNode} from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -9,13 +11,6 @@ import UserBar from './UserBar';
 
 const { Content, Sider } = ANTDLayout;
 
-const navItems: MenuProps['items'] = (Object.keys(routeConfig) as AppRoutes[])
-	.filter(key => routeConfig[key].meta.showInNav)
-	.map(key => ({
-		key,
-		label: getString(routeConfig[key].meta.navNameKey!),
-	}))
-
 interface LayoutProps {
 	children: ReactNode | ReactNode[];
 }
@@ -24,13 +19,64 @@ const Layout: FC<LayoutProps> = ({ children }) => {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const user = useAppSelector(s => s.auth.user);
+	const isDark = useAppSelector(s => s.theme.isDark);
+	const permissions = useAppSelector(s => s.auth.permissions);
 	const currentRouteKey = RouteKeysByPath[location.pathname];
 	const { token } = theme.useToken();
 	
 	// Синхронизируем профиль пользователя при загрузке
 	useProfileSync();
 	
+
+	// Элементы навигации с проверкой прав: disabled + замок и тултип
+	const names = new Set(permissions.map(p => p.name));
+	const navItems: MenuProps['items'] = (Object.keys(routeConfig) as AppRoutes[])
+		.filter(key => routeConfig[key].meta.showInNav)
+		.map(key => {
+			const cfg = routeConfig[key];
+			const need = (cfg as { permissionsNeed?: string[] }).permissionsNeed ?? [];
+			const allowed = need.length === 0 || need.every(n => names.has(n));
+			const label = allowed
+				? getString(cfg.meta.navNameKey!)
+				: (
+					<Tooltip title="Нет прав для просмотра">
+						<span>
+							<LockOutlined style={{ marginRight: 8 }} />
+							{getString(cfg.meta.navNameKey!)}
+						</span>
+					</Tooltip>
+				);
+			return {
+				key,
+				label,
+				disabled: !allowed,
+			};
+		});
+	
 	const {Title} = Typography;
+	const serverOnline = useAppSelector(s => s.app.serverOnline);
+
+	const OfflineOverlay = () => (
+		<div
+			style={{
+				position: 'fixed',
+				inset: 0,
+				display: 'flex',
+				alignItems: 'center',
+				justifyContent: 'center',
+				flexDirection: 'column',
+				gap: 16,
+				background: isDark ? 'rgba(0,0,0, .4)' : 'rgba(255,255,255, .4)',
+				backdropFilter: 'blur(8px)',
+				zIndex: 2000,
+			}}
+		>
+			<Title level={2} style={{ color: token.colorText, margin: 0 }}>Нет соединения с сервером</Title>
+			<Button type="primary" onClick={() => window.location.reload()}>
+				Обновить страницу
+			</Button>
+		</div>
+	);
 
 	const handleClick: MenuProps['onClick'] = (e) => {
 		if (location.pathname === RoutePaths[e.key as AppRoutes]) return;
@@ -48,9 +94,9 @@ const Layout: FC<LayoutProps> = ({ children }) => {
 						margin: 0,
 					}}
 				>
-					SkillMatrix
+					PALMA <span  style={{color: blue[5]}}>SkillMatrix</span>
 				</Title>
-				<div style={{ flex: 1, overflow: 'auto' }}>
+				<div style={{flex: 1, overflow: 'auto'}}>
 					<Menu
 						mode="inline"
 						selectedKeys={currentRouteKey ? [currentRouteKey] : []}
@@ -78,11 +124,12 @@ const Layout: FC<LayoutProps> = ({ children }) => {
 						padding: 24,
 						margin: 0,
 						minHeight: '100vh',
-						backgroundColor: token.colorBgContainer,
+						backgroundColor: isDark ? '#000000' : blue[0],
 						color: token.colorText
 					}}
 				>
 					{children}
+					{!serverOnline && <OfflineOverlay />}
 				</Content>
 			</ANTDLayout>
 		</ANTDLayout>
