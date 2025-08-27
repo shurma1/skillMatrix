@@ -8,16 +8,16 @@ import SkillConfirmationsContainer from '../skill/SkillConfirmationsContainer';
 
 export interface SkillListItemProps {
   skill: UserSkillSearchDto;
-  onOpenSkill: (skillId: string) => void;
   showConfirmations?: boolean;
   userId?: string;
+  jobroleId?: string; // optional context to target jobrole list updates
 }
 
 const SkillListItem: React.FC<SkillListItemProps> = ({
   skill,
-  onOpenSkill,
   showConfirmations = false,
   userId,
+  jobroleId,
 }) => {
   const tags = useMemo(() => skill.tags, [skill.tags]);
   const levelsText = useMemo(
@@ -26,8 +26,8 @@ const SkillListItem: React.FC<SkillListItemProps> = ({
   );
 
   const handleOpenSkill = useCallback(() => {
-    onOpenSkill(skill.skillId);
-  }, [onOpenSkill, skill.skillId]);
+    // no-op: navigation via explicit link button
+  }, []);
 
   const stopPropagation = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -36,7 +36,7 @@ const SkillListItem: React.FC<SkillListItemProps> = ({
   return (
     <List.Item
       onClick={handleOpenSkill}
-      style={{ display: 'block', paddingBottom: 12, cursor: 'pointer' }}
+      style={{ display: 'block', paddingBottom: 12 }}
     >
       <div
         style={{
@@ -85,12 +85,13 @@ const SkillListItem: React.FC<SkillListItemProps> = ({
         </div>
       </div>
       <SkillProgressBar level={skill.level} target={skill.targetLevel} />
-      {showConfirmations && userId && (
+    {showConfirmations && userId && (
         <SkillConfirmationsContainer
           userId={userId}
           skillId={skill.skillId}
           skillTitle={skill.title}
           currentLevel={skill.level}
+      jobroleId={jobroleId}
         />
       )}
     </List.Item>

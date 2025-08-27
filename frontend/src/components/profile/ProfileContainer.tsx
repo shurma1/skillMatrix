@@ -8,8 +8,8 @@ import {
   useGetProfileQuery,
   useUpdateProfileMutation
 } from '@/store/endpoints';
-import ProfileInfoSection from './ProfileInfoSection';
 import EditUserModal from '../modals/user/EditUserModal';
+import UserInfoSection from "@/components/user/UserInfoSection.tsx";
 
 const ProfileContainer: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -58,13 +58,13 @@ const ProfileContainer: React.FC = () => {
 
   return (
     <Space direction="vertical" size={32} style={{ width: '100%' }}>
-      <ProfileInfoSection
-        user={user}
-        loading={isUserLoading}
-        initials={initials}
-        onEdit={() => setEditOpen(true)}
-        onAvatarChange={(avatar_id: string) => handleUpdateProfile({ avatar_id })}
-      />
+		<UserInfoSection
+			user={user}
+			loading={isUserLoading}
+			initials={initials}
+			onEdit={() => setEditOpen(true)}
+			onAvatarChange={(avatar_id: string) => handleUpdateProfile({ avatar_id })}
+		/>
 
       <EditUserModal
         open={editOpen}

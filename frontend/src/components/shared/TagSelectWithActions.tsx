@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Select, Button, Flex, Space } from 'antd';
+import { Select, Flex, Space } from 'antd';
+import PermissionButton from '@/components/shared/PermissionButton';
 import { EditOutlined, PlusOutlined } from '@ant-design/icons';
 import type { TagDTO } from '@/types/api/tag';
 
@@ -43,7 +44,7 @@ const TagSelectWithActions: React.FC<TagSelectWithActionsProps> = ({
         optionRender={(option) => (
           <Flex justify="space-between" align="center">
             <span>{option.label}</span>
-            <Button
+            <PermissionButton
               type="text"
               size="small"
               icon={<EditOutlined />}
@@ -60,14 +61,14 @@ const TagSelectWithActions: React.FC<TagSelectWithActionsProps> = ({
         }))}
       />
       
-      <Button
+  <PermissionButton
         type="dashed"
         icon={<PlusOutlined />}
         onClick={onCreateTag}
         style={{ width: '100%' }}
       >
         Создать тег
-      </Button>
+  </PermissionButton>
     </Space>
   );
 };

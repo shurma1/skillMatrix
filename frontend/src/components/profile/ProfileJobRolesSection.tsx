@@ -1,5 +1,6 @@
 import React from 'react';
-import { Typography, Card, Button, Skeleton, Flex, Collapse, Popconfirm } from 'antd';
+import { Typography, Card, Skeleton, Flex, Collapse, Popconfirm } from 'antd';
+import PermissionButton from '@/components/shared/PermissionButton';
 import { Link } from 'react-router-dom';
 import { LinkOutlined } from '@ant-design/icons';
 
@@ -30,9 +31,9 @@ const ProfileJobRolesSection: React.FC<ProfileJobRolesSectionProps> = ({
       title={
         <Flex justify="space-between" align="center">
           <span>Должности ({jobroles.length})</span>
-          <Button size="small" onClick={onAdd}>
+          <PermissionButton size="small" onClick={onAdd}>
             Добавить
-          </Button>
+          </PermissionButton>
         </Flex>
       }
     >
@@ -74,14 +75,14 @@ const ProfileJobRolesSection: React.FC<ProfileJobRolesSectionProps> = ({
                     cancelText="Нет"
                     onConfirm={() => onDelete(jrId)}
                   >
-                    <Button
+                    <PermissionButton
                       size="small"
                       danger
                       type="text"
                       onClick={e => e.stopPropagation()}
                     >
                       Удалить
-                    </Button>
+                    </PermissionButton>
                   </Popconfirm>
                 }
               >
