@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { message, Space } from 'antd';
 import { 
@@ -10,15 +10,19 @@ import {
   useGetFileInfoQuery,
   useGetTestResultQuery,
   useGetMyJobrolesQuery,
+  useSearchTagsQuery,
+  useUpdateSkillMutation,
   api,
 } from '@/store/endpoints';
 import { useAppDispatch } from '@/hooks/storeHooks';
-import type { SkillWithCurrentVersionDTO } from '@/types/api/skill';
+import type { SkillWithCurrentVersionDTO, UpdateSkillDTO } from '@/types/api/skill';
 import type { PreviewTestDto, CreateTestDTO } from '@/types/api/test';
 import type { UserSkillSearchDto } from '@/types/api/user';
+import type { TagDTO } from '@/types/api/tag';
 import SkillInfoCard from './SkillInfoCard';
 import SkillTestCard from './SkillTestCard';
 import FileCard from './FileCard';
+import EditSkillModal from '@/components/modals/skill/EditSkillModal';
 // no duplicate imports
 
 const SkillContainer: React.FC = () => {
@@ -69,9 +73,15 @@ const SkillContainer: React.FC = () => {
 
   // API mutations
   const [createTest, { isLoading: isCreatingTest }] = useCreateTestMutation();
+  const [updateSkill, { isLoading: isUpdatingSkill }] = useUpdateSkillMutation();
 
   // My job roles (to update jobrole skills caches on view)
   const { data: myJobroles } = useGetMyJobrolesQuery();
+    const { data: tagSearch = [] } = useSearchTagsQuery({ query: '' });
+    const allTags: TagDTO[] = useMemo(() => tagSearch as unknown as TagDTO[], [tagSearch]);
+
+    // Edit modal state
+    const [isEditOpen, setIsEditOpen] = useState(false);
 
   // Mark skill as seen (isNew = false) in RTK Query caches when visiting Skill page
   useEffect(() => {
@@ -106,6 +116,20 @@ const SkillContainer: React.FC = () => {
   const handleOpenVersions = useCallback(() => {
     navigate(`/skills/${skillId}/versions`);
   }, [navigate, skillId]);
+
+  const handleOpenEdit = useCallback(() => setIsEditOpen(true), []);
+  const handleCloseEdit = useCallback(() => setIsEditOpen(false), []);
+
+  const handleSubmitEdit = useCallback(async (values: UpdateSkillDTO) => {
+    if (!skillId) return;
+    try {
+      await updateSkill({ id: skillId, body: values }).unwrap();
+      message.success('Навык обновлён');
+      setIsEditOpen(false);
+    } catch {
+      message.error('Ошибка при обновлении навыка');
+    }
+  }, [skillId, updateSkill]);
 
   const handleCreateTest = useCallback(async (data: CreateTestDTO) => {
     try {
@@ -159,6 +183,15 @@ const SkillContainer: React.FC = () => {
         loadingUsers={loadingUsers}
         versionCount={versionCount}
         onOpenVersions={handleOpenVersions}
+        onEditSkill={handleOpenEdit}
+      />
+      <EditSkillModal
+        open={isEditOpen}
+        confirmLoading={isUpdatingSkill}
+        skill={skill as SkillWithCurrentVersionDTO | undefined}
+        tags={allTags}
+        onCancel={handleCloseEdit}
+        onSubmit={handleSubmitEdit}
       />
       
       {hasFile && (

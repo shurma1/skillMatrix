@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, Tag, Button, Tooltip, Space, Typography, Popconfirm, theme } from 'antd';
-import { DownloadOutlined, DeleteOutlined, CalendarOutlined } from '@ant-design/icons';
+import PermissionButton from '@/components/shared/PermissionButton';
+import { DownloadOutlined, DeleteOutlined, CalendarOutlined, EditOutlined } from '@ant-design/icons';
 import type { SkillVersionDTO } from '@/types/api/skill';
 import { formatDate } from '../../utils/dateHelpers';
 
@@ -12,6 +13,7 @@ interface SkillVersionCardProps {
   totalVersions: number;
   onDownload: (versionId: string, fileId: string) => void;
   onDelete: (versionId: string) => void;
+  onEdit: (version: SkillVersionDTO) => void;
   canDelete: boolean;
   isDeleting: boolean;
 }
@@ -26,6 +28,7 @@ const SkillVersionCard: React.FC<SkillVersionCardProps> = ({
   totalVersions,
   onDownload,
   onDelete,
+  onEdit,
   canDelete,
   isDeleting
 }) => {
@@ -49,37 +52,42 @@ const SkillVersionCard: React.FC<SkillVersionCardProps> = ({
         </Space>
       }
       extra={
-        <Popconfirm
-          title="Удалить версию?"
-          description={
-            isLatest 
-              ? `Вы удаляете текущую версию ${version.version}. После удаления актуальной станет другая версия. Продолжить?`
-              : `Вы уверены, что хотите удалить версию ${version.version}? Это действие нельзя отменить.`
-          }
-          onConfirm={() => onDelete(version.id)}
-          okText="Да, удалить"
-          cancelText="Отмена"
-          okType="danger"
-          disabled={!canDeleteVersion}
-        >
-          <Tooltip 
-            title={
-              !canDeleteVersion 
-                ? totalVersions === 1
-                  ? "Нельзя удалить единственную версию"
-                  : "Нет прав на удаление"
-                : "Удалить версию"
-            }
-          >
-            <Button
-              type="text"
-              danger
-              icon={<DeleteOutlined />}
-              disabled={!canDeleteVersion}
-              loading={isDeleting}
-            />
+        <Space>
+          <Tooltip title="Редактировать версию">
+            <PermissionButton type="text" icon={<EditOutlined />} onClick={() => onEdit(version)} />
           </Tooltip>
-        </Popconfirm>
+          <Popconfirm
+            title="Удалить версию?"
+            description={
+              isLatest 
+                ? `Вы удаляете текущую версию ${version.version}. После удаления актуальной станет другая версия. Продолжить?`
+                : `Вы уверены, что хотите удалить версию ${version.version}? Это действие нельзя отменить.`
+            }
+            onConfirm={() => onDelete(version.id)}
+            okText="Да, удалить"
+            cancelText="Отмена"
+            okType="danger"
+            disabled={!canDeleteVersion}
+          >
+            <Tooltip 
+              title={
+                !canDeleteVersion 
+                  ? totalVersions === 1
+                    ? "Нельзя удалить единственную версию"
+                    : "Нет прав на удаление"
+                  : "Удалить версию"
+              }
+            >
+              <PermissionButton
+                type="text"
+                danger
+                icon={<DeleteOutlined />}
+                disabled={!canDeleteVersion}
+                loading={isDeleting}
+              />
+            </Tooltip>
+          </Popconfirm>
+        </Space>
       }
     >
       <Space direction="vertical" size="middle" style={{ width: '100%' }}>

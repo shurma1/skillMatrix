@@ -1,14 +1,18 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { message, Space, Typography, Button, Spin, Alert, Empty } from 'antd';
+import PermissionButton from '@/components/shared/PermissionButton';
 import { ArrowLeftOutlined, PlusOutlined } from '@ant-design/icons';
 import { 
   useGetSkillQuery,
   useListSkillVersionsQuery,
   useDeleteSkillVersionMutation,
-  useCreateSkillVersionMutation
+  useCreateSkillVersionMutation,
+  useUpdateSkillVersionMutation
 } from '@/store/endpoints';
-import type { SkillVersionDTO, CreateSkillVersionDTO } from '@/types/api/skill';
+import { api } from '@/store/endpoints';
+import { useAppDispatch } from '@/hooks/storeHooks';
+import type { SkillVersionDTO, CreateSkillVersionDTO, UpdateSkillVersionDTO } from '@/types/api/skill';
 import SkillVersionCard from './SkillVersionCard';
 import CreateVersionModal from '../modals/skill/CreateVersionModal';
 import { extractErrMessage } from '../../utils/errorHelpers';
@@ -20,9 +24,13 @@ const { Title, Text } = Typography;
  * Отвечает за логику работы со списком версий
  */
 const SkillVersionsContainer: React.FC = () => {
+  const dispatch = useAppDispatch();
   const { skillId = '' } = useParams<{ skillId: string }>();
   const navigate = useNavigate();
   const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
+  const [editingVersion, setEditingVersion] = React.useState<SkillVersionDTO | null>(null);
+  const [deletingId, setDeletingId] = React.useState<string | null>(null);
 
   // API запросы
   const { 
@@ -34,13 +42,13 @@ const SkillVersionsContainer: React.FC = () => {
   const { 
     data: versions = [], 
     isFetching: isVersionsLoading,
-    error: versionsError,
-    refetch: refetchVersions
+    error: versionsError
   } = useListSkillVersionsQuery(skillId, { skip: !skillId });
 
   // API мутации
-  const [deleteVersion, { isLoading: isDeletingVersion }] = useDeleteSkillVersionMutation();
+  const [deleteVersion] = useDeleteSkillVersionMutation();
   const [createVersion, { isLoading: isCreatingVersion }] = useCreateSkillVersionMutation();
+  const [updateVersion, { isLoading: isUpdatingVersion }] = useUpdateSkillVersionMutation();
 
   // Для скачивания файлов создаем отдельную функцию
   const downloadFileById = async (fileId: string): Promise<Blob | null> => {
@@ -69,16 +77,27 @@ const SkillVersionsContainer: React.FC = () => {
   const handleCreateVersion = () => {
     setIsCreateModalOpen(true);
   };
+  const handleEditVersion = (version: SkillVersionDTO) => {
+    setEditingVersion(version);
+    setIsEditModalOpen(true);
+  };
 
-  const handleCreateVersionSubmit = async (data: CreateSkillVersionDTO) => {
+  const handleCreateVersionSubmit = async (data: CreateSkillVersionDTO | UpdateSkillVersionDTO) => {
     try {
-      await createVersion({
+      const created = await createVersion({
         id: skillId,
-        body: data
+        body: data as CreateSkillVersionDTO
       }).unwrap();
+      // Insert new version into cache at top and update latest marker logic
+      dispatch(
+        api.util.updateQueryData('listSkillVersions', skillId, (draft: SkillVersionDTO[] | undefined) => {
+          if (!draft) return;
+          draft.unshift(created);
+        })
+      );
       message.success('Версия создана');
       setIsCreateModalOpen(false);
-      refetchVersions();
+      // no refetch to avoid flicker
     } catch (error) {
       message.error(extractErrMessage(error) || 'Ошибка создания версии');
     }
@@ -111,11 +130,45 @@ const SkillVersionsContainer: React.FC = () => {
 
   const handleDeleteVersion = async (versionId: string) => {
     try {
+      setDeletingId(versionId);
       await deleteVersion({ id: skillId, versionId }).unwrap();
+      // Remove from cache without refetch
+      dispatch(
+        api.util.updateQueryData('listSkillVersions', skillId, (draft: SkillVersionDTO[] | undefined) => {
+          if (!draft) return;
+          const idx = draft.findIndex(v => v.id === versionId);
+          if (idx !== -1) draft.splice(idx, 1);
+        })
+      );
       message.success('Версия удалена');
-      refetchVersions();
+      // no refetch to avoid spinner
     } catch (error) {
       message.error(extractErrMessage(error) || 'Ошибка удаления версии');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleUpdateVersionSubmit = async (data: UpdateSkillVersionDTO) => {
+    if (!editingVersion) return;
+    try {
+      const updated = await updateVersion({ id: skillId, versionId: editingVersion.id, body: data }).unwrap();
+      // Optimistically update versions list cache to avoid full rerender
+      dispatch(
+        api.util.updateQueryData('listSkillVersions', skillId, (draft: SkillVersionDTO[] | undefined) => {
+          if (!draft) return;
+          const idx = draft.findIndex(v => v.id === editingVersion.id);
+          if (idx !== -1) {
+            draft[idx] = { ...draft[idx], ...updated } as SkillVersionDTO;
+          }
+        })
+      );
+      message.success('Версия обновлена');
+      setIsEditModalOpen(false);
+      setEditingVersion(null);
+      // no hard refetch to keep render minimal
+    } catch (error) {
+      message.error(extractErrMessage(error) || 'Ошибка обновления версии');
     }
   };
 
@@ -179,14 +232,14 @@ const SkillVersionsContainer: React.FC = () => {
               </Text>
             </div>
             
-            <Button 
+            <PermissionButton 
               type="primary" 
               icon={<PlusOutlined />}
               loading={isCreatingVersion}
               onClick={handleCreateVersion}
             >
               Создать версию
-            </Button>
+            </PermissionButton>
           </div>
         </div>
 
@@ -198,7 +251,7 @@ const SkillVersionsContainer: React.FC = () => {
           />
         ) : (
           <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-            {sortedVersions.map((version: SkillVersionDTO) => (
+      {sortedVersions.map((version: SkillVersionDTO) => (
               <SkillVersionCard
                 key={version.id}
                 version={version}
@@ -206,8 +259,9 @@ const SkillVersionsContainer: React.FC = () => {
                 totalVersions={versions.length}
                 onDownload={handleDownloadVersion}
                 onDelete={handleDeleteVersion}
+                onEdit={handleEditVersion}
                 canDelete={true} // TODO: проверка прав доступа
-                isDeleting={isDeletingVersion}
+                isDeleting={deletingId === version.id}
               />
             ))}
           </Space>
@@ -220,6 +274,19 @@ const SkillVersionsContainer: React.FC = () => {
         onSubmit={handleCreateVersionSubmit}
         loading={isCreatingVersion}
         skillId={skillId}
+      />
+      <CreateVersionModal
+        open={isEditModalOpen}
+        onCancel={() => { setIsEditModalOpen(false); setEditingVersion(null); }}
+        onSubmit={handleUpdateVersionSubmit}
+        loading={isUpdatingVersion}
+        skillId={skillId}
+        title="Обновить версию"
+        okText="Обновить"
+        initialAuthorId={skill?.authorId || undefined}
+        initialVerifierId={skill?.verifierId || undefined}
+        initialApprovedDate={editingVersion?.approvedDate}
+        currentFileName={editingVersion?.files?.[0]?.filename || editingVersion?.files?.[0]?.name}
       />
     </div>
   );

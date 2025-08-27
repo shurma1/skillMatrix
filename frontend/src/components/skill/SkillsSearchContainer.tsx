@@ -132,7 +132,8 @@ const SkillsSearchContainer: React.FC = () => {
               ? approved
               : approved.toDate().toISOString())
           : '',
-        fileId
+        fileId,
+        documentId: formData.documentId
       };
 
       const skill = await createSkill(values).unwrap();

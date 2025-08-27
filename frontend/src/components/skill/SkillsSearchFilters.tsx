@@ -1,4 +1,5 @@
-import { Space, Button, DatePicker } from 'antd';
+import { Space, DatePicker } from 'antd';
+import PermissionButton from '@/components/shared/PermissionButton';
 import { PlusOutlined } from '@ant-design/icons';
 import type { FC } from 'react';
 import type { Dayjs } from 'dayjs';
@@ -92,13 +93,13 @@ const SkillsSearchFilters: FC<SkillsSearchFiltersProps> = ({
       placeholder={['Ревизия от', 'Ревизия до']}
     />
     
-    <Button
+    <PermissionButton
       type="primary"
       icon={<PlusOutlined />}
       onClick={onCreateClick}
     >
       Добавить навык
-    </Button>
+    </PermissionButton>
   </Space>
 );
 

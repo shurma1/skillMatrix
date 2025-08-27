@@ -1,10 +1,11 @@
 import React from 'react';
-import { Typography, Card, Button, Skeleton, List, Tag, Flex, Popconfirm } from 'antd';
+import { Typography, Card, Skeleton, List, Tag, Flex, Popconfirm } from 'antd';
 import { Link } from 'react-router-dom';
 import { LinkOutlined } from '@ant-design/icons';
 import type { UserSkillSearchDto } from '@/types/api/user';
 import SkillProgressBar from '../shared/SkillProgressBar';
 import SkillConfirmationsContainer from './SkillConfirmationsContainer';
+import PermissionButton from "@/components/shared/PermissionButton.tsx";
 
 const { Title } = Typography;
 
@@ -26,13 +27,13 @@ const UserSkillsSection: React.FC<UserSkillsSectionProps> = ({
   onEditTarget
 }) => (
   <div>
-    <Title level={3}>Навыки пользователя</Title>
+    <Title level={3}>Дополнительные навыки</Title>
     <Card
       title={<span>Навыки ({skills.length})</span>}
       extra={
-        <Button size="small" onClick={onAdd}>
+        <PermissionButton size="small" onClick={onAdd}>
           Добавить
-        </Button>
+        </PermissionButton>
       }
     >
       {loading ? (
@@ -89,7 +90,7 @@ const UserSkillsSection: React.FC<UserSkillsSectionProps> = ({
                     {skill.level}/{skill.targetLevel}
                   </div>
                   <div style={{ display: 'flex', gap: 4 }}>
-                    <Button
+                    <PermissionButton
                       size="small"
                       type="link"
                       onClick={() => onEditTarget({
@@ -98,16 +99,16 @@ const UserSkillsSection: React.FC<UserSkillsSectionProps> = ({
                       })}
                     >
                       Изменить
-                    </Button>
+                    </PermissionButton>
                     <Popconfirm
                       title="Удалить навык?"
                       okText="Да"
                       cancelText="Нет"
                       onConfirm={() => onDelete(skill.skillId)}
                     >
-                      <Button size="small" type="link" danger>
+                      <PermissionButton size="small" type="link" danger>
                         Удалить
-                      </Button>
+                      </PermissionButton>
                     </Popconfirm>
                   </div>
                 </div>

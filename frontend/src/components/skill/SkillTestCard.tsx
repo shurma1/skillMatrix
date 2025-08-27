@@ -1,5 +1,6 @@
 import React from 'react';
 import { Card, Button, Space, Tooltip, Statistic, Row, Col, Tag, theme } from 'antd';
+import PermissionButton from '@/components/shared/PermissionButton';
 import { EditOutlined, CheckCircleOutlined, CloseCircleOutlined, EyeOutlined } from '@ant-design/icons';
 import type { PreviewTestDto, CreateTestDTO, UserTestResultDTO } from '@/types/api/test';
 
@@ -37,12 +38,12 @@ const SkillTestCard: React.FC<SkillTestCardProps> = ({
   const renderTestActions = () => {
     if (!hasTest) {
       return (
-        <Button 
+        <PermissionButton 
           type="primary" 
           onClick={onGoToCreateTest}
         >
           Создать тест
-        </Button>
+        </PermissionButton>
       );
     }
 
@@ -72,12 +73,12 @@ const SkillTestCard: React.FC<SkillTestCardProps> = ({
             Посмотреть все результаты
           </Button>
         )}
-        <Button 
+        <PermissionButton 
           icon={<EditOutlined />}
           onClick={onEditTest}
         >
           Редактировать
-        </Button>
+        </PermissionButton>
       </Space>
     );
   };

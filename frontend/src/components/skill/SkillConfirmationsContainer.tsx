@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Collapse, Button, message } from 'antd';
+import { Collapse, message } from 'antd';
+import PermissionButton from '@/components/shared/PermissionButton';
 import { CheckCircleOutlined } from '@ant-design/icons';
 import {
   useListUserSkillConfirmationsQuery,
@@ -14,13 +15,15 @@ interface SkillConfirmationsContainerProps {
   skillId: string;
   skillTitle: string;
   currentLevel: number;
+  jobroleId?: string;
 }
 
 const SkillConfirmationsContainer: React.FC<SkillConfirmationsContainerProps> = ({
   userId,
   skillId,
   skillTitle,
-  currentLevel
+  currentLevel,
+  jobroleId: _jobroleId,
 }) => {
   const [addModalOpen, setAddModalOpen] = useState(false);
 
@@ -49,6 +52,8 @@ const SkillConfirmationsContainer: React.FC<SkillConfirmationsContainerProps> = 
       message.success('Подтверждение добавлено');
       setAddModalOpen(false);
       refetchConfirmations();
+  // If inside jobrole context, optimistically refetch its list by invalidating cache via manual refetch hook of parent not available here
+  // Rely on API tag invalidation; optional: emit custom event
     } catch (error) {
       const errorMessage = 
         error && 
@@ -72,7 +77,7 @@ const SkillConfirmationsContainer: React.FC<SkillConfirmationsContainerProps> = 
         </span>
       ),
       extra: (
-        <Button
+        <PermissionButton
           size="small"
           type="primary"
           onClick={(e) => {
@@ -81,7 +86,7 @@ const SkillConfirmationsContainer: React.FC<SkillConfirmationsContainerProps> = 
           }}
         >
           Добавить
-        </Button>
+        </PermissionButton>
       ),
       children: (
         <SkillConfirmationsList

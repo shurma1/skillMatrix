@@ -14,6 +14,7 @@ interface SkillInfoCardProps {
   loadingUsers: boolean;
   versionCount: number;
   onOpenVersions: () => void;
+  onEditSkill: () => void;
 }
 
 const SkillInfoCard: React.FC<SkillInfoCardProps> = ({
@@ -23,14 +24,18 @@ const SkillInfoCard: React.FC<SkillInfoCardProps> = ({
   verifier,
   loadingUsers,
   versionCount,
-  onOpenVersions
+  onOpenVersions,
+  onEditSkill
 }) => (
   <Card
     title={<Title level={3} style={{ margin: 0 }}>Информация о навыке</Title>}
     extra={
-      <Button onClick={onOpenVersions}>
-        Версии ({versionCount})
-      </Button>
+      <Space>
+        <Button onClick={onEditSkill}>Изменить навык</Button>
+        <Button onClick={onOpenVersions}>
+          Версии ({versionCount})
+        </Button>
+      </Space>
     }
   >
     {loading || !skill ? (
@@ -62,6 +67,12 @@ const SkillInfoCard: React.FC<SkillInfoCardProps> = ({
               {skill.isActive ? 'Активен' : 'Неактивен'}
             </Tag>
           </Paragraph>
+          {skill.type === 'document' && skill.documentId && (
+            <Paragraph style={{ margin: 0 }}>
+              <Text strong>ID документа: </Text>
+              {skill.documentId}
+            </Paragraph>
+          )}
         </Space>
 
         {(skill.tags && skill.tags.length > 0) && (

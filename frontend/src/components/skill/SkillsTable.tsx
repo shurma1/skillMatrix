@@ -23,6 +23,12 @@ const SkillsTable: FC<SkillsTableProps> = ({
   onRowClick
 }) => {
   const columns = [
+    {
+      title: 'Номер документ',
+      dataIndex: 'documentId',
+      key: 'documentId',
+      render: (value: string) => value || '-'
+    },
     { title: 'Название', dataIndex: 'title', key: 'title' },
     { title: 'Тип', dataIndex: 'type', key: 'type', render: (value: string) => value === 'skill' ? 'Навык' : 'Документ' },
     {
