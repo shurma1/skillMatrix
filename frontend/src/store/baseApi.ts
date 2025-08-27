@@ -4,6 +4,7 @@ import type { RootState } from './store';
 import { logout, setTokens } from './authSlice';
 import type { TokenDTO } from '../types/api/auth';
 import {API_BASE_URL} from "@/config/api.ts";
+import { setServerOnline } from './appSlice';
 
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: API_BASE_URL,
@@ -22,6 +23,12 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
   extraOptions,
 ) => {
   let result = await rawBaseQuery(args, api, extraOptions);
+  // Mark offline on network error (status undefined or 'FETCH_ERROR')
+  if ((result as any).error && (!('status' in (result as any).error) || (result as any).error.status === 'FETCH_ERROR')) {
+    api.dispatch(setServerOnline(false));
+  } else {
+    api.dispatch(setServerOnline(true));
+  }
   
   const isRefreshCall = typeof args === 'object' && (args as FetchArgs).url?.includes('/api/auth/refresh');
   
@@ -38,7 +45,8 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
     if (refreshResult.data) {
       const tokens = refreshResult.data as TokenDTO;
       api.dispatch(setTokens(tokens));
-      result = await rawBaseQuery(args, api, extraOptions);
+  result = await rawBaseQuery(args, api, extraOptions);
+  api.dispatch(setServerOnline(true));
     } else {
       api.dispatch(logout());
     }
@@ -50,7 +58,7 @@ export const baseApi = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithReauth,
   tagTypes: [
-    'User','Skill','JobRole','Tag','File','Image','Test','UserSkill','JobRoleSkill','Profile','ProfileSkill','MyJobroles','MySkills','MyJobroleSkills'
+  'User','Skill','SkillVersions','JobRole','Tag','File','Image','Test','UserSkill','UserSkills','SkillUsers','JobRoleSkill','Profile','ProfileSkill','MyJobroles','MySkills','MyJobroleSkills','MyPermissions','UserJobroleSkillsByJobrole'
   ],
   endpoints: () => ({}),
 });

@@ -1,11 +1,13 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import type { AuthDTO, TokenDTO, UserDTO } from '../types/api/auth';
+import type { PermissionDTO } from '../types/api/permission';
 
 export interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
   user: UserDTO | null;
+  permissions: PermissionDTO[];
 }
 
 const STORAGE_KEY = 'auth';
@@ -13,15 +15,26 @@ const STORAGE_KEY = 'auth';
 function loadInitial(): AuthState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { accessToken: null, refreshToken: null, user: null };
+    if (!raw) return { 
+      accessToken: null, 
+      refreshToken: null, 
+      user: null, 
+      permissions: [] 
+    };
     const parsed = JSON.parse(raw) as Partial<AuthState>;
     return {
       accessToken: parsed.accessToken ?? null,
       refreshToken: parsed.refreshToken ?? null,
       user: parsed.user ?? null,
+      permissions: parsed.permissions ?? [],
     };
   } catch {
-    return { accessToken: null, refreshToken: null, user: null };
+    return { 
+      accessToken: null, 
+      refreshToken: null, 
+      user: null, 
+      permissions: [] 
+    };
   }
 }
 
@@ -54,6 +67,10 @@ const authSlice = createSlice({
       state.user = action.payload;
       persist(state);
     },
+    setPermissions(state, action: PayloadAction<PermissionDTO[]>) {
+      state.permissions = action.payload;
+      persist(state);
+    },
     updateUserAvatar(state, action: PayloadAction<string>) {
       if (state.user) {
         state.user.avatar_id = action.payload;
@@ -64,10 +81,18 @@ const authSlice = createSlice({
       state.accessToken = null;
       state.refreshToken = null;
       state.user = null;
+      state.permissions = [];
       persist(state);
     },
   },
 });
 
-export const { setAuth, setTokens, setUser, updateUserAvatar, logout } = authSlice.actions;
+export const { 
+  setAuth, 
+  setTokens, 
+  setUser, 
+  setPermissions, 
+  updateUserAvatar, 
+  logout 
+} = authSlice.actions;
 export default authSlice.reducer;
