@@ -11,6 +11,7 @@ import {TagSearchDTO} from "../dtos/tag.dto";
 import SkillService from "./skill.service";
 import {JobRoleToSkillsInstance} from "../models/entities/JobRoleToSkills";
 import TestRepository from "../repositories/test.repository";
+import SkillRepository from "../repositories/skill.repository";
 
 class JobRoleService {
 	async create(data: { title: string }): Promise<JobRoleDTO> {
@@ -50,6 +51,14 @@ class JobRoleService {
 
 	async delete(id: string): Promise<boolean> {
 		return await JobRoleRepository.delete(id);
+	}
+	
+	async getAll() {
+		return await JobRoleRepository.getAll();
+	}
+	
+	async getEmployeesCount(jobRoleId: string) {
+		return await JobRoleRepository.getEmployeesCount(jobRoleId);
 	}
 	
 	async getAllByUserId(userId: string): Promise<JobRoleSearchDTO[]> {
@@ -100,6 +109,14 @@ class JobRoleService {
 		return await JobRoleRepository.deleteUser(jobId, userId);
 	}
 	
+	async getTargetGeneralLevel(jobRoleId: string) {
+		return await JobRoleRepository.getTargetGeneralLevel(jobRoleId);
+	}
+	
+	async getEmployeeCurrentLevel(jobRoleId: string) {
+		return await JobRoleRepository.getEmployeeCurrentLevel(jobRoleId);
+	}
+	
 	async addSkill(jobId: string, skillId: string, targetLevel: number) {
 		await this.checkIsJobRoleExists(jobId);
 		await SkillService.checkSkillExist(skillId);
@@ -133,6 +150,9 @@ class JobRoleService {
 	async getSkill(jobId: string, skillId: string) {
 		const jobSkill = await JobRoleRepository.getSkill(jobId, skillId);
 		
+		const skill = await SkillService.get(skillId);
+		const lastVersion = await SkillRepository.getLastVersion(skillId);
+		
 		const testId = await TestRepository.getTestIdBySkill(skillId);
 		
 		return new JobRoleSkillSearchDTO(
@@ -145,6 +165,9 @@ class JobRoleService {
 					tag.name
 				)),
 			jobSkill.jobRoleToSkill!.targetLevel,
+			lastVersion!.auditDate,
+			lastVersion!.approvedDate,
+			skill.isActive,
 			testId || undefined
 		)
 	}
@@ -163,7 +186,6 @@ class JobRoleService {
 	
 	async getSkills(jobId: string): Promise<JobRoleSkillSearchDTO[]> {
 		const jobSkills = await JobRoleRepository.getJobSkills(jobId);
-		
 		const promises = jobSkills.skills.map(async skill =>
 			new JobRoleSkillSearchDTO(
 				skill.id,
@@ -176,6 +198,9 @@ class JobRoleService {
 					)
 				),
 				skill.jobRoleToSkills.targetLevel,
+				skill.skillVersions[0].auditDate,
+				skill.skillVersions[0].approvedDate,
+				skill.isActive,
 				await TestRepository.getTestIdBySkill(skill.id) || undefined
 			)
 		)

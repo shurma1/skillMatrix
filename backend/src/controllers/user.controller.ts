@@ -3,6 +3,10 @@ import UserService from '../services/user.service';
 import { ApiError } from '../error/apiError';
 import calcPageLimitAndOffset from "../utils/calcPageLimitAndOffset";
 import {SkillConfirmType} from "../models/types/SkillConfirmType";
+import {type} from "node:os";
+import PermissionService from "../services/permission.service";
+import SkillService from "../services/skill.service";
+import AnalyticsService from "../services/analytics.service";
 
 class UserController {
 	async create(req: Request, res: Response, next: NextFunction) {
@@ -123,7 +127,28 @@ class UserController {
 			
 			const skills = await UserService.getAllSkills(userId);
 			
-			res.json(skills);
+			const filteredSkills = skills.filter(skill => skill.isActive);
+			
+			res.json(filteredSkills);
+		} catch (err) {
+			next(err);
+		}
+	}
+	
+	async getResultPreview(req: Request, res: Response, next: NextFunction) {
+		try {
+			let {query} = req.query;
+			
+			if(typeof query === 'undefined') {
+				query = '';
+			}
+			else {
+				query = decodeURIComponent(query as string);
+			}
+			
+			const rusult = await UserService.getResultPreview(query);
+			
+			res.json(rusult);
 		} catch (err) {
 			next(err);
 		}
@@ -273,11 +298,65 @@ class UserController {
 		}
 	}
 	
+	async getUserPermissions(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { id } = req.params;
+			
+			const permissions = await PermissionService.getByUser(id);
+			
+			res.json(permissions);
+			
+		} catch (err) {
+			next(err);
+		}
+	}
+	
+	async addPermissionToUser(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { id } = req.params;
+			
+			const { permissionId } = req.body;
+			
+			await PermissionService.add(id, permissionId);
+			
+			res.status(200).send();
+			
+		} catch (err) {
+			next(err);
+		}
+	}
+	
+	async deletePermissionFromUser(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { id, permissionId } = req.params;
+			
+			await PermissionService.deleteFormUser(id, permissionId);
+			
+			res.status(204).send();
+			
+		} catch (err) {
+			next(err);
+		}
+	}
+	
 	async getMe(req: Request, res: Response, next: NextFunction) {
 		try {
 			const userId = req.authUser!.id;
 			
 			const user = await UserService.getByID(userId);
+			
+			res.json(user);
+			
+		} catch (err) {
+			next(err);
+		}
+	}
+	
+	async getMyStats(req: Request, res: Response, next: NextFunction) {
+		try {
+			const userId = req.authUser!.id;
+			
+			const user = await AnalyticsService.getUserStats(userId);
 			
 			res.json(user);
 			

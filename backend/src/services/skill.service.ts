@@ -10,8 +10,16 @@ import TestRepository from "../repositories/test.repository";
 import {PaginationDTO} from "../dtos/Pagination.dto";
 import UserService from "./user.service";
 import {SkillConfirmType} from "../models/types/SkillConfirmType";
+import TagRepository from "../repositories/tag.repository";
+import JobRoleRepository from "../repositories/jobRole.repository";
+import JobRoleService from "./jobRole.service";
+import MailService from "./mail.service";
+import MailRepository from "../repositories/mail.repository";
+import {formatDate} from "../utils/formatDate";
+import {generateAuditReminderHtml} from "../utils/mailTemplates";
 
 const MOUNTS_BEFORE_AUDIT = config.get<number>('times.MOUNTS_BEFORE_AUDIT');
+const MOUNTS_TO_NOTIFY = config.get<number>('times.MOUNTS_TO_NOTIFY');
 
 class SkillService {
 	async create(skillData: Omit<SkillCreation, 'auditDate' | 'isActive'>) {
@@ -22,6 +30,11 @@ class SkillService {
 		auditDate.setMonth(auditDate.getMonth() + MOUNTS_BEFORE_AUDIT);
 		
 		const skill =  await SkillRepository.create({...skillData, auditDate, isActive: true});
+		
+		if(skillData.authorId !== null && typeof skillData.authorId !== 'undefined') {
+			await UserService.addConfirmation(skillData.authorId, skill.id, SkillConfirmType.Acquired, 5);
+		}
+		
 		return skill as SkillWithCurrentVersionDTO;
 	}
 	
@@ -57,6 +70,8 @@ class SkillService {
 		if(! skill) {
 			throw ApiError.errorByType('SKILL_NOT_FOUND');
 		}
+		
+		return skill;
 	}
 	
 	async checkSkillVersionExist(versionId: string) {
@@ -65,6 +80,7 @@ class SkillService {
 		if(! skillVersion) {
 			throw ApiError.errorByType('SKILL_VERSION_NOT_FOUND');
 		}
+		return skillVersion;
 	}
 	
 	async delete(id: string) {
@@ -86,15 +102,35 @@ class SkillService {
 		await SkillRepository.readSkill(userId, id);
 	}
 	
-	async update(id: string, title: string, isActive: boolean) {
-		await this.checkSkillExist(id);
+	async update(id: string, title?: string, isActive?: boolean, tags?: string[], documentId?: string) {
+		const skill = await this.checkSkillExist(id);
+		const isUpdated = await SkillRepository.update(id, { title, isActive, documentId });
 		
-		const isUpdated = await SkillRepository.update(id, {title, isActive});
-		
-		if(! isUpdated) {
+		if (!isUpdated) {
 			throw ApiError.errorByType('SKILL_NOT_FOUND');
 		}
+
+		if (tags) {
+			const toRemove = skill.tags.map(tag => tag.id);
+			const toAdd = tags;
 		
+			if (toRemove.length > 0) {
+				for (const removeTagId of toRemove) {
+					await SkillRepository.deleteTag(skill.id, removeTagId)
+				}
+			}
+			
+			if (toAdd.length > 0) {
+				for (const addTagId of toAdd) {
+					const isTagExist = !! await TagRepository.getById(addTagId);
+					
+					if(isTagExist) {
+						await SkillRepository.addTag(skill.id, addTagId)
+					}
+				}
+			}
+		}
+
 		return this.get(id);
 	}
 	
@@ -112,6 +148,7 @@ class SkillService {
 		fileId: string,
 		authorId: string,
 		verifierid: string,
+		approvedDate?: string,
 	): Promise<SkillVersionDTO> {
 		await this.checkSkillExist(skillId);
 		
@@ -122,20 +159,87 @@ class SkillService {
 		const lastVersion = await SkillRepository.getLastVersion(skillId);
 		
 		const version = (lastVersion?.version || 0) + 1;
-		
-		const now = new Date(Date.now());
-		const auditDate = new Date(now);
+		const approved = approvedDate ? new Date(approvedDate) : new Date(Date.now());
+		const auditDate = new Date(approved);
 		auditDate.setMonth(auditDate.getMonth() + MOUNTS_BEFORE_AUDIT);
 		
-		const skillVersion = await SkillRepository.createVersion(skillId, now, auditDate, version, verifierid, authorId, fileId);
+		const skillVersion = await SkillRepository.createVersion(skillId, approved, auditDate, version, verifierid, authorId, fileId);
+		
+		const users = await SkillRepository.getAllUsers(skillId); //todo: получает не всех пользователей, нужно нщн получать по работе. при подтверждении навыка восстановить уровень
+		const usersFromJobroleSkill = await JobRoleRepository.getUsersBySkillId(skillId);
+		
+		const userIds = [
+			...users.map(user => user.userId),
+			...usersFromJobroleSkill.map(user => user.id)
+		]
+		
+		if(authorId) {
+			await UserService.addConfirmation(authorId, skillId, SkillConfirmType.Acquired, 5);
+		}
+		
+		await Promise.all(userIds.map(async userId => {
+			if(userId !== authorId) {
+				await UserService.addConfirmation(userId, skillId, SkillConfirmType.Debuff, 0);
+			}
+		}))
 		
 		return this.getVersion(skillVersion.id);
+	}
+	
+	async updateVersion(
+		skillVersionId: string,
+		skillId: string,
+		fileId: string,
+		authorId: string,
+		verifierid: string,
+		approvedDate?: string,
+	): Promise<SkillVersionDTO> {
+		const skillVersion = await this.checkSkillVersionExist(skillVersionId);
+		
+		const previousAuthorId = skillVersion.authorId;
+		
+		if (fileId) {
+			await FileService.checkFileExist(fileId);
+		}
+		
+		const current = await SkillRepository.getVersion(skillVersionId);
+		const approved = approvedDate ? new Date(approvedDate) : current.approvedDate;
+		const auditDate = new Date(approved);
+		auditDate.setMonth(auditDate.getMonth() + MOUNTS_BEFORE_AUDIT);
+		
+		const finalVerifierId = verifierid ?? current.verifierId;
+		const finalAuthorId = (authorId ?? current.authorId) || undefined;
+		
+		const updated = await SkillRepository.updateVersion(skillVersionId, approved, auditDate, finalVerifierId, finalAuthorId, fileId);
+		if (!updated) {
+			throw ApiError.errorByType('SKILL_VERSION_NOT_FOUND');
+		}
+		
+		if(authorId !== previousAuthorId) {
+			if(previousAuthorId !== null) {
+				const confirmations = await UserService.getConfirmations(previousAuthorId, skillId);
+				let level = 0;
+				
+				if(confirmations.length >= 2) {
+					level = confirmations[1].level;
+				}
+				
+				await UserService.addConfirmation(previousAuthorId, skillId, SkillConfirmType.Debuff, level);
+			}
+			
+			if(authorId !== null) {
+				await UserService.addConfirmation(authorId, skillId, SkillConfirmType.Acquired, 5);
+			}
+			
+		}
+		
+		return this.getVersion(updated.id);
 	}
 	
 	async getVersion(id: string): Promise<SkillVersionDTO> {
 		const skillVersion = await SkillRepository.getVersion(id);
 		
-		const testId = await TestRepository.getTestIdBySkill(id);
+		const testId = await TestRepository.getTestIdBySkill(skillVersion.skillId);
 		
 		return new SkillVersionDTO(
 			skillVersion.id,
@@ -188,6 +292,8 @@ class SkillService {
 	
 	async deleteVersion(id: string) {
 		await this.checkSkillVersionExist(id);
+		
+		await SkillRepository.deleteSkillVersionConfirms(id);
 		return await SkillRepository.deleteVersion(id);
 	}
 	
@@ -232,7 +338,7 @@ class SkillService {
 		}
 		
 		const confirmations = await UserService.getConfirmations(userId, skill.id);
-		
+		console.log(confirmations);
 		const currentLevel = confirmations.length === 0 ? 0 : confirmations[0].level;
 		
 		if(currentLevel > 0) {
@@ -262,12 +368,80 @@ class SkillService {
 		)
 	}
 	
+	async isAuthorOrVerifier(userId: string, skillId?: string) {
+		return await SkillRepository.isAuthorOrVerifier(userId, skillId);
+	}
+	
+	async getAll() {
+		return SkillRepository.getAll();
+	}
+	
 	async checkExpirationDateOfTheSkills() {
-		// оповещалка авторов за месяц до истечения skill
+		console.log('run task [2]')
+		const now = new Date();
+		const notifyUntil = new Date(now);
+		notifyUntil.setMonth(notifyUntil.getMonth() + MOUNTS_TO_NOTIFY);
+		
+		const skills = await this.getAll();
+		
+		for (const skill of skills) {
+			const auditDate = new Date(skill.auditDate);
+			
+			if(skill.authorId) {
+				if (auditDate > now && auditDate <= notifyUntil) {
+					const user = await UserService.getByID(skill.authorId);
+					
+					if(user.email) {
+						if (!(await MailRepository.wasNotifiedInLastMonths(user.email, 1))) {
+							await MailService.SendMail({
+								recipient: user.email,
+								title: `Напоминание. Проведите ревизию документа ${skill.title} до ${formatDate(auditDate)}`,
+								HTML: generateAuditReminderHtml(skill.title, formatDate(auditDate) || '', `${user.firstname} ${user.patronymic}`)
+							});
+							await MailRepository.create(user.email);
+						}
+					}
+				}
+			}
+		}
 	}
 	
 	async checkExpirationDateOfTheUserSkills() {
-		// проверка, не истекли ли у пользователя навыки
+		const users = await UserService.getAll();
+		
+		for (const user of users) {
+			const skills = await UserService.getAllSkills(user.id);
+			const jobs = await UserService.getAllJobroles(user.id);
+			const jobRoleSkills = (
+				await Promise.all(
+					jobs.map(job => JobRoleService.getSkills(job.jobRoleId))
+				)
+			).flat();
+			
+			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+			//@ts-expect-error
+			skills.push(...jobRoleSkills as UserSkillSearchDto)
+			
+			for(const skill of skills) {
+				const confirmations = await UserService.getConfirmations(user.id, skill.skillId);
+				if(! confirmations.length) {
+					continue;
+				}
+				const auditDate = new Date(skill.auditDate);
+				const lastConfirmation = confirmations[0];
+				
+				if(lastConfirmation.level === 0) {
+					continue;
+				}
+				
+				const confirmationDate = new Date(confirmations[0].date);
+				
+				if(confirmationDate > auditDate) {
+					await UserService.addConfirmation(user.id, skill.skillId, SkillConfirmType.Debuff, 0);
+				}
+			}
+		}
+		
 	}
 }
 

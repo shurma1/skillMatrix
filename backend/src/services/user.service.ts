@@ -5,7 +5,7 @@ import ImageRepository from '../repositories/image.repository';
 import {validate as isValidUUID} from 'uuid';
 import {UserDTO} from "../dtos/user.dto";
 import {PaginationDTO} from "../dtos/Pagination.dto";
-import UserRepository from "../repositories/user.repossitory";
+import UserRepository, {UserSkillSearch} from "../repositories/user.repossitory";
 import UserRepossitory from "../repositories/user.repossitory";
 import {UserSkillDto} from "../dtos/userSkill.dto";
 import SkillRepository from "../repositories/skill.repository";
@@ -15,6 +15,9 @@ import {UserJobRoleSearchDTO} from "../dtos/userJobRoleSearch.dto";
 import JobRoleRepository from "../repositories/jobRole.repository";
 import {JobRoleInstance} from "../models/entities/JobRole";
 import {SkillConfirmType} from "../models/types/SkillConfirmType";
+import {loadSql} from "../utils/loadSql";
+import {Sequelize} from "../models";
+import {QueryTypes} from "sequelize";
 
 
 class UserService {
@@ -92,6 +95,12 @@ class UserService {
 		
 		return this.instanceToUserDTO(updatedUser);
 	}
+	
+	async getAll() {
+		const users = await UserRepository.getAll();
+		
+		return users.map(user => new UserDTO(user.id, user.login, user.firstname, user.lastname, user.patronymic, user.avatar_id, user.email));
+	}
 
 	async getByID(id: string): Promise<UserDTO> {
 		const user =  await UserRepository.getByID(id);
@@ -103,12 +112,13 @@ class UserService {
 		return this.instanceToUserDTO(user);
 	}
 	
-	async checkIsUserExist(id: string): Promise<void> {
+	async checkIsUserExist(id: string): Promise<UserInstance> {
 		const user =  await UserRepository.getByID(id);
 		
 		if(! user) {
 			throw ApiError.errorByType('USER_NOT_FOUND');
 		}
+		return user;
 	}
 	
 	async checkIsSkillExist(id: string): Promise<void> {
@@ -333,6 +343,13 @@ class UserService {
 		const confirmations = await UserRepository.deleteConfirmation(confirmationId);
 		
 		return confirmations;
+	}
+	
+	async getResultPreview(query: string) {
+		
+		const result = await UserRepossitory.getResultPreview(query);
+		console.log('result', result)
+		return result;
 	}
 	
 	private instanceToUserDTO(user: UserInstance): UserDTO {

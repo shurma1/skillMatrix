@@ -13,7 +13,8 @@ class SkillController {
 				approvedDate,
 				verifierId,
 				authorId,
-				fileId
+				fileId,
+				documentId
 			} = req.body;
 			
 			const skill = await SkillService.create({
@@ -22,7 +23,8 @@ class SkillController {
 				approvedDate,
 				verifierId,
 				authorId,
-				fileId
+				documentId,
+				fileId,
 			})
 			
 			res.status(200).json(skill);
@@ -46,9 +48,9 @@ class SkillController {
 	async update(req: Request, res: Response, next: NextFunction) {
 		try {
 			const { id } = req.params;
-			const { title, isActive } = req.body;
+			const { title, isActive, tags, documentId } = req.body;
 			
-			const skill = await SkillService.update(id, title, isActive);
+			const skill = await SkillService.update(id, title, isActive, tags, documentId);
 			
 			res.send(skill);
 		} catch (err) {
@@ -133,9 +135,29 @@ class SkillController {
 				fileId ,
 				authorId,
 				verifierid,
+				approvedDate,
 			} = req.body;
 			
-			const skillVersion = await SkillService.createVersion(id, fileId , authorId, verifierid);
+			const skillVersion = await SkillService.createVersion(id, fileId , authorId, verifierid, approvedDate);
+			
+			res.send(skillVersion);
+		} catch (err) {
+			next(err);
+		}
+	}
+	
+	async editVersion(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { id, versionId } = req.params;
+			
+			const {
+				fileId ,
+				authorId,
+				verifierid,
+				approvedDate,
+			} = req.body;
+			
+			const skillVersion = await SkillService.updateVersion(versionId, id, fileId , authorId, verifierid, approvedDate);
 			
 			res.send(skillVersion);
 		} catch (err) {

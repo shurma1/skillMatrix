@@ -173,7 +173,9 @@ class JobRoleController {
 			
 			const skills = await UserService.getAllSkillsByJobrole(userId, id);
 			
-			res.json(skills);
+			const filteredSkill = skills.filter(skill => skill.isActive);
+			
+			res.json(filteredSkill);
 		} catch (err) {
 			next(err);
 		}

@@ -7,6 +7,10 @@ export class DailyTaskService {
 	private tasks: Set<() => void> = new Set();
 
 	constructor() {
+	
+	}
+	
+	public start() {
 		this.init();
 	}
 
@@ -42,6 +46,7 @@ export class DailyTaskService {
 	private checkAndRun() {
 		const now = Date.now();
 		const lastRun = this.getLastRun();
+		console.log(lastRun, now - lastRun > 24 * 60 * 60 * 1000)
 		if (now - lastRun > 24 * 60 * 60 * 1000) {
 			this.runAllTasks();
 			this.setLastRun(now);
