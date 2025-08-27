@@ -39,6 +39,7 @@ export class SkillWithCurrentVersionDTO {
 	version: number;
 	tags: TagDTO[];
 	testId?: string;
+	documentId?: string;
 	
 	
 	constructor(
@@ -53,6 +54,7 @@ export class SkillWithCurrentVersionDTO {
 		version: number,
 		tags: TagDTO[],
 		testId?: string,
+		documentId?: string
 	) {
 		this.id = id;
 		this.type = type;
@@ -65,5 +67,6 @@ export class SkillWithCurrentVersionDTO {
 		this.version = version;
 		this.tags = tags;
 		this.testId = testId;
+		this.documentId = documentId;
 	}
 }

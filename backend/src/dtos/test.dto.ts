@@ -1,114 +1,23 @@
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     PreviewTestDto:
+ *       type: object
+ *       properties:
+ *         id: { type: string }
+ *         needScore: { type: integer }
+ *         title: { type: string }
+ *         timeLimit: { type: integer }
+ *         questionsCount: { type: integer }
+ */
 export class PreviewTestDto {
 	id: string;
 	needScore: number;
 	title: string;
 	timeLimit: number;
 	questionsCount: number;
-	
-	constructor(
-	/**
-	 * @openapi
-	 * components:
-	 *   schemas:
-	 *     AnswerVariantDTO:
-	 *       type: object
-	 *       properties:
-	 *         text: { type: string }
-	 *         isTrue: { type: boolean }
-	 *     QuestionDTO:
-	 *       type: object
-	 *       properties:
-	 *         text: { type: string }
-	 *         answerVariants:
-	 *           type: array
-	 *           items:
-	 *             $ref: '#/components/schemas/AnswerVariantDTO'
-	 *     CreateTestDTO:
-	 *       type: object
-	 *       required: [needScore, timeLimit, title, questions]
-	 *       properties:
-	 *         needScore: { type: integer }
-	 *         timeLimit: { type: integer }
-	 *         title: { type: string }
-	 *         questions:
-	 *           type: array
-	 *           items:
-	 *             $ref: '#/components/schemas/QuestionDTO'
-	 *     StartTestDTO:
-	 *       type: object
-	 *       required: [userId, testId]
-	 *       properties:
-	 *         userId: { type: string }
-	 *         testId: { type: string }
-	 *     EndTestDTO:
-	 *       type: object
-	 *       required: [userId, sessionId]
-	 *       properties:
-	 *         userId: { type: string }
-	 *         sessionId: { type: string }
-	 *     SendAnswerDTO:
-	 *       type: object
-	 *       required: [skillId, testId, questIonId, answerId]
-	 *       properties:
-	 *         skillId: { type: string }
-	 *         testId: { type: string }
-	 *         questIonId: { type: string }
-	 *         answerId: { type: string }
-	 *     AnswerResultDTO:
-	 *       type: object
-	 *       properties:
-	 *         answerId: { type: string }
-	 *         answerText: { type: string }
-	 *         isTrue: { type: boolean }
-	 *         isPicked: { type: boolean }
-	 *     QuestionResultDTO:
-	 *       type: object
-	 *       properties:
-	 *         questIonId: { type: string }
-	 *         questionText: { type: string }
-	 *         answers:
-	 *           type: array
-	 *           items:
-	 *             $ref: '#/components/schemas/AnswerResultDTO'
-	 *     UserTestResultDTO:
-	 *       type: object
-	 *       properties:
-	 *         id: { type: string }
-	 *         title: { type: string }
-	 *         userId: { type: string }
-	 *         testId: { type: string }
-	 *         score: { type: integer }
-	 *         needScore: { type: integer }
-	 *         questions:
-	 *           type: array
-	 *           items:
-	 *             $ref: '#/components/schemas/QuestionResultDTO'
-	 *     TestDTO:
-	 *       type: object
-	 *       properties:
-	 *         id: { type: string }
-	 *         questionsCount: { type: integer }
-	 *         needScore: { type: integer }
-	 *         timeLimit: { type: integer }
-	 *         questions:
-	 *           type: array
-	 *           items:
-	 *             $ref: '#/components/schemas/QuestionDTO'
-	 *     PreviewTestDto:
-	 *       type: object
-	 *       properties:
-	 *         id: { type: string }
-	 *         needScore: { type: integer }
-	 *         title: { type: string }
-	 *         timeLimit: { type: integer }
-	 *         questionsCount: { type: integer }
-	 */
-		id: string,
-		needScore: number,
-		title: string,
-		timeLimit: number,
-		questionsCount: number,
-	) {
+	constructor(id: string, needScore: number, title: string, timeLimit: number, questionsCount: number) {
 		this.id = id;
 		this.needScore = needScore;
 		this.questionsCount = questionsCount;
@@ -121,102 +30,17 @@ export class PreviewTestDto {
  * @openapi
  * components:
  *   schemas:
- *     AnswerVariantDTO:
- *       type: object
- *       properties:
- *         id: { type: string }
- *         text: { type: string }
- *         isTrue: { type: boolean }
- *     QuestionDTO:
- *       type: object
- *       properties:
- *         id: { type: string }
- *         text: { type: string }
- *         answerVariants:
- *           type: array
- *           items:
- *             $ref: '#/components/schemas/AnswerVariantDTO'
  *     CreateTestDTO:
  *       type: object
+ *       required: [needScore, timeLimit, title, questions]
  *       properties:
  *         needScore: { type: integer }
- *         title: { type: string }
  *         timeLimit: { type: integer }
+ *         title: { type: string }
  *         questions:
  *           type: array
  *           items:
  *             $ref: '#/components/schemas/QuestionDTO'
- *     StartTestDTO:
- *       type: object
- *       properties:
- *         userId: { type: string }
- *         testId: { type: string }
- *     SendAnswerDTO:
- *       type: object
- *       properties:
- *         testId: { type: string }
- *         questIonId: { type: string }
- *         answerId: { type: string }
- *     AnswerResultDTO:
- *       type: object
- *       properties:
- *         answerId: { type: string }
- *         answerText: { type: string }
- *         isTrue: { type: boolean }
- *         isPicked: { type: boolean }
- *     QuestionResultDTO:
- *       type: object
- *       properties:
- *         questIonId: { type: string }
- *         questionText: { type: string }
- *         answers:
- *           type: array
- *           items:
- *             $ref: '#/components/schemas/AnswerResultDTO'
- *     UserTestResultDTO:
- *       type: object
- *       properties:
- *         id: { type: string }
- *         title: { type: string }
- *         userId: { type: string }
- *         testId: { type: string }
- *         score: { type: integer }
- *         needScore: { type: integer }
- *         questions:
- *           type: array
- *           items:
- *             $ref: '#/components/schemas/QuestionResultDTO'
- *     TestDTO:
- *       type: object
- *       properties:
- *         id: { type: string }
- *         questionsCount: { type: integer }
- *         needScore: { type: integer }
- *         timeLimit: { type: integer }
- *         questions:
- *           type: array
- *           items:
- *             $ref: '#/components/schemas/QuestionDTO'
- *     PreviewTestDto:
- *       type: object
- *       properties:
- *         id: { type: string }
- *         needScore: { type: integer }
- *         title: { type: string }
- *         timeLimit: { type: integer }
- *         questionsCount: { type: integer }
- *     StartTestResponseDTO:
- *       type: object
- *       properties:
- *         sessionId: { type: string }
- *         test:
- *           $ref: '#/components/schemas/TestDTO'
- *         startTime: { type: integer }
- *     UserIdDTO:
- *       type: object
- *       required: [userId]
- *       properties:
- *         userId: { type: string }
  */
 export class CreateTestDTO {
 	needScore: number;
@@ -231,6 +55,20 @@ export class CreateTestDTO {
 	}
 }
 
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     QuestionDTO:
+ *       type: object
+ *       properties:
+ *         id: { type: string }
+ *         text: { type: string }
+ *         answerVariants:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/AnswerVariantDTO'
+ */
 export class QuestionDTO {
 	id: string;
 	text: string;
@@ -242,6 +80,17 @@ export class QuestionDTO {
 	}
 }
 
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     AnswerVariantDTO:
+ *       type: object
+ *       properties:
+ *         id: { type: string }
+ *         text: { type: string }
+ *         isTrue: { type: boolean }
+ */
 export class AnswerVariantDTO {
 	id: string;
 	text: string;
@@ -253,6 +102,17 @@ export class AnswerVariantDTO {
 	}
 }
 
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     StartTestDTO:
+ *       type: object
+ *       required: [userId, testId]
+ *       properties:
+ *         userId: { type: string }
+ *         testId: { type: string }
+ */
 export class StartTestDTO {
 	userId: string;
 	testId: string;
@@ -262,6 +122,38 @@ export class StartTestDTO {
 	}
 }
 
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     EndTestDTO:
+ *       type: object
+ *       required: [userId, sessionId]
+ *       properties:
+ *         userId: { type: string }
+ *         sessionId: { type: string }
+ */
+export class EndTestDTO {
+	userId: string;
+	sessionId: string;
+	constructor(userId: string, sessionId: string) {
+		this.userId = userId;
+		this.sessionId = sessionId;
+	}
+}
+
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     SendAnswerDTO:
+ *       type: object
+ *       required: [testId, questionId, answerId]
+ *       properties:
+ *         testId: { type: string }
+ *         questionId: { type: string }
+ *         answerId: { type: string }
+ */
 export class SendAnswerDTO {
 	testId: string;
 	questionId: string;
@@ -273,6 +165,24 @@ export class SendAnswerDTO {
 	}
 }
 
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     UserTestResultDTO:
+ *       type: object
+ *       properties:
+ *         id: { type: string }
+ *         title: { type: string }
+ *         userId: { type: string }
+ *         testId: { type: string }
+ *         score: { type: integer }
+ *         needScore: { type: integer }
+ *         questions:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/QuestionResultDTO'
+ */
 export class UserTestResultDTO {
 	id: string;
 	title: string;
@@ -292,6 +202,20 @@ export class UserTestResultDTO {
 	}
 }
 
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     QuestionResultDTO:
+ *       type: object
+ *       properties:
+ *         questIonId: { type: string }
+ *         questionText: { type: string }
+ *         answers:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/AnswerResultDTO'
+ */
 export class QuestionResultDTO {
 	questIonId: string;
 	questionText: string;
@@ -303,6 +227,18 @@ export class QuestionResultDTO {
 	}
 }
 
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     AnswerResultDTO:
+ *       type: object
+ *       properties:
+ *         answerId: { type: string }
+ *         answerText: { type: string }
+ *         isTrue: { type: boolean }
+ *         isPicked: { type: boolean }
+ */
 export class AnswerResultDTO {
 	answerId: string;
 	answerText: string;
@@ -316,6 +252,22 @@ export class AnswerResultDTO {
 	}
 }
 
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     TestDTO:
+ *       type: object
+ *       properties:
+ *         id: { type: string }
+ *         questionsCount: { type: integer }
+ *         needScore: { type: integer }
+ *         timeLimit: { type: integer }
+ *         questions:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/QuestionDTO'
+ */
 export class TestDTO {
 	id: string;
 	questionsCount: number;
@@ -328,5 +280,45 @@ export class TestDTO {
 		this.needScore = needScore;
 		this.timeLimit = timeLimit;
 		this.questions = questions;
+	}
+}
+
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     StartTestResponseDTO:
+ *       type: object
+ *       properties:
+ *         sessionId: { type: string }
+ *         test:
+ *           $ref: '#/components/schemas/TestDTO'
+ *         startTime: { type: integer }
+ */
+export class StartTestResponseDTO {
+	sessionId: string;
+	test: TestDTO;
+	startTime: number;
+	constructor(sessionId: string, test: TestDTO, startTime: number) {
+		this.sessionId = sessionId;
+		this.test = test;
+		this.startTime = startTime;
+	}
+}
+
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     UserIdDTO:
+ *       type: object
+ *       required: [userId]
+ *       properties:
+ *         userId: { type: string }
+ */
+export class UserIdDTO {
+	userId: string;
+	constructor(userId: string) {
+		this.userId = userId;
 	}
 }

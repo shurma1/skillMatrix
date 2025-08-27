@@ -24,7 +24,10 @@ export class JobRoleSkillSearchDTO {
 	title: string;
 	type: SkillType;
 	tags: TagSearchDTO[];
+	auditDate: Date;
+	approvedDate: Date;
 	targetLevel: number;
+	isActive: boolean;
 	
 	constructor(
 		skillId: string,
@@ -32,6 +35,9 @@ export class JobRoleSkillSearchDTO {
 		type: SkillType,
 		tags: TagSearchDTO[],
 		targetLevel: number,
+		auditDate: Date,
+		approvedDate: Date,
+		isActive: boolean,
 		testId?: string,
 	) {
 		this.skillId = skillId;
@@ -39,6 +45,9 @@ export class JobRoleSkillSearchDTO {
 		this.type = type;
 		this.tags = tags;
 		this.targetLevel = targetLevel;
+		this.auditDate = auditDate;
+		this.approvedDate = approvedDate;
 		this.testId = testId;
+		this.isActive = isActive;
 	}
 }

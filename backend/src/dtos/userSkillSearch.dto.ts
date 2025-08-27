@@ -33,6 +33,7 @@ export class UserSkillSearchDto {
 	level: number;
 	targetLevel: number;
 	isConfirmed: boolean;
+	isActive: boolean;
 	isNew: boolean;
 	tags: TagDTO[];
 	userId: string;
@@ -40,6 +41,8 @@ export class UserSkillSearchDto {
 	firstname: string;
 	patronymic: string;
 	avatarId: string;
+	approvedDate: Date;
+	auditDate: Date;
 	testId?: string;
 	
 	constructor(
@@ -49,6 +52,7 @@ export class UserSkillSearchDto {
 		level: number,
 		targetLevel: number,
 		isConfirmed: boolean,
+		isActive: boolean,
 		isNew: boolean,
 		tags: TagDTO[],
 		userId: string,
@@ -56,6 +60,8 @@ export class UserSkillSearchDto {
 		firstname: string,
 		patronymic: string,
 		avatarId: string,
+		approvedDate: Date,
+		auditDate: Date,
 		testId?: string,
 	) {
 		this.skillId = skillId;
@@ -64,6 +70,7 @@ export class UserSkillSearchDto {
 		this.level = level;
 		this.targetLevel = targetLevel;
 		this.isConfirmed = isConfirmed;
+		this.isActive = isActive;
 		this.isNew = isNew;
 		this.tags = tags;
 		this.userId = userId;
@@ -71,6 +78,8 @@ export class UserSkillSearchDto {
 		this.firstname = firstname;
 		this.patronymic = patronymic;
 		this.avatarId = avatarId;
+		this.approvedDate = approvedDate;
+		this.auditDate = auditDate;
 		this.testId = testId;
 	}
 }

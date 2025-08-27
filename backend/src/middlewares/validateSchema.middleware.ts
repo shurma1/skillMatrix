@@ -32,7 +32,7 @@ export const validateSchema = (schema: Schema, locations: Locations[] = ['body']
 		next();
 		return;
 	}
-
+	console.log('errors', errors);
 	const mainError = errors[0];
 
 	next(ApiError.errorByType(mainError.msg));
