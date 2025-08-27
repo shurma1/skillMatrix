@@ -31,12 +31,12 @@ const AddJobRoleSkillModal: FC<AddJobRoleSkillModalProps> = ({
 
   // API запрос для поиска навыков
   const { data: skillsData, isFetching: isLoadingSkills } = useSearchSkillsQuery(
-    { 
+    {
       query: debouncedQuery || ' ', // Пробел чтобы получить все навыки при пустом запросе
       limit: 50,
       page: 1
     },
-    { 
+    {
       skip: !open // Не выполняем запрос если модал закрыт
     }
   );
@@ -71,13 +71,13 @@ const AddJobRoleSkillModal: FC<AddJobRoleSkillModalProps> = ({
   return (
     <Modal
       open={open}
-      title="Добавить навык к роли"
-      onCancel={handleCancel}
-      onOk={handleOk}
-      confirmLoading={confirmLoading}
-      okText="Добавить"
-      cancelText="Отмена"
-      destroyOnClose
+      title="Добавить навык к должности"
+  onCancel={handleCancel}
+  onOk={handleOk}
+  confirmLoading={confirmLoading}
+  okText="Добавить"
+  cancelText="Отмена"
+  destroyOnClose
     >
       <Form
         form={form}

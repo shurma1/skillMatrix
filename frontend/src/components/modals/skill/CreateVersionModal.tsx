@@ -1,21 +1,29 @@
-import React, { useState } from 'react';
-import { Modal, Form, Select, Upload, Input } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Modal, Form, Select, Upload, Input, DatePicker } from 'antd';
+import dayjs from 'dayjs';
 import type { UploadProps } from 'antd';
 import { useSearchUsersQuery, useUploadFileMutation, useGetSkillQuery } from '@/store/endpoints';
-import type { CreateSkillVersionDTO } from '@/types/api/skill';
+import type { CreateSkillVersionDTO, UpdateSkillVersionDTO } from '@/types/api/skill';
 import { extractErrMessage } from '../../../utils/errorHelpers';
 
 interface CreateVersionModalProps {
   open: boolean;
   onCancel: () => void;
-  onSubmit: (data: CreateSkillVersionDTO) => Promise<void>;
+  onSubmit: (data: CreateSkillVersionDTO | UpdateSkillVersionDTO) => Promise<void>;
   loading: boolean;
   skillId: string;
+  title?: string;
+  okText?: string;
+  initialAuthorId?: string;
+  initialVerifierId?: string;
+  initialApprovedDate?: string;
+  currentFileName?: string;
 }
 
 interface FormData {
   authorId: string;
   verifierId: string;
+  approvedDate?: any;
 }
 
 /**
@@ -26,7 +34,13 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
   onCancel,
   onSubmit,
   loading,
-  skillId
+  skillId,
+  title,
+  okText,
+  initialAuthorId,
+  initialVerifierId,
+  initialApprovedDate,
+  currentFileName,
 }) => {
   const [form] = Form.useForm<FormData>();
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -38,6 +52,17 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
 
   // Проверяем, нужен ли файл для данного типа навыка
   const isDocumentType = skill?.type === 'document';
+
+  // Обновляем форму при изменении пропсов (для режима редактирования)
+  useEffect(() => {
+    if (open) {
+      form.setFieldsValue({
+        authorId: initialAuthorId,
+        verifierId: initialVerifierId,
+        approvedDate: initialApprovedDate ? dayjs(initialApprovedDate) : dayjs(),
+      });
+    }
+  }, [open, initialAuthorId, initialVerifierId, initialApprovedDate, form]);
 
   const handleFileUpload = async (file: File): Promise<string | null> => {
     try {
@@ -55,9 +80,30 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
-      
+      // Build payload with only changed fields for update
+      const payload: UpdateSkillVersionDTO = {};
+      // Approved date diff
+      if (values.approvedDate) {
+        const iso = typeof values.approvedDate === 'string' 
+          ? values.approvedDate 
+          : values.approvedDate.toDate ? values.approvedDate.toDate().toISOString() : undefined;
+        if (iso) {
+          // always include for create; for update include when provided
+          (payload as any).approvedDate = iso;
+        }
+      }
+
+      // Author diff
+      if (values.authorId && values.authorId !== initialAuthorId) {
+        payload.authorId = values.authorId;
+      }
+      // Verifier diff (note backend expects verifierid)
+      if (values.verifierId && values.verifierId !== initialVerifierId) {
+        payload.verifierid = values.verifierId;
+      }
+
       let fileId: string | undefined = undefined;
-      
+
       // Загружаем файл только если тип документ и файл выбран
       if (isDocumentType && uploadedFile) {
         const uploadedFileId = await handleFileUpload(uploadedFile);
@@ -65,13 +111,23 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
           throw new Error('Не удалось загрузить файл');
         }
         fileId = uploadedFileId;
+        payload.fileId = fileId;
       }
 
-      await onSubmit({
-        fileId,
-        authorId: values.authorId,
-        verifierid: values.verifierId
-      });
+      // For create flow, ensure required fields present
+      if (!initialAuthorId && !initialVerifierId) {
+        const createPayload: CreateSkillVersionDTO = {
+          fileId,
+          authorId: values.authorId,
+          verifierid: values.verifierId
+        };
+        if (payload && (payload as any).approvedDate) {
+          (createPayload as any).approvedDate = (payload as any).approvedDate;
+        }
+        await onSubmit(createPayload);
+      } else {
+        await onSubmit(payload);
+      }
 
       handleCancel();
     } catch (error) {
@@ -105,19 +161,28 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
 
   return (
     <Modal
-      title="Создать новую версию"
+      title={title || "Создать новую версию"}
       open={open}
       onCancel={handleCancel}
-      onOk={handleSubmit}
+  onOk={handleSubmit}
+  okText={okText || 'Создать'}
       confirmLoading={loading}
       width={600}
-	  destroyOnHidden
+      destroyOnHidden
     >
       <Form
         form={form}
         layout="vertical"
         requiredMark={false}
+        initialValues={{
+          authorId: initialAuthorId,
+          verifierId: initialVerifierId,
+          approvedDate: initialApprovedDate ? dayjs(initialApprovedDate) : dayjs(),
+        }}
       >
+        <Form.Item name="approvedDate" label="Дата утверждения">
+          <DatePicker style={{ width: '100%' }} />
+        </Form.Item>
         <Form.Item
           name="authorId"
           label="Автор"
@@ -158,17 +223,17 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
 
         {isDocumentType && (
           <>
-            <Form.Item label="Имя файла">
+            <Form.Item label="Текущий файл">
               <Input
-                placeholder="Название документа"
-                value={uploadedFile?.name}
+                placeholder="Файл не выбран"
+                value={uploadedFile?.name || currentFileName}
                 disabled
               />
             </Form.Item>
             <Upload.Dragger {...draggerProps}>
               <p className="ant-upload-drag-icon">📄</p>
-              <p className="ant-upload-text">Перетащите файл или кликните</p>
-              <p className="ant-upload-hint">Файл обязателен для документа</p>
+              <p className="ant-upload-text">Перетащите новый файл или кликните</p>
+              <p className="ant-upload-hint">Если не хотите менять файл, оставьте поле пустым</p>
             </Upload.Dragger>
           </>
         )}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, Form, Input, Select, DatePicker, Upload, message } from 'antd';
+import { Modal, Form, Input, Select, DatePicker, Upload, message, Button } from 'antd';
 import type { FC } from 'react';
 import type { Dayjs } from 'dayjs';
 import type { UploadProps } from 'antd';
@@ -14,6 +14,7 @@ import {
 import TagSelectWithActions from '../../shared/TagSelectWithActions';
 import CreateTagModal from '../tag/CreateTagModal';
 import EditTagModal from '../tag/EditTagModal';
+import PermissionButton from '@/components/shared/PermissionButton';
 
 interface CreateSkillModalProps {
   open: boolean;
@@ -24,10 +25,11 @@ interface CreateSkillModalProps {
   onSubmit: (values: CreateSkillModalFormData) => void;
 }
 
-export interface CreateSkillModalFormData extends Omit<CreateSkillDTO, 'approvedDate' | 'fileId'> {
+export interface CreateSkillModalFormData extends Omit<CreateSkillDTO, 'approvedDate' | 'fileId' | 'documentId'> {
   approvedDate: Dayjs;
   selectedTags: string[];
   uploadedFile: File | null;
+  documentId?: string;
 }
 
 const CreateSkillModal: FC<CreateSkillModalProps> = ({
@@ -62,7 +64,8 @@ const CreateSkillModal: FC<CreateSkillModalProps> = ({
     onSubmit({
       ...values,
       selectedTags: selectedCreateTags,
-      uploadedFile
+      uploadedFile,
+      documentId: values.documentId
     });
   };
 
@@ -124,9 +127,11 @@ const CreateSkillModal: FC<CreateSkillModalProps> = ({
         open={open}
         title="Добавить навык"
         onCancel={handleCancel}
-        onOk={handleOk}
-        confirmLoading={confirmLoading}
         destroyOnHidden
+        footer={[
+          <Button key="cancel" onClick={handleCancel}>Отмена</Button>,
+          <PermissionButton key="ok" type="primary" loading={confirmLoading} onClick={handleOk}>Создать</PermissionButton>
+        ]}
       >
         <Form
           form={form}
@@ -189,6 +194,12 @@ const CreateSkillModal: FC<CreateSkillModalProps> = ({
               }))}
             />
           </Form.Item>
+          
+          {typeValue === 'document' && (
+            <Form.Item name="documentId" label="ID документа">
+              <Input placeholder="Введите ID документа" />
+            </Form.Item>
+          )}
           
           <Form.Item label="Теги">
             <TagSelectWithActions

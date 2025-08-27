@@ -48,7 +48,7 @@ const EditUserModal: FC<EditUserModalProps> = ({
           firstname: user?.firstname,
           lastname: user?.lastname,
           patronymic: user?.patronymic,
-          email: user?.email,
+          email: user?.email || undefined,
         }}
       >
         <Form.Item

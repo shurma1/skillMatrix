@@ -1,6 +1,7 @@
-import { Modal, Form } from 'antd';
+import { Modal, Form, Button } from 'antd';
 import SkillLevelSelect from '@/components/shared/SkillLevelSelect';
 import type { FC } from 'react';
+import PermissionButton from '@/components/shared/PermissionButton';
 
 interface EditJobRoleSkillModalProps {
   open: boolean;
@@ -37,11 +38,11 @@ const EditJobRoleSkillModal: FC<EditJobRoleSkillModalProps> = ({
       open={open}
       title="Изменить целевой уровень"
       onCancel={onCancel}
-      onOk={handleOk}
-      confirmLoading={confirmLoading}
-      okText="Сохранить"
-      cancelText="Отмена"
       destroyOnClose
+      footer={[
+        <Button key="cancel" onClick={onCancel}>Отмена</Button>,
+        <PermissionButton key="ok" type="primary" loading={confirmLoading} onClick={handleOk}>Сохранить</PermissionButton>
+      ]}
     >
       <Form
         form={form}

@@ -54,11 +54,11 @@ const AddConfirmationModal: React.FC<AddConfirmationModalProps> = ({
     <Modal
       title="Добавить подтверждение навыка"
       open={open}
-      onOk={handleSubmit}
-      onCancel={handleCancel}
-      confirmLoading={confirmLoading}
-      okText="Добавить"
-      cancelText="Отмена"
+  onOk={handleSubmit}
+  onCancel={handleCancel}
+  confirmLoading={confirmLoading}
+  okText="Добавить"
+  cancelText="Отмена"
     >
       <div style={{ marginBottom: 16 }}>
         <Title level={5} style={{ margin: 0 }}>

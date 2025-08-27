@@ -31,7 +31,7 @@ const EditJobRoleModal: FC<EditJobRoleModalProps> = ({
   return (
     <Modal
       open={open}
-      title="Редактировать роль"
+      title="Редактировать должность"
       onCancel={onCancel}
       onOk={handleOk}
       confirmLoading={confirmLoading}
@@ -49,8 +49,8 @@ const EditJobRoleModal: FC<EditJobRoleModalProps> = ({
       >
         <Form.Item
           name="title"
-          label="Название роли"
-          rules={[{ required: true, message: 'Введите название роли' }]}
+          label="Название должности"
+          rules={[{ required: true, message: 'Введите название должности' }]}
         >
           <Input />
         </Form.Item>

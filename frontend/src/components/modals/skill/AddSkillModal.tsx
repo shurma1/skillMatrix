@@ -53,12 +53,12 @@ const AddSkillModal: React.FC<AddSkillModalProps> = ({
     <Modal
       open={open}
       title="Добавить навык"
-      onCancel={handleCancel}
-      onOk={handleOk}
-      confirmLoading={confirmLoading}
-      okText="Добавить"
-      cancelText="Отмена"
-      destroyOnClose
+  onCancel={handleCancel}
+  onOk={handleOk}
+  confirmLoading={confirmLoading}
+  okText="Добавить"
+  cancelText="Отмена"
+  destroyOnClose
     >
       <Form
         form={form}

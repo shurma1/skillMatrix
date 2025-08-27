@@ -35,13 +35,13 @@ const CreateJobRoleModal: FC<CreateJobRoleModalProps> = ({
   return (
     <Modal
       open={open}
-      title="Создать роль"
-      onCancel={handleCancel}
-      onOk={handleOk}
-      confirmLoading={confirmLoading}
-      okText="Создать"
-      cancelText="Отмена"
-      destroyOnClose
+      title="Создать должность"
+	  onCancel={handleCancel}
+	  onOk={handleOk}
+	  confirmLoading={confirmLoading}
+	  okText="Создать"
+	  cancelText="Отмена"
+	  destroyOnClose
     >
       <Form
         form={form}
@@ -50,10 +50,10 @@ const CreateJobRoleModal: FC<CreateJobRoleModalProps> = ({
       >
         <Form.Item
           name="title"
-          label="Название роли"
-          rules={[{ required: true, message: 'Введите название роли' }]}
+          label="Название должности"
+          rules={[{ required: true, message: 'Введите название должности' }]}
         >
-          <Input placeholder="Введите название роли" />
+          <Input placeholder="Введите название должности" />
         </Form.Item>
       </Form>
     </Modal>

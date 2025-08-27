@@ -66,11 +66,11 @@ const SelectEntityModal: React.FC<SelectEntityModalProps> = (props) => {
     <Modal
       open={open}
       title={title}
-      okText={okText}
-      cancelText="Отмена"
-      onCancel={onCancel}
-      confirmLoading={confirmLoading}
-      onOk={handleOk}
+  okText={okText}
+  cancelText="Отмена"
+  onCancel={onCancel}
+  confirmLoading={confirmLoading}
+  onOk={handleOk}
 	  destroyOnHidden
     >
       <Form

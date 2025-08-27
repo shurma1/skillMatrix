@@ -50,13 +50,13 @@ const AssignUserToJobRoleModal: FC<AssignUserToJobRoleModalProps> = ({
   return (
     <Modal
       open={open}
-      title="Назначить пользователя на роль"
-      onCancel={handleCancel}
-      onOk={handleOk}
-      confirmLoading={confirmLoading}
-      okText="Назначить"
-      cancelText="Отмена"
-      destroyOnClose
+      title="Назначить пользователя на должность"
+  onCancel={handleCancel}
+  onOk={handleOk}
+  confirmLoading={confirmLoading}
+  okText="Назначить"
+  cancelText="Отмена"
+  destroyOnClose
     >
       <Form
         form={form}
