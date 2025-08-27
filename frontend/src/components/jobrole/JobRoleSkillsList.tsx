@@ -1,6 +1,5 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { List, Skeleton } from 'antd';
-import { useNavigate } from 'react-router-dom';
 import type { UserSkillSearchDto } from '@/types/api/user';
 import { useListUserSkillsInJobroleQuery } from '@/store/endpoints';
 import SkillListItem from '../shared/SkillListItem';
@@ -19,12 +18,6 @@ const JobRoleSkillsList: React.FC<JobRoleSkillsListProps> = ({
     jobroleId
   });
 
-  const navigate = useNavigate();
-  const handleOpenSkill = useCallback(
-    (skillId: string) => navigate(`/skills/${skillId}`),
-    [navigate]
-  );
-
   if (isFetching) {
     return <Skeleton active paragraph={{ rows: 2 }} />;
   }
@@ -40,9 +33,9 @@ const JobRoleSkillsList: React.FC<JobRoleSkillsListProps> = ({
         <SkillListItem
           key={skill.skillId}
           skill={skill}
-          onOpenSkill={handleOpenSkill}
           showConfirmations
           userId={userId}
+          jobroleId={jobroleId}
         />
       )}
     />

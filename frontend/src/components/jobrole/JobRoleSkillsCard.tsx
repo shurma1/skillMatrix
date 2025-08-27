@@ -1,7 +1,8 @@
 import React from 'react';
 import { Card, Table, Button, Space, Tag, Popconfirm } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import type { JobRoleSkillSearchDTO } from '@/types/api/jobrole';
+import PermissionButton from '@/components/shared/PermissionButton';
+import {PlusOutlined, EditOutlined, DeleteOutlined, LinkOutlined} from '@ant-design/icons';
+import type {JobRoleSkillSearchDTO, JobRoleUserSearchDTO} from '@/types/api/jobrole';
 
 interface JobRoleSkillsCardProps {
   skills: JobRoleSkillSearchDTO[];
@@ -24,15 +25,6 @@ const JobRoleSkillsCard: React.FC<JobRoleSkillsCardProps> = ({
     {
       title: 'Название',
       dataIndex: 'title',
-      render: (title: string, record: JobRoleSkillSearchDTO) => (
-        <Button 
-          type="link" 
-          onClick={() => onSkillClick(record.skillId)}
-          style={{ padding: 0 }}
-        >
-          {title}
-        </Button>
-      )
     },
     {
       title: 'Тип',
@@ -68,22 +60,22 @@ const JobRoleSkillsCard: React.FC<JobRoleSkillsCardProps> = ({
       key: 'actions',
       render: (_: unknown, record: JobRoleSkillSearchDTO) => (
         <Space>
-          <Button
+          <PermissionButton
             type="text"
             icon={<EditOutlined />}
-            onClick={() => onEdit({ 
-              skillId: record.skillId, 
-              targetLevel: record.targetLevel 
+            onClick={() => onEdit({
+              skillId: record.skillId,
+              targetLevel: record.targetLevel
             })}
           />
           <Popconfirm
             title="Удалить навык?"
-            description="Вы уверены, что хотите удалить этот навык из роли?"
+            description="Вы уверены, что хотите удалить этот навык из должности?"
             onConfirm={() => onRemove(record.skillId)}
             okText="Да"
             cancelText="Нет"
           >
-            <Button
+            <PermissionButton
               type="text"
               danger
               icon={<DeleteOutlined />}
@@ -91,20 +83,33 @@ const JobRoleSkillsCard: React.FC<JobRoleSkillsCardProps> = ({
           </Popconfirm>
         </Space>
       )
-    }
+    },
+	{
+		  title: 'Перейти',
+		  key: 'go',
+		  align: 'center' as const,
+		  render: (_: unknown, record: JobRoleSkillSearchDTO) => (
+			  <Button
+				  type="text"
+				  
+				  icon={<LinkOutlined />}
+				  onClick={() => onSkillClick(record.skillId)}
+			  />
+		  )
+	},
   ];
 
   return (
     <Card
-      title="Навыки роли"
+      title="Навыки должности"
       extra={
-        <Button 
-          type="primary" 
+  <PermissionButton
+          type="primary"
           icon={<PlusOutlined />}
           onClick={onAdd}
-        >
+  >
           Добавить навык
-        </Button>
+  </PermissionButton>
       }
     >
       <Table

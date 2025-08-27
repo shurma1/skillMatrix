@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { message, Space } from 'antd';
-import { 
+import {
   useGetJobRoleQuery,
   useListJobRoleSkillsQuery,
   useListJobRoleUsersQuery,
@@ -27,19 +27,19 @@ const JobRoleContainer: React.FC = () => {
   const navigate = useNavigate();
 
   // Data queries
-  const { 
-    data: jobRole, 
-    isFetching: isJobRoleLoading 
+  const {
+    data: jobRole,
+    isFetching: isJobRoleLoading
   } = useGetJobRoleQuery(jobroleId, { skip: !jobroleId });
 
-  const { 
-    data: jobRoleSkills = [], 
+  const {
+    data: jobRoleSkills = [],
     isFetching: isSkillsLoading,
     refetch: refetchSkills
   } = useListJobRoleSkillsQuery(jobroleId, { skip: !jobroleId });
 
-  const { 
-    data: jobRoleUsers = [], 
+  const {
+    data: jobRoleUsers = [],
     isFetching: isUsersLoading,
     refetch: refetchUsers
   } = useListJobRoleUsersQuery(jobroleId, { skip: !jobroleId });
@@ -84,7 +84,7 @@ const JobRoleContainer: React.FC = () => {
   const handleUpdateJobRole = async (data: UpdateJobRoleDTO) => {
     try {
       await updateJobRole({ id: jobroleId, body: data }).unwrap();
-      message.success('Роль обновлена');
+      message.success('Должность обновлена');
       setEditOpen(false);
     } catch (error) {
       message.error(extractErrMessage(error) || 'Ошибка обновления');
@@ -93,9 +93,9 @@ const JobRoleContainer: React.FC = () => {
 
   const handleAddSkill = async (skillId: string, targetLevel: number) => {
     try {
-      await addJobRoleSkill({ 
-        id: jobroleId, 
-        data: { skillId, targetLevel } 
+      await addJobRoleSkill({
+        id: jobroleId,
+        data: { skillId, targetLevel }
       }).unwrap();
       message.success('Навык добавлен');
       setAddSkillOpen(false);
@@ -135,7 +135,7 @@ const JobRoleContainer: React.FC = () => {
   const handleAssignUser = async (userId: string) => {
     try {
       await assignUserToJobRole({ id: jobroleId, userId }).unwrap();
-      message.success('Пользователь назначен на роль');
+      message.success('Пользователь назначен на должность');
       setAssignUserOpen(false);
       refetchUsers();
     } catch (error) {
@@ -146,7 +146,7 @@ const JobRoleContainer: React.FC = () => {
   const handleUnassignUser = async (userId: string) => {
     try {
       await unassignUserFromJobRole({ id: jobroleId, userId }).unwrap();
-      message.success('Пользователь удален из роли');
+      message.success('Пользователь удален из должности');
       refetchUsers();
     } catch (error) {
       message.error(extractErrMessage(error) || 'Ошибка удаления');

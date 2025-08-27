@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, Table, Button, Popconfirm } from 'antd';
-import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import PermissionButton from '@/components/shared/PermissionButton';
+import { PlusOutlined, DeleteOutlined, LinkOutlined } from '@ant-design/icons';
 import type { JobRoleUserSearchDTO } from '@/types/api/jobrole';
 import UserAvatar from '../shared/UserAvatar';
 
@@ -25,7 +26,7 @@ const JobRoleUsersCard: React.FC<JobRoleUsersCardProps> = ({
       dataIndex: 'avatarId',
       width: 56,
       render: (_: unknown, user: JobRoleUserSearchDTO) => (
-        <UserAvatar 
+        <UserAvatar
           user={{
             id: user.userId,
             login: user.login,
@@ -34,23 +35,14 @@ const JobRoleUsersCard: React.FC<JobRoleUsersCardProps> = ({
             lastname: user.lastname,
             patronymic: user.patronymic,
             avatar_id: user.avatarId
-          }} 
-          size={40} 
+          }}
+          size={40}
         />
       )
     },
     {
       title: 'Фамилия',
       dataIndex: 'lastname',
-      render: (lastname: string, record: JobRoleUserSearchDTO) => (
-        <Button 
-          type="link" 
-          onClick={() => onUserClick(record.userId)}
-          style={{ padding: 0 }}
-        >
-          {lastname}
-        </Button>
-      )
     },
     {
       title: 'Имя',
@@ -76,35 +68,49 @@ const JobRoleUsersCard: React.FC<JobRoleUsersCardProps> = ({
     {
       title: 'Действия',
       key: 'actions',
+	  align: 'center' as const,
       render: (_: unknown, record: JobRoleUserSearchDTO) => (
         <Popconfirm
-          title="Удалить пользователя из роли?"
-          description="Вы уверены, что хотите удалить этого пользователя из роли?"
+          title="Удалить пользователя из должности?"
+          description="Вы уверены, что хотите удалить этого пользователя из должности?"
           onConfirm={() => onRemove(record.userId)}
           okText="Да"
           cancelText="Нет"
         >
-          <Button
+          <PermissionButton
             type="text"
             danger
             icon={<DeleteOutlined />}
           />
         </Popconfirm>
       )
-    }
+    },
+	{
+		  title: 'Перейти',
+		  key: 'go',
+		  align: 'center' as const,
+		  render: (_: unknown, record: JobRoleUserSearchDTO) => (
+			  <Button
+				  type="text"
+				  
+				  icon={<LinkOutlined />}
+				  onClick={() => onUserClick(record.userId)}
+			  />
+		  )
+	},
   ];
 
   return (
-    <Card 
-      title="Пользователи с этой ролью"
+    <Card
+      title="Пользователи с этой должностью"
       extra={
-        <Button 
-          type="primary" 
+        <PermissionButton
+          type="primary"
           icon={<PlusOutlined />}
           onClick={onAdd}
         >
           Добавить пользователя
-        </Button>
+        </PermissionButton>
       }
     >
       <Table
@@ -116,10 +122,6 @@ const JobRoleUsersCard: React.FC<JobRoleUsersCardProps> = ({
           pageSize: 10,
           showSizeChanger: true
         }}
-        onRow={(record) => ({
-          onClick: () => onUserClick(record.userId),
-          style: { cursor: 'pointer' }
-        })}
       />
     </Card>
   );

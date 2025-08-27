@@ -44,14 +44,14 @@ const JobrolesSearchContainer: React.FC = () => {
   const handleCreate = async (values: CreateJobRoleDTO) => {
     try {
       const jobRole = await createJobRole(values).unwrap();
-      message.success('Роль создана');
+      message.success('Должность создана');
       setIsCreateOpen(false);
       navigate(`/jobroles/${jobRole.id}/`);
     } catch (error: unknown) {
       const errorMessage = error && typeof error === 'object' && 'data' in error
         ? (error.data as { message?: string })?.message
-        : 'Ошибка создания роли';
-      message.error(errorMessage || 'Ошибка создания роли');
+        : 'Ошибка создания должности';
+      message.error(errorMessage || 'Ошибка создания должности');
     }
   };
 
@@ -68,7 +68,7 @@ const JobrolesSearchContainer: React.FC = () => {
         level={3}
         style={{ marginTop: 0, marginBottom: 16 }}
       >
-        Роли
+        Должности
       </Typography.Title>
       <JobrolesSearchPanel
         query={query}

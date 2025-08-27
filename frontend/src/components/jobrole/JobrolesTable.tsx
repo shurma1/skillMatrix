@@ -22,8 +22,8 @@ const JobrolesTable: FC<JobrolesTableProps> = ({
   onRowClick
 }) => {
   const columns = [
-    { 
-      title: 'Название роли', 
+    {
+      title: 'Название должности',
       dataIndex: 'title'
     }
   ];

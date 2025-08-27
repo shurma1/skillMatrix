@@ -1,5 +1,6 @@
 import React from 'react';
-import { Card, Skeleton, Typography, Space, Button } from 'antd';
+import {Card, Skeleton, Typography, Space, Flex} from 'antd';
+import PermissionButton from '@/components/shared/PermissionButton';
 import { EditOutlined } from '@ant-design/icons';
 import type { JobRoleDTO } from '@/types/api/jobrole';
 
@@ -16,30 +17,38 @@ const JobRoleInfoCard: React.FC<JobRoleInfoCardProps> = ({
   loading,
   onEdit
 }) => (
-  <Card
-    title={<Title level={3} style={{ margin: 0 }}>Информация о роли</Title>}
-    extra={
-      <Button 
-        type="primary" 
-        icon={<EditOutlined />}
-        onClick={onEdit}
-        disabled={loading || !jobRole}
-      >
-        Редактировать
-      </Button>
-    }
-  >
-    {loading || !jobRole ? (
-      <Skeleton active paragraph={{ rows: 2 }} />
-    ) : (
-      <Space direction="vertical" size={16} style={{ width: '100%' }}>
-        <div>
-          <Title level={4} style={{ margin: 0 }}>{jobRole.title}</Title>
-          <Text type="secondary">ID: {jobRole.id}</Text>
-        </div>
-      </Space>
-    )}
-  </Card>
+	<div>
+		<Title level={3} style={{ marginTop: 0 }}>
+			Должность
+		</Title>
+		{loading || !jobRole ? (
+			<Skeleton active />
+		) : (
+			<Card>
+				<Flex
+					justify="space-between"
+					align="start"
+					gap={16}
+					style={{ width: '100%' }}
+				>
+					<Title
+						level={3}
+						style={{ margin: 0 }}
+					>
+						{jobRole.title}
+					</Title>
+					<PermissionButton
+						type="primary"
+						icon={<EditOutlined />}
+						onClick={onEdit}
+						disabled={loading || !jobRole}
+					>
+						Редактировать
+					</PermissionButton>
+				</Flex>
+			</Card>
+		)}
+	</div>
 );
 
 export default JobRoleInfoCard;

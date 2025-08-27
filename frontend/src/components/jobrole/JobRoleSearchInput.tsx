@@ -18,7 +18,7 @@ const JobRoleSearchInput: FC<JobRoleSearchInputProps> = ({
   <Input
     allowClear
     value={value}
-    placeholder={placeholder || 'Поиск ролей по названию'}
+    placeholder={placeholder || 'Поиск должностей по названию'}
     onChange={(e) => onChange(e.target.value)}
     prefix={<SearchOutlined style={{ color: '#999' }} />}
     suffix={loading ? <Spin size="small" /> : undefined}

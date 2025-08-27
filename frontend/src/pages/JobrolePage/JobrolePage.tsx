@@ -1,4 +1,4 @@
-import JobRoleContainer from '@/components/jobrole/JobRoleContainer';
+ import JobRoleContainer from '@/components/jobrole/JobRoleContainer';
 
 const JobrolePage = () => <JobRoleContainer />;
 
