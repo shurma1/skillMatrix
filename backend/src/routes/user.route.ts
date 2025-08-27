@@ -8,6 +8,13 @@ import permissionMiddleware from "../middlewares/permission.middleware";
 
 const router = express.Router();
 
+
+
+router.get(
+	'/getResultPreview',
+	UserController.getResultPreview
+);
+
 /**
  * @openapi
  * /api/user/search:
@@ -127,6 +134,34 @@ router.get(
 	}),
 	validateSchema(checkID(), ['params']),
 	UserController.getByID
+);
+
+
+router.get(
+	'/:id/permissions',
+	permissionMiddleware({
+		needAuth: true,
+		permission: ['PERMISSION_MANAGE']
+	}),
+	UserController.getUserPermissions
+);
+
+router.post(
+	'/:id/permissions',
+	permissionMiddleware({
+		needAuth: true,
+		permission: ['PERMISSION_MANAGE']
+	}),
+	UserController.addPermissionToUser
+);
+
+router.delete(
+	'/:id/permissions/:permissionId',
+	permissionMiddleware({
+		needAuth: true,
+		permission: ['PERMISSION_MANAGE']
+	}),
+	UserController.deletePermissionFromUser
 );
 
 /**

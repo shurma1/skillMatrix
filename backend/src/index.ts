@@ -12,6 +12,7 @@ import {DailyTaskService} from "./services/dailyTask.service";
 import SkillService from "./services/skill.service";
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import SkillRepository from "./repositories/skill.repository";
 initEnv();
 
 export const ROOT_PATH = path.resolve(__dirname, '..');
@@ -60,9 +61,11 @@ const start  = async () => {
 	await Sequelize.authenticate();
 	await Sequelize.sync();
 	
+	await SkillRepository.isAuthorOrVerifier('c3ecec0c-1438-44f4-a969-d745a6642f63', '3d5dd56b-0732-48fe-afac-2a99a15bd704')
+	
 	app.listen(
 		PORT,
-		HOST as any,
+		HOST,
 		() => {
 			Logger.log(`Server started on http://localhost:${PORT}/api/ [${isDev ? 'Development': 'Production'}]`);
 			if(isDev) {
@@ -75,6 +78,8 @@ const start  = async () => {
 	
 	dailyTask.register(SkillService.checkExpirationDateOfTheSkills);
 	dailyTask.register(SkillService.checkExpirationDateOfTheUserSkills);
+	
+	dailyTask.start();
 }
 
 

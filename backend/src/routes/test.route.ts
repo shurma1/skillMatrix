@@ -63,6 +63,10 @@ router.post(
  *     responses:
  *       200:
  *         description: Session started
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StartTestResponseDTO'
  */
 router.post(
 	'/start',
@@ -117,6 +121,10 @@ router.post(
  *     responses:
  *       200:
  *         description: Current result
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserTestResultDTO'
  */
 router.post(
 	'/sendAnswer',
@@ -128,26 +136,20 @@ router.post(
 
 /**
  * @openapi
- * /api/test/result:
+ * /api/test/{testId}/result:
  *   get:
- *     summary: Get user test result by skill
+ *     summary: Get test result by test session id
  *     tags:
  *       - Test
  *     security:
  *       - JWT: []
  *     x-permissions: []
  *     parameters:
- *       - in: query
- *         name: skillId
+ *       - in: path
+ *         name: testId
  *         required: true
  *         schema:
  *           type: string
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/UserIdDTO'
  *     responses:
  *       200:
  *         description: User test result
@@ -167,7 +169,7 @@ router.get(
  * @openapi
  * /api/test/{testId}:
  *   get:
- *     summary: Get test
+ *     summary: Get test by id
  *     tags:
  *       - Test
  *     security:

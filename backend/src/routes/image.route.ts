@@ -51,9 +51,6 @@ router.post(
  *     summary: Get image by id
  *     tags:
  *       - Image
- *     security:
- *       - JWT: []
- *     x-permissions: []
  *     parameters:
  *       - in: path
  *         name: id

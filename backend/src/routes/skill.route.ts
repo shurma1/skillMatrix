@@ -104,6 +104,8 @@ router.get(
  *                 enum: [skill, document]
  *               title:
  *                 type: string
+ *               fileId:
+ *                 type: string
  *               approvedDate:
  *                 type: string
  *                 format: date-time
@@ -186,6 +188,14 @@ router.delete(
  *                 type: string
  *               isActive:
  *                 type: boolean
+ *               approvedDate:
+ *                 type: string
+ *                 format: date-time
+ *               tags:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Array of tag IDs to set on the skill
  *     responses:
  *       200:
  *         description: Updated skill
@@ -390,6 +400,9 @@ router.delete(
  *                 type: string
  *               verifierid:
  *                 type: string
+ *               approvedDate:
+ *                 type: string
+ *                 format: date-time
  *     responses:
  *       200:
  *         description: Version created
@@ -405,6 +418,61 @@ router.post(
 		permission: ['EDIT_ALL']
 	}),
 	SkillController.createVersion
+);
+
+/**
+ * @openapi
+ * /api/skill/{id}/version/{versionId}:
+ *   put:
+ *     summary: Update skill version
+ *     tags:
+ *       - Skill
+ *     security:
+ *       - JWT: []
+ *     x-permissions:
+ *       - EDIT_ALL
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: versionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fileId:
+ *                 type: string
+ *               authorId:
+ *                 type: string
+ *               verifierid:
+ *                 type: string
+ *               approvedDate:
+ *                 type: string
+ *                 format: date-time
+ *     responses:
+ *       200:
+ *         description: Version updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SkillVersionDTO'
+ */
+router.put(
+	'/:id/version/:versionId',
+	permissionMiddleware({
+		needAuth: true,
+		permission: ['EDIT_ALL']
+	}),
+	SkillController.editVersion
 );
 
 /**

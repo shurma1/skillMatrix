@@ -119,8 +119,28 @@ router.post(
 	FileController.upload
 );
 
-
-
+/**
+ * @openapi
+ * /api/file/{id}/confirm:
+ *   get:
+ *     summary: Confirm file availability
+ *     description: Returns 200 if the file is available and confirmed in storage.
+ *     tags:
+ *       - File
+ *     security:
+ *       - JWT: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: File confirmed
+ *       404:
+ *         description: File not found
+ */
 router.get(
 	'/:id/confirm',
 	permissionMiddleware({
