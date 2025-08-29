@@ -6,28 +6,14 @@ WITH filtered_users AS (
          OR LOWER(u.login) LIKE '%' || LOWER(:query) || '%')
 ),
 user_target_sum AS (
-  SELECT "userId", SUM("targetLevel") AS "targetLevel"
-  FROM (
-    -- targetLevel из ролей
-    SELECT ur."userId",
-           COALESCE(SUM(CAST(jrs."targetLevel" AS INTEGER)), 0) AS "targetLevel"
-    FROM "userToJobRoles" ur
-    JOIN "jobRoleToSkills" jrs ON jrs."jobRoleId" = ur."jobRoleId"
-    JOIN "skills" s ON s.id = jrs."skillId" AND s."isActive" = TRUE
-    JOIN filtered_users fu ON fu.id = ur."userId"
-    GROUP BY ur."userId"
-
-    UNION ALL
-
-    -- targetLevel из явных userToSkills
-    SELECT uts."userId",
-           COALESCE(SUM(CAST(uts."targetLevel" AS INTEGER)), 0) AS "targetLevel"
-    FROM "userToSkills" uts
-    JOIN "skills" s ON s.id = uts."skillId" AND s."isActive" = TRUE
-    JOIN filtered_users fu ON fu.id = uts."userId"
-    GROUP BY uts."userId"
-  ) t
-  GROUP BY "userId"
+  -- targetLevel только из ролей (jobRoles)
+  SELECT ur."userId",
+         COALESCE(SUM(CAST(jrs."targetLevel" AS INTEGER)), 0) AS "targetLevel"
+  FROM "userToJobRoles" ur
+  JOIN "jobRoleToSkills" jrs ON jrs."jobRoleId" = ur."jobRoleId"
+  JOIN "skills" s ON s.id = jrs."skillId" AND s."isActive" = TRUE
+  JOIN filtered_users fu ON fu.id = ur."userId"
+  GROUP BY ur."userId"
 ),
 user_role_skill_ids AS (
   SELECT DISTINCT ur."userId" AS "userId", jrs."skillId" AS "skillId"
