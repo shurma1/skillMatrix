@@ -415,7 +415,6 @@ class UserService {
 	async getResultPreview(query: string) {
 		
 		const result = await UserRepossitory.getResultPreview(query);
-		console.log('result', result)
 		return result;
 	}
 	

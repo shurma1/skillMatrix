@@ -33,7 +33,7 @@ app.use(cookieParser());
 
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || `http://${HOST}:${PORT}`;
 app.use(cors({
-	origin: FRONTEND_ORIGIN,
+	origin: isDev ? 'http://localhost:5173' : FRONTEND_ORIGIN,
 	credentials: true,
 	methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 	allowedHeaders: ['Content-Type', 'Authorization']

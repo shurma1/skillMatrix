@@ -220,15 +220,11 @@ class AnalyticsService {
 			)
 		];
 		
-		console.log(skillIds, jobRoleIds);
-		
 		const jobroleToSkillsMatrix = skillIds.length && jobRoleIds.length
 			? await JobRoleRepository.getLevelMatrixBySkills(skillIds, jobRoleIds)
 			: [[]];
 		
-		console.log(jobroleToSkillsMatrix);
-		
-		const needLevel = sumMatrix(jobroleToSkillsMatrix) + userSkills.reduce((sum, skill) => sum + skill.targetLevel, 0);
+		const needLevel = sumMatrix(jobroleToSkillsMatrix);
 		
 		const userLevelMatrix = skillIds.length
 			? await SkillRepository.getUserLevelMatrixBySkills([user.id], skillIds)
@@ -868,7 +864,8 @@ class AnalyticsService {
 		]);
 		
 		// Рассчитываем суммы для заголовков
-		const totalTargetLevel = skills.reduce((sum, skill) => sum + skill.targetLevel, 0);
+		const stat = await this.getUserStats(userId);
+		const totalTargetLevel = stat.needLevel;
 		const totalCurrentLevel = skills.reduce((sum, skill) => sum + skill.currentLevel, 0);
 		const totalPercent = calcPercent(totalTargetLevel, totalCurrentLevel);
 		
