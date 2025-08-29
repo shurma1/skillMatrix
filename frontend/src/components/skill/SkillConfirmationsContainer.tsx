@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Collapse, message } from 'antd';
+import { Collapse, message, Button } from 'antd';
 import PermissionButton from '@/components/shared/PermissionButton';
 import { CheckCircleOutlined } from '@ant-design/icons';
 import {
@@ -16,6 +16,8 @@ interface SkillConfirmationsContainerProps {
   skillTitle: string;
   currentLevel: number;
   jobroleId?: string;
+  /** When true, allow adding without requiring EDIT_ALL (e.g., author/verifier context) */
+  forceAllowAdd?: boolean;
 }
 
 const SkillConfirmationsContainer: React.FC<SkillConfirmationsContainerProps> = ({
@@ -24,6 +26,7 @@ const SkillConfirmationsContainer: React.FC<SkillConfirmationsContainerProps> = 
   skillTitle,
   currentLevel,
   jobroleId: _jobroleId,
+  forceAllowAdd = false,
 }) => {
   const [addModalOpen, setAddModalOpen] = useState(false);
 
@@ -77,16 +80,29 @@ const SkillConfirmationsContainer: React.FC<SkillConfirmationsContainerProps> = 
         </span>
       ),
       extra: (
-        <PermissionButton
-          size="small"
-          type="primary"
-          onClick={(e) => {
-            e.stopPropagation();
-            setAddModalOpen(true);
-          }}
-        >
-          Добавить
-        </PermissionButton>
+        forceAllowAdd ? (
+          <Button
+            size="small"
+            type="primary"
+            onClick={(e) => {
+              e.stopPropagation();
+              setAddModalOpen(true);
+            }}
+          >
+            Добавить
+          </Button>
+        ) : (
+          <PermissionButton
+            size="small"
+            type="primary"
+            onClick={(e) => {
+              e.stopPropagation();
+              setAddModalOpen(true);
+            }}
+          >
+            Добавить
+          </PermissionButton>
+        )
       ),
       children: (
         <SkillConfirmationsList

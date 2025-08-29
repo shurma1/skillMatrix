@@ -1,10 +1,10 @@
 import React from 'react';
-import {Card, Skeleton, Typography, Space, Flex} from 'antd';
+import {Card, Skeleton, Typography, Flex} from 'antd';
 import PermissionButton from '@/components/shared/PermissionButton';
 import { EditOutlined } from '@ant-design/icons';
 import type { JobRoleDTO } from '@/types/api/jobrole';
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
 interface JobRoleInfoCardProps {
   jobRole?: JobRoleDTO;

@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, Table, Button, Space, Tag, Popconfirm } from 'antd';
 import PermissionButton from '@/components/shared/PermissionButton';
 import {PlusOutlined, EditOutlined, DeleteOutlined, LinkOutlined} from '@ant-design/icons';
-import type {JobRoleSkillSearchDTO, JobRoleUserSearchDTO} from '@/types/api/jobrole';
+import type {JobRoleSkillSearchDTO} from '@/types/api/jobrole';
 
 interface JobRoleSkillsCardProps {
   skills: JobRoleSkillSearchDTO[];

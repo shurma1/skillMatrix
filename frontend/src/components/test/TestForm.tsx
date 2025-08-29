@@ -7,8 +7,9 @@ import type { CreateTestDTO, AnswerVariantDTO } from '@/types/api/test';
 const { Title } = Typography;
 
 interface TestFormProps {
-  onSubmit: (values: CreateTestDTO) => void;
+  onSubmit: (values: CreateTestDTO) => void; // expects seconds; form handles minutes->seconds conversion
   loading?: boolean;
+  // initialValues.timeLimit is expected in MINUTES (UI units)
   initialValues?: Partial<CreateTestDTO>;
 }
 
@@ -20,7 +21,12 @@ const TestForm: React.FC<TestFormProps> = ({
   const [form] = Form.useForm<CreateTestDTO>();
 
   const handleFinish = (values: CreateTestDTO) => {
-    onSubmit(values);
+    const minutes = Number(values.timeLimit) || 1;
+    const payload: CreateTestDTO = {
+      ...values,
+      timeLimit: Math.round(minutes * 60), // convert minutes -> seconds for backend
+    };
+    onSubmit(payload);
   };
 
   // Следим за изменениями в количестве вопросов и корректируем needScore
@@ -99,7 +105,8 @@ const TestForm: React.FC<TestFormProps> = ({
         onFinish={handleFinish}
         initialValues={{
           needScore: 1,
-          timeLimit: 60,
+          // default 1 minute in UI
+          timeLimit: 1,
           title: '',
           questions: [
             {
@@ -153,16 +160,16 @@ const TestForm: React.FC<TestFormProps> = ({
 
         <Form.Item 
           name="timeLimit" 
-          label="Лимит времени (секунды)" 
+          label="Лимит времени (минуты)" 
           rules={[
             { required: true, message: 'Укажите лимит времени' },
-            { type: 'number', min: 10, message: 'Время должно быть больше 10 секунд' }
+            { type: 'number', min: 1, message: 'Время должно быть минимум 1 минута' }
           ]}
         >
           <InputNumber 
-            min={10} 
+            min={1}
             style={{ width: '100%' }} 
-            placeholder="Лимит времени в секундах"
+            placeholder="Лимит времени в минутах"
           />
         </Form.Item>
 

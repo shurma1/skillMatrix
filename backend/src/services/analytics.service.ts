@@ -173,7 +173,7 @@ class AnalyticsService {
 			: [[]];
 		
 		const userLevelMatrixTotalMatrix = sumByColumns(userLevelMatrix);
-		const userLevelPercentMatrix = userLevelMatrixTotalMatrix.map(userLevel => calcPercent(userLevel, jobRoleTarget))
+		const userLevelPercentMatrix = userLevelMatrixTotalMatrix.map(userLevel => calcPercent(jobRoleTarget, userLevel))
 		
 		const colLabels_3d_p = [userNames, userLevelPercentMatrix, userLevelMatrixTotalMatrix];
 		
@@ -637,6 +637,333 @@ class AnalyticsService {
 			buffer,
 			filename,
 			contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+		};
+	}
+
+	async downloadUserToSkills(userId: string) {
+		const analytics = await this.userToSkills(userId);
+
+		const workbook = new ExcelJS.Workbook();
+		const worksheet = workbook.addWorksheet('UserToSkills');
+
+		const leftCols = analytics.left.colLabels as string[]; // 6 columns
+		const leftData = analytics.left.data as (string | number | null)[][];
+
+		const middleCols = (analytics.middle.colLabels?.[0] as (string | number)[][]) || [[], [], []]; // [[top],["ЦЕЛЬ"],[target]]
+		const middleMatrix = analytics.middle.data as number[][]; // skills x 1
+
+		const rightCols = analytics.right.colLabels as (string | number)[][]; // [[userName],[percent],[total]]
+		const rightMatrix = analytics.right.data as number[][]; // skills x 1
+
+		const leftColCount = leftCols.length; // expected 6
+		const midStartCol = leftColCount + 1; // 7th column
+		const rightStartCol = midStartCol + 1; // 8th column
+
+		// Header row 1: left headers (vertical, merged 1..3 rows)
+		for (let j = 0; j < leftCols.length; j++) {
+			const cell = worksheet.getCell(1, j + 1);
+			cell.value = leftCols[j];
+			cell.font = { bold: true };
+			cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true, textRotation: 90 } as ExcelJS.Alignment;
+			worksheet.mergeCells(1, j + 1, 3, j + 1);
+		}
+
+		// Middle header (vertical top, then 'ЦЕЛЬ', then total target with grey fill)
+		worksheet.getCell(1, midStartCol).value = (middleCols?.[0]?.[0] ?? '') as string;
+		worksheet.getCell(1, midStartCol).font = { bold: true };
+		worksheet.getCell(1, midStartCol).alignment = { vertical: 'middle', horizontal: 'center', wrapText: true, textRotation: 90 } as ExcelJS.Alignment;
+		worksheet.getRow(1).height = 160;
+		worksheet.getCell(2, midStartCol).value = String(middleCols?.[1]?.[0] ?? 'ЦЕЛЬ');
+		worksheet.getCell(2, midStartCol).font = { bold: true };
+		worksheet.getCell(2, midStartCol).alignment = { vertical: 'middle', horizontal: 'center' };
+		worksheet.getCell(3, midStartCol).value = Number(middleCols?.[2]?.[0] ?? 0);
+		worksheet.getCell(3, midStartCol).font = { bold: true };
+		worksheet.getCell(3, midStartCol).alignment = { vertical: 'middle', horizontal: 'center' };
+		worksheet.getCell(3, midStartCol).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'D9D9D9' } };
+
+		// Right header (user name vertical, then percent and total current)
+		const userName = String(rightCols?.[0]?.[0] ?? '');
+		worksheet.getCell(1, rightStartCol).value = userName;
+		worksheet.getCell(1, rightStartCol).font = { bold: true };
+		worksheet.getCell(1, rightStartCol).alignment = { vertical: 'middle', horizontal: 'center', wrapText: true, textRotation: 90 } as ExcelJS.Alignment;
+		const percentVal = Number((rightCols?.[1]?.[0] as number) ?? 0);
+		const totalCurrent = Number((rightCols?.[2]?.[0] as number) ?? 0);
+		const pcCell = worksheet.getCell(2, rightStartCol);
+		pcCell.value = (isFinite(percentVal) ? percentVal : 0) / 100;
+		pcCell.numFmt = '0%';
+		pcCell.alignment = { vertical: 'middle', horizontal: 'center' };
+		const totalCell = worksheet.getCell(3, rightStartCol);
+		totalCell.value = totalCurrent;
+		totalCell.font = { bold: true };
+		totalCell.alignment = { vertical: 'middle', horizontal: 'center' };
+		totalCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'D9D9D9' } };
+
+		// Data rows start at 4
+		const startRow = 4;
+		const rowCount = Math.max(leftData.length, middleMatrix.length, rightMatrix.length);
+		for (let i = 0; i < rowCount; i++) {
+			const r = startRow + i;
+			const leftRow = leftData[i] ?? [];
+			for (let j = 0; j < leftColCount; j++) {
+				const cell = worksheet.getCell(r, j + 1);
+				cell.value = (leftRow[j] ?? null) as any;
+				cell.alignment = { vertical: 'middle', horizontal: j >= 2 ? 'left' : 'center', wrapText: true };
+			}
+			const mval = Number(middleMatrix?.[i]?.[0] ?? 0);
+			const mcell = worksheet.getCell(r, midStartCol);
+			mcell.value = mval;
+			mcell.alignment = { vertical: 'middle', horizontal: 'center' };
+			mcell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFDE9D9' } } as any;
+			const rval = Number(rightMatrix?.[i]?.[0] ?? 0);
+			const rcell = worksheet.getCell(r, rightStartCol);
+			rcell.value = rval;
+			rcell.alignment = { vertical: 'middle', horizontal: 'center' };
+			rcell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFDE9D9' } } as any;
+		}
+
+		// Column widths
+		const calcTextWidth = (txt: string) => Math.max(10, Math.min(60, Math.round((txt ?? '').toString().length * 1.2)));
+		for (let j = 0; j < leftCols.length; j++) {
+			const col = worksheet.getColumn(j + 1);
+			const headerWidth = calcTextWidth(leftCols[j]);
+			const dataWidths = leftData.map(r => calcTextWidth(String(r[j] ?? '')));
+			col.width = Math.max(16, headerWidth, ...dataWidths);
+		}
+		worksheet.getColumn(midStartCol).width = 12;
+		worksheet.getColumn(rightStartCol).width = 12;
+
+		// Borders for used range
+		const lastRow = startRow + rowCount - 1;
+		const lastCol = rightStartCol;
+		for (let r = 1; r <= Math.max(lastRow, 3); r++) {
+			for (let c = 1; c <= lastCol; c++) {
+				worksheet.getCell(r, c).border = {
+					top: { style: 'thin' },
+					left: { style: 'thin' },
+					bottom: { style: 'thin' },
+					right: { style: 'thin' },
+				};
+			}
+		}
+
+		worksheet.views = [{ state: 'frozen', xSplit: midStartCol, ySplit: 3 }];
+
+		const arrayBuffer = await workbook.xlsx.writeBuffer();
+		const buffer: Buffer = Buffer.isBuffer(arrayBuffer)
+			? (arrayBuffer as Buffer)
+			: Buffer.from(arrayBuffer as ArrayBuffer);
+
+		const dateStr = new Date().toISOString().slice(0, 10);
+		const filename = `user_to_skills_${dateStr}.xlsx`;
+		return {
+			buffer,
+			filename,
+			contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+		};
+	}
+
+	async downloadSkillToUsers(skillId: string) {
+		const analytics = await this.skillToUsers(skillId);
+
+		const workbook = new ExcelJS.Workbook();
+		const worksheet = workbook.addWorksheet('SkillToUsers');
+
+		const colLabels = analytics.colLabels as string[];
+		const data = analytics.data as (string | number | null)[][];
+
+		// Header row
+		for (let j = 0; j < colLabels.length; j++) {
+			const cell = worksheet.getCell(1, j + 1);
+			cell.value = colLabels[j];
+			cell.font = { bold: true };
+			cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+		}
+
+		// Data rows
+		for (let i = 0; i < data.length; i++) {
+			const r = i + 2;
+			for (let j = 0; j < colLabels.length; j++) {
+				const cell = worksheet.getCell(r, j + 1);
+				const value = data[i]?.[j] ?? null;
+				if (j === colLabels.length - 1) { // % column
+					const num = typeof value === 'number' ? value : Number(value) || 0;
+					cell.value = num / 100;
+					cell.numFmt = '0%';
+				} else {
+					cell.value = value as any;
+				}
+				cell.alignment = { vertical: 'middle', horizontal: j >= 3 ? 'center' : (j === 2 ? 'center' : 'left'), wrapText: true };
+			}
+		}
+
+		// Column widths (name wider, login medium, type medium, numbers fixed)
+		worksheet.getColumn(1).width = 28; // ФИО
+		worksheet.getColumn(2).width = 18; // Логин
+		worksheet.getColumn(3).width = 22; // Тип связи
+		for (let j = 4; j <= colLabels.length; j++) {
+			worksheet.getColumn(j).width = 14;
+		}
+
+		// Borders
+		const lastRow = 1 + data.length;
+		const lastCol = colLabels.length;
+		for (let r = 1; r <= Math.max(lastRow, 2); r++) {
+			for (let c = 1; c <= lastCol; c++) {
+				worksheet.getCell(r, c).border = {
+					top: { style: 'thin' },
+					left: { style: 'thin' },
+					bottom: { style: 'thin' },
+					right: { style: 'thin' },
+				};
+			}
+		}
+
+		worksheet.views = [{ state: 'frozen', xSplit: 0, ySplit: 1 }];
+
+		const arrayBuffer = await workbook.xlsx.writeBuffer();
+		const buffer: Buffer = Buffer.isBuffer(arrayBuffer)
+			? (arrayBuffer as Buffer)
+			: Buffer.from(arrayBuffer as ArrayBuffer);
+
+		const dateStr = new Date().toISOString().slice(0, 10);
+		const filename = `skill_to_users_${dateStr}.xlsx`;
+		return {
+			buffer,
+			filename,
+			contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+		};
+	}
+	
+	async userToSkills(userId: string) {
+		// Проверяем существование пользователя
+		const user = await UserService.checkIsUserExist(userId);
+		
+		// Получаем все навыки связанные с пользователем
+		const skills = await SkillRepository.getSkillsByUserId(userId);
+		
+		// Вспомогательная функция для сокращения имени
+		const shortenTheName = (lastname: string, firstname: string) => {
+			return `${lastname} ${firstname[0]}.`;
+		}
+		
+		// Формируем левую часть таблицы с информацией о навыках
+		const colLabels_1st_p = [
+			'Ответсвенный за навык / документ',
+			'Ответсвенный за подтверждение квалификации',
+			'Number / Номер документа',
+			'Стандарт / Навык',
+			'Актуальная версия',
+			'Дата утверждения'
+		];
+		
+		const data_1st_p = skills.map(skill => [
+			skill.authorFirstname && skill.authorLastname
+				? shortenTheName(skill.authorLastname, skill.authorFirstname)
+				: null,
+			shortenTheName(skill.verifierLastname, skill.verifierFirstname),
+			skill.documentId || null,
+			skill.title,
+			skill.version,
+			formatDate(skill.approvedDate) || null
+		]);
+		
+		// Рассчитываем суммы для заголовков
+		const totalTargetLevel = skills.reduce((sum, skill) => sum + skill.targetLevel, 0);
+		const totalCurrentLevel = skills.reduce((sum, skill) => sum + skill.currentLevel, 0);
+		const totalPercent = calcPercent(totalTargetLevel, totalCurrentLevel);
+		
+		// Формируем правую часть с уровнями пользователя
+		const userName = `${user.lastname} ${user.firstname}${user.patronymic ? ' ' + user.patronymic : ''}`;
+		
+		// Middle содержит только базовую структуру с целью
+		const colLabels_2nd_p = [[
+			["Нужный уровень"],
+			["ЦЕЛЬ"],
+			[totalTargetLevel]
+		]];
+		
+		// Right содержит заголовки пользователя
+		const colLabels_3rd_p = [
+			[userName],
+			[totalPercent],
+			[totalCurrentLevel]
+		];
+		
+		// Данные для правой части - targetLevel для каждого навыка
+		const data_2nd_p = skills.map(skill => [skill.targetLevel]);
+		
+		// Данные для третьей части - currentLevel для каждого навыка
+		const data_3rd_p = skills.map(skill => [skill.currentLevel]);
+		
+		return {
+			user: {
+				id: user.id,
+				login: user.login,
+				firstname: user.firstname,
+				lastname: user.lastname,
+				patronymic: user.patronymic
+			},
+			left: {
+				colLabels: colLabels_1st_p,
+				data: data_1st_p
+			},
+			middle: {
+				colLabels: colLabels_2nd_p,
+				data: data_2nd_p
+			},
+			right: {
+				colLabels: colLabels_3rd_p,
+				data: data_3rd_p
+			},
+			summary: {
+				totalTargetLevel,
+				totalCurrentLevel,
+				totalPercent
+			}
+		};
+	}
+	
+	async skillToUsers(skillId: string) {
+		// Проверяем существование навыка
+		await SkillService.checkSkillExist(skillId);
+		
+		// Получаем информацию о навыке
+		const skill = await SkillService.get(skillId);
+		
+		// Получаем всех пользователей связанных с навыком
+		const users = await SkillRepository.getUsersBySkillId(skillId);
+		
+		// Формируем заголовки колонок
+		const colLabels = [
+			'ФИО',
+			'Логин',
+			'Тип связи',
+			'Необходимый уровень',
+			'Текущий уровень',
+			'%'
+		];
+		
+		// Формируем данные таблицы
+		const data = users.map(user => [
+			`${user.lastname} ${user.firstname}${user.patronymic ? ' ' + user.patronymic : ''}`,
+			user.login,
+			user.relationshipTypes === 'direct' ? 'Прямая' :
+				user.relationshipTypes === 'jobRole' ? 'Через должность' :
+					'Прямая + Через должность',
+			user.targetLevel,
+			user.currentLevel,
+			calcPercent(user.targetLevel, user.currentLevel)
+		]);
+		
+		return {
+			skill: {
+				id: skill?.id,
+				title: skill?.title,
+				version: skill?.version,
+				documentId: skill?.documentId
+			},
+			colLabels,
+			data
 		};
 	}
 }

@@ -3,7 +3,6 @@ import { Typography, Card, Skeleton, Flex } from 'antd';
 import PermissionButton from '@/components/shared/PermissionButton';
 import type { UserUpdateDTO } from '@/types/api/user';
 import AvatarEditor from './shared/AvatarEditor';
-import {Permissions} from "@/constants/permissions.ts";
 
 const { Title } = Typography;
 

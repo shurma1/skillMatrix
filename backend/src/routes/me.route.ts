@@ -3,6 +3,7 @@ import UserController from '../controllers/user.controller';
 import permissionMiddleware from "../middlewares/permission.middleware";
 import JobRoleController from "../controllers/jobRole.controller";
 import PermissionController from "../controllers/permission.controller";
+import analyticsController from '../controllers/analytics.controller';
 
 const router = express.Router();
 
@@ -176,6 +177,33 @@ router.get(
 	UserController.getMyAllSkills
 );
 
+/**
+ * @openapi
+ * /api/me/servicedSkills:
+ *   get:
+ *     summary: Get skills managed by current user (as author or verifier)
+ *     tags:
+ *       - Me
+ *     security:
+ *       - JWT: []
+ *     responses:
+ *       200:
+ *         description: List of skills where user is author or verifier
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/SkillWithCurrentVersionDTO'
+ */
+router.get(
+	'/servicedSkills',
+	permissionMiddleware({
+		needAuth: true,
+	}),
+	UserController.getMyServicedSkills
+);
+
 router.get(
 	'/stats',
 	permissionMiddleware({
@@ -183,5 +211,41 @@ router.get(
 	}),
 	UserController.getMyStats
 );
+
+router.get(
+	'/sharedStat',
+	permissionMiddleware({
+		needAuth: true,
+	}),
+	analyticsController.getMySkillsStat
+);
+
+/**
+ * @openapi
+ * /api/me/sharedStat/download:
+ *   get:
+ *     summary: Download current user's shared skills analytics as Excel
+ *     tags:
+ *       - Me
+ *     security:
+ *       - JWT: []
+ *     responses:
+ *       200:
+ *         description: Excel file
+ *         content:
+ *           application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+ *             schema:
+ *               type: string
+ *               format: binary
+ */
+router.get(
+	'/sharedStat/download',
+	permissionMiddleware({
+		needAuth: true,
+	}),
+	analyticsController.downloadMySkillsStat
+);
+
+
 
 export default router;

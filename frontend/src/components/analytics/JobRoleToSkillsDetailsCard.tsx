@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
-import { Card, Select, Alert, Spin, Space } from 'antd';
-import { useSearchJobRolesQuery } from '@/store/endpoints';
+import { Card, Select, Alert, Spin, Space, Button } from 'antd';
+import { DownloadOutlined } from '@ant-design/icons';
+import { useSearchJobRolesQuery, useDownloadAnalyticsJobRoleToSkillsQuery } from '@/store/endpoints';
 import JobRoleToSkillsDetailsTable from './JobRoleToSkillsDetailsTable';
 import type { SerializedError } from '@reduxjs/toolkit';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
@@ -45,6 +46,11 @@ const JobRoleToSkillsDetailsCard: React.FC<Props> = ({
     onJobRoleChange(value);
   }, [onJobRoleChange]);
 
+  const { refetch: refetchDownload, isFetching: isDownloading } = useDownloadAnalyticsJobRoleToSkillsQuery(
+    selectedJobRoleId ? { jobRoleId: selectedJobRoleId } : (undefined as any),
+    { skip: !selectedJobRoleId }
+  );
+
   if (error) {
     return (
       <Card>
@@ -67,6 +73,24 @@ const JobRoleToSkillsDetailsCard: React.FC<Props> = ({
       title="Детализация навыков по должности"
       extra={
         <Space>
+          <Button
+            icon={<DownloadOutlined />}
+            onClick={async () => {
+              const res = await refetchDownload();
+              const payload = res.data as unknown as { blob: Blob; filename?: string } | undefined;
+              if (!payload) return;
+              const url = URL.createObjectURL(payload.blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = payload.filename || 'jobRoleToSkills.xlsx';
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+            loading={isDownloading}
+            disabled={!selectedJobRoleId}
+          >
+            Скачать Excel
+          </Button>
           <Select
             showSearch
             placeholder="Выберите должность"

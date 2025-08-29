@@ -20,7 +20,7 @@ class FileController {
 	async get(req: Request, res: Response, next: NextFunction) {
 		try {
 			const { id } = req.params;
-			const { view } = req.query; // Добавляем параметр для просмотра
+			const { view } = req.query;
 			
 			const fileInfo = await FileService.getInfo(id);
 			const filePath = path.resolve(__dirname, '..', '..', 'uploads', fileInfo.filename);

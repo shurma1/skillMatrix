@@ -171,7 +171,7 @@ class JobRoleController {
 			
 			await JobRoleService.checkIsUserHasThisJobrole(id, userId);
 			
-			const skills = await UserService.getAllSkillsByJobrole(userId, id);
+			const skills = await UserService.getAllMySkillsByJobrole(userId, id);
 			
 			const filteredSkill = skills.filter(skill => skill.isActive);
 			

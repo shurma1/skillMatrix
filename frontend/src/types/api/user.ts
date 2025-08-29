@@ -9,8 +9,8 @@ export interface UserJobRoleSearchDTO { jobRoleId: string; title: string; assign
 export interface ConfirmationDTO { id: string; type: 'acquired' | 'debuff' | 'admin_set'; level: number; date: string; version: number; }
 export interface ConfirmationCreateDTO { date: string; level: number; }
 export interface ConfirmationAddResponseDTO { /* server returns added confirmation; reuse ConfirmationDTO */ }
-export interface UserSkillDto { skillId: string; title: string; type: string; level: number; targetLevel: number; isConfirmed: boolean; isNew: boolean; tags: TagDTO[]; userId: string; login: string; firstname: string; patronymic: string; avatarId: string; confirmations: ConfirmationDTO[]; testId?: string | null; }
-export interface UserSkillSearchDto { skillId: string; title: string; type: string; level: number; targetLevel: number; isConfirmed: boolean; isNew: boolean; tags: TagDTO[]; userId: string; login: string; firstname: string; patronymic: string; avatarId: string; testId?: string | null; }
+export interface UserSkillDto { skillId: string; title: string; type: string; level: number; targetLevel: number; isConfirmed: boolean; isNew: boolean; tags: TagDTO[]; userId: string; login: string; firstname: string; lastname: string; patronymic: string; avatarId: string; confirmations: ConfirmationDTO[]; testId?: string | null; isOverdue?: boolean; }
+export interface UserSkillSearchDto { skillId: string; title: string; type: string; level: number; targetLevel: number; isConfirmed: boolean; isNew: boolean; tags: TagDTO[]; userId: string; login: string; firstname: string; lastname: string; patronymic: string; avatarId: string; testId?: string | null; isOverdue?: boolean; }
 
 // Preview of user results for login page popup
 export interface UserResultPreviewDTO {

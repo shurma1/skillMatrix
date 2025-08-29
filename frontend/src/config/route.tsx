@@ -204,17 +204,14 @@ export const routeConfig: Record<AppRoutes, AppRouteObject> = {
 		path: RoutePaths.SkillDocument,
 		element: (
 			<ProtectedRoute>
-				<RequirePermission need={[Permissions.VIEW_ALL]}>
-					<SkillDocumentPageAsync />
-				</RequirePermission>
+				<SkillDocumentPageAsync />
 			</ProtectedRoute>
 		),
 		meta: {
 			titleKey: 'SkillTitle',
 			descriptionKey: 'SkillDescription',
 			showInNav: false
-		},
-		permissionsNeed: [Permissions.VIEW_ALL]
+		}
 	},
 	[AppRoutes.SkillVersions]: {
 		path: RoutePaths.SkillVersions,
@@ -349,6 +346,7 @@ export const routeConfig: Record<AppRoutes, AppRouteObject> = {
 			descriptionKey: 'TestResultViewDescription',
 			navNameKey: 'AnalyticsNavName',
 			showInNav: true
-		}
+		},
+		permissionsNeed: [Permissions.ANALYTICS_VIEW]
 	},
 };

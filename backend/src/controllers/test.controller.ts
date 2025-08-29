@@ -65,6 +65,39 @@ class TestController {
 			next(err);
 		}
 	}
+
+	// For curators/admins: get user test result by explicit userId
+	async getUserTestResultByUser(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { testId, userId } = req.params as { testId: string; userId: string };
+			const result = await TestService.getUserTestResult(testId, userId);
+			res.status(200).json(result);
+		} catch (err) {
+			next(err);
+		}
+	}
+
+	async deleteUserTestResult(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { testId, userId } = req.params as { testId: string; userId: string };
+			await TestService.deleteUserResult(testId, userId);
+			res.status(200).send();
+		} catch (err) {
+			next(err);
+		}
+	}
+
+	async canDeleteTest(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { testId } = req.params as { testId: string };
+			const requesterId = req.authUser!.id;
+			const permissions = (req as any).permissions as string[] | undefined;
+			const can = await TestService.canDeleteTest(testId, requesterId, permissions || []);
+			res.status(200).json({ can });
+		} catch (err) {
+			next(err);
+		}
+	}
 	
 	async getTest(req: Request, res: Response, next: NextFunction) {
 		try {
@@ -73,6 +106,27 @@ class TestController {
 			const result = await TestService.getTest(testId);
 			
 			res.status(200).json(result);
+		} catch (err) {
+			next(err);
+		}
+	}
+
+	async getTestFull(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { testId } = req.params;
+			const result = await TestService.getTestFull(testId);
+			res.status(200).json(result);
+		} catch (err) {
+			next(err);
+		}
+	}
+
+	async updateTest(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { testId } = req.params as { testId: string };
+			const dto = req.body as CreateTestDTO;
+			const updated = await TestService.updateTest(testId, dto);
+			res.status(200).json(updated);
 		} catch (err) {
 			next(err);
 		}

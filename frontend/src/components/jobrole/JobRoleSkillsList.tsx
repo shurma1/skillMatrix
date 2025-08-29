@@ -36,6 +36,7 @@ const JobRoleSkillsList: React.FC<JobRoleSkillsListProps> = ({
           showConfirmations
           userId={userId}
           jobroleId={jobroleId}
+          showTestInfo
         />
       )}
     />

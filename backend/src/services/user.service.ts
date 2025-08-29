@@ -5,7 +5,7 @@ import ImageRepository from '../repositories/image.repository';
 import {validate as isValidUUID} from 'uuid';
 import {UserDTO} from "../dtos/user.dto";
 import {PaginationDTO} from "../dtos/Pagination.dto";
-import UserRepository, {UserSkillSearch} from "../repositories/user.repossitory";
+import UserRepository from "../repositories/user.repossitory";
 import UserRepossitory from "../repositories/user.repossitory";
 import {UserSkillDto} from "../dtos/userSkill.dto";
 import SkillRepository from "../repositories/skill.repository";
@@ -15,10 +15,13 @@ import {UserJobRoleSearchDTO} from "../dtos/userJobRoleSearch.dto";
 import JobRoleRepository from "../repositories/jobRole.repository";
 import {JobRoleInstance} from "../models/entities/JobRole";
 import {SkillConfirmType} from "../models/types/SkillConfirmType";
-import {loadSql} from "../utils/loadSql";
-import {Sequelize} from "../models";
-import {QueryTypes} from "sequelize";
+import config from "config";
 
+interface IMySkillSearch extends UserSkillSearchDto {
+	isOverdue: boolean;
+}
+
+const OVERDUE_MONTHS = config.get<number>("times.OVERDUE_MONTHS");
 
 class UserService {
 	async create(data: {
@@ -157,11 +160,75 @@ class UserService {
 		return await UserRepository.getAllSkills(userId) as UserSkillSearchDto[];
 	}
 	
+	async getUserServicedSkills(userId: string) {
+		await this.checkIsUserExist(userId);
+		
+		return await UserRepository.getUserServicedSkills(userId);
+	}
+	
+	async getAllMySkills(userId: string): Promise<IMySkillSearch[]> {
+		const user =  await UserRepository.getByID(userId);
+		
+		if(! user) {
+			throw ApiError.errorByType('USER_NOT_FOUND');
+		}
+		const skill = await this.getAllSkills(userId);
+		
+		const userCreationAt = new Date(user.creationAt!);
+		
+		return skill.map(skill => {
+			const approvedDate = new Date(skill.approvedDate);
+			const now = new Date(Date.now());
+			
+			const startDate = userCreationAt > approvedDate ? userCreationAt : approvedDate;
+			
+			const overdueDate = startDate;
+			overdueDate.setMonth(overdueDate.getMonth() + OVERDUE_MONTHS);
+			
+			const isOverdue = now > overdueDate;
+			
+			return {
+				...skill,
+				isOverdue
+			}
+		})
+	}
+	
 	async getAllSkillsByJobrole(userId: string, jobroleId: string): Promise<UserSkillSearchDto[]> {
 		await this.checkIsUserExist(userId);
 		await this.checkIsJobroleExist(jobroleId);
 		
 		return await UserRepository.getAllSkillsByJobroles(userId, jobroleId) as UserSkillSearchDto[];
+	}
+	
+	async getAllMySkillsByJobrole(userId: string, jobroleId: string): Promise<IMySkillSearch[]> {
+		await this.checkIsUserExist(userId);
+		await this.checkIsJobroleExist(jobroleId);
+		
+		const user =  await UserRepository.getByID(userId) as UserInstance;
+		
+		const skills = await UserRepository.getAllSkillsByJobroles(userId, jobroleId) as UserSkillSearchDto[];
+		
+		const userCreationAt = new Date(user.creationAt!);
+		
+		
+		return skills.map(skill => {
+			const approvedDate = new Date(skill.approvedDate);
+			const now = new Date(Date.now());
+			
+			const startDate = userCreationAt > approvedDate ? userCreationAt : approvedDate;
+			
+			const overdueDate = startDate;
+			overdueDate.setMonth(overdueDate.getMonth() + OVERDUE_MONTHS);
+			
+			const isOverdue = now > overdueDate;
+			
+			return {
+				...skill,
+				isOverdue
+			}
+		})
+		
 	}
 	
 	async addSkill(userId: string, skillId: string, targetLevel: number) {

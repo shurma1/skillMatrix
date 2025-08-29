@@ -83,6 +83,163 @@ export const api = baseApi.injectEndpoints({
       }),
       providesTags: ['Profile'],
     }),
+    getAnalyticsUserToSkills: build.query<{
+      user: {
+        id: string;
+        login: string;
+        firstname: string;
+        lastname: string;
+        patronymic?: string;
+      };
+      left: { colLabels: string[]; data: (string | number | null)[][] };
+      middle: { colLabels: Array<[string[], string[], number[]]>; data: number[][] };
+      right: { colLabels: [string[], number[], number[]]; data: number[][] };
+      summary: {
+        totalTargetLevel: number;
+        totalCurrentLevel: number;
+        totalPercent: number;
+      };
+    }, string>({
+      query: (userId) => `/api/analytics/userToSkills/${userId}`,
+      providesTags: ['Profile'],
+    }),
+    getMySharedStat: build.query<{
+      user: {
+        id: string;
+        login: string;
+        firstname: string;
+        lastname: string;
+        patronymic?: string;
+      };
+      left: { colLabels: string[]; data: (string | number | null)[][] };
+      middle: { colLabels: Array<[string[], string[], number[]]>; data: number[][] };
+      right: { colLabels: [string[], number[], number[]]; data: number[][] };
+      summary: {
+        totalTargetLevel: number;
+        totalCurrentLevel: number;
+        totalPercent: number;
+      };
+    }, void>({
+      query: () => '/api/me/sharedStat',
+      providesTags: ['Profile'],
+    }),
+    downloadMySharedStat: build.query<{ blob: Blob; filename?: string }, void>({
+      query: () => ({
+        url: '/api/me/sharedStat/download',
+        responseHandler: async (response) => {
+          if (!response.ok) {
+            const text = await response.text();
+            throw new Error(text || `HTTP ${response.status}`);
+          }
+          const cd = response.headers.get('Content-Disposition') || undefined;
+          const match = cd?.match(/filename\*=UTF-8''([^;]+)/);
+          const filename = match ? decodeURIComponent(match[1]) : undefined;
+          const blob = await response.blob();
+          return { blob, filename };
+        },
+      }),
+      keepUnusedDataFor: 0,
+    }),
+    getAnalyticsSkillToUsers: build.query<{
+      skill: {
+        id?: string;
+        title?: string;
+        version?: number;
+        documentId?: string | null;
+      };
+      colLabels: string[];
+      data: (string | number | null)[][];
+    }, string>({
+      query: (skillId) => `/api/analytics/skillToUsers/${skillId}`,
+      providesTags: ['Profile'],
+    }),
+    // Downloads (Excel)
+    downloadAnalyticsKPI: build.query<{ blob: Blob; filename?: string }, void>({
+      query: () => ({
+        url: '/api/analytics/kpi/download',
+        responseHandler: async (response) => {
+          if (!response.ok) {
+            const text = await response.text();
+            throw new Error(text || `HTTP ${response.status}`);
+          }
+          const cd = response.headers.get('Content-Disposition') || undefined;
+          const match = cd?.match(/filename\*=UTF-8''([^;]+)/);
+          const filename = match ? decodeURIComponent(match[1]) : undefined;
+          const blob = await response.blob();
+          return { blob, filename };
+        },
+      }),
+      keepUnusedDataFor: 0,
+    }),
+    downloadAnalyticsJobRolesToSkills: build.query<{ blob: Blob; filename?: string }, void>({
+      query: () => ({
+        url: '/api/analytics/jobRolesToSkills/download',
+        responseHandler: async (response) => {
+          if (!response.ok) {
+            const text = await response.text();
+            throw new Error(text || `HTTP ${response.status}`);
+          }
+          const cd = response.headers.get('Content-Disposition') || undefined;
+          const match = cd?.match(/filename\*=UTF-8''([^;]+)/);
+          const filename = match ? decodeURIComponent(match[1]) : undefined;
+          const blob = await response.blob();
+          return { blob, filename };
+        },
+      }),
+      keepUnusedDataFor: 0,
+    }),
+    downloadAnalyticsJobRoleToSkills: build.query<{ blob: Blob; filename?: string }, { jobRoleId: string; userId?: string }>({
+      query: ({ jobRoleId, userId }) => ({
+        url: '/api/analytics/jobRoleToSkills/download',
+        params: { jobRoleId, ...(userId && { userId }) },
+        responseHandler: async (response) => {
+          if (!response.ok) {
+            const text = await response.text();
+            throw new Error(text || `HTTP ${response.status}`);
+          }
+          const cd = response.headers.get('Content-Disposition') || undefined;
+          const match = cd?.match(/filename\*=UTF-8''([^;]+)/);
+          const filename = match ? decodeURIComponent(match[1]) : undefined;
+          const blob = await response.blob();
+          return { blob, filename };
+        },
+      }),
+      keepUnusedDataFor: 0,
+    }),
+    downloadAnalyticsUserToSkills: build.query<{ blob: Blob; filename?: string }, string>({
+      query: (userId) => ({
+        url: `/api/analytics/userToSkills/${userId}/download`,
+        responseHandler: async (response) => {
+          if (!response.ok) {
+            const text = await response.text();
+            throw new Error(text || `HTTP ${response.status}`);
+          }
+          const cd = response.headers.get('Content-Disposition') || undefined;
+          const match = cd?.match(/filename\*=UTF-8''([^;]+)/);
+          const filename = match ? decodeURIComponent(match[1]) : undefined;
+          const blob = await response.blob();
+          return { blob, filename };
+        },
+      }),
+      keepUnusedDataFor: 0,
+    }),
+    downloadAnalyticsSkillToUsers: build.query<{ blob: Blob; filename?: string }, string>({
+      query: (skillId) => ({
+        url: `/api/analytics/skillToUsers/${skillId}/download`,
+        responseHandler: async (response) => {
+          if (!response.ok) {
+            const text = await response.text();
+            throw new Error(text || `HTTP ${response.status}`);
+          }
+          const cd = response.headers.get('Content-Disposition') || undefined;
+          const match = cd?.match(/filename\*=UTF-8''([^;]+)/);
+          const filename = match ? decodeURIComponent(match[1]) : undefined;
+          const blob = await response.blob();
+          return { blob, filename };
+        },
+      }),
+      keepUnusedDataFor: 0,
+    }),
     // Auth
     login: build.mutation<AuthDTO, LoginRequestDTO>({
       query: (body) => ({ url: '/api/auth/login', method: 'POST', body }),
@@ -298,6 +455,10 @@ export const api = baseApi.injectEndpoints({
       query: (id) => `/api/skill/${id}/user`,
       providesTags: (_, __, id) => [{ type: 'SkillUsers' as const, id }]
     }),
+    listAllSkillUsers: build.query<UserSkillSearchDto[], string>({
+      query: (id) => `/api/skill/${id}/allUsers`,
+      providesTags: (_, __, id) => [{ type: 'SkillUsers' as const, id }]
+    }),
     addTagToSkill: build.mutation<void, { id: string; tagId: string }>({
       query: ({ id, tagId }) => ({
         url: `/api/skill/${id}/tag`,
@@ -424,8 +585,34 @@ export const api = baseApi.injectEndpoints({
       query: (testId) => `/api/test/${testId}/result`,
       providesTags: (_, __, testId) => [{ type: 'Test' as const, id: testId }],
     }),
+    getUserTestResultByUser: build.query<UserTestResultDTO, { testId: string; userId: string }>({
+      query: ({ testId, userId }) => `/api/test/${testId}/result/user/${userId}`,
+      providesTags: (_, __, { testId, userId }) => [
+        { type: 'Test' as const, id: testId },
+        { type: 'User' as const, id: userId },
+      ],
+    }),
     getTest: build.query<PreviewTestDto, string>({
       query: (testId) => `/api/test/${testId}`
+    }),
+    getTestFull: build.query<TestDTO, string>({
+      query: (testId) => `/api/test/${testId}/full`,
+      providesTags: (_, __, testId) => [{ type: 'Test' as const, id: testId }],
+    }),
+    updateTest: build.mutation<TestDTO, { testId: string; body: CreateTestDTO }>({
+      query: ({ testId, body }) => ({ url: `/api/test/${testId}`, method: 'PUT', body }),
+      invalidatesTags: (_r, _e, { testId }) => [{ type: 'Test' as const, id: testId }],
+    }),
+    getCanDeleteTest: build.query<{ can: boolean }, string>({
+      query: (testId) => `/api/test/${testId}/can-delete`,
+      providesTags: (_, __, testId) => [{ type: 'Test' as const, id: testId }],
+    }),
+    deleteUserTestResult: build.mutation<void, { testId: string; userId: string }>({
+      query: ({ testId, userId }) => ({
+        url: `/api/test/${testId}/result/user/${userId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (_r, _e, { testId }) => [{ type: 'Test' as const, id: testId }],
     }),
     // User
     searchUsers: build.query<
@@ -631,6 +818,10 @@ export const api = baseApi.injectEndpoints({
       query: (jobroleId) => `/api/me/jobrole/${jobroleId}/skills`,
       providesTags: (_, __, jobroleId) => [{ type: 'MyJobroleSkills' as const, id: jobroleId }],
     }),
+    getMyServicedSkills: build.query<SkillWithCurrentVersionDTO[], void>({
+      query: () => '/api/me/servicedSkills',
+      providesTags: ['MyServicedSkills'],
+    }),
 
     // Permissions
     getMyPermissions: build.query<PermissionDTO[], void>({
@@ -639,11 +830,11 @@ export const api = baseApi.injectEndpoints({
     }),
     getAllPermissions: build.query<PermissionDTO[], void>({
       query: () => '/api/permissions',
-      providesTags: ['Permission'],
+      providesTags: ['MyPermissions'],
     }),
     getUserPermissions: build.query<PermissionDTO[], string>({
       query: (userId) => `/api/user/${userId}/permissions`,
-      providesTags: (_, __, userId) => [{ type: 'UserPermissions' as const, id: userId }],
+      providesTags: (_, __, userId) => [{ type: 'MyPermissions' as const, id: userId }],
     }),
     addUserPermission: build.mutation<void, { userId: string; permissionId: string }>({
       query: ({ userId, permissionId }) => ({
@@ -651,14 +842,14 @@ export const api = baseApi.injectEndpoints({
         method: 'POST',
         body: { permissionId }
       }),
-      invalidatesTags: (_, __, { userId }) => [{ type: 'UserPermissions' as const, id: userId }],
+      invalidatesTags: (_, __, { userId }) => [{ type: 'MyPermissions' as const, id: userId }],
     }),
     removeUserPermission: build.mutation<void, { userId: string; permissionId: string }>({
       query: ({ userId, permissionId }) => ({
         url: `/api/user/${userId}/permissions/${permissionId}`,
         method: 'DELETE'
       }),
-      invalidatesTags: (_, __, { userId }) => [{ type: 'UserPermissions' as const, id: userId }],
+      invalidatesTags: (_, __, { userId }) => [{ type: 'MyPermissions' as const, id: userId }],
     }),
 
     // Result preview for login popup (no caching; always refetch on demand)
@@ -698,6 +889,7 @@ export const {
   useUpdateSkillMutation,
   useGetSkillQuery,
   useListSkillUsersQuery,
+  useListAllSkillUsersQuery,
   useAddTagToSkillMutation,
   useGetSkillTagsQuery,
   useRemoveTagFromSkillMutation,
@@ -717,7 +909,12 @@ export const {
   useSendAnswerMutation,
   useGetUserTestResultQuery,
   useGetTestResultQuery,
+  useGetUserTestResultByUserQuery,
   useGetTestQuery,
+  useGetTestFullQuery,
+  useUpdateTestMutation,
+  useGetCanDeleteTestQuery,
+  useDeleteUserTestResultMutation,
   useSearchUsersQuery,
   useCreateUserMutation,
   useGetUserQuery,
@@ -755,6 +952,7 @@ export const {
   useGetMyJobrolesQuery,
   useGetMySkillsQuery,
   useGetMySkillsInJobroleQuery,
+  useGetMyServicedSkillsQuery,
   // Permissions hooks
   useGetMyPermissionsQuery,
   useGetAllPermissionsQuery,
@@ -764,5 +962,20 @@ export const {
   useGetAnalyticsKPIQuery: useGetAnalyticsKPIQuery,
   useGetAnalyticsJobRolesToSkillsQuery: useGetAnalyticsJobRolesToSkillsQuery,
   useGetAnalyticsJobRoleToSkillsQuery,
+  useGetAnalyticsUserToSkillsQuery,
+  useGetAnalyticsSkillToUsersQuery,
+  useGetMySharedStatQuery,
+  useDownloadAnalyticsKPIQuery,
+  useDownloadAnalyticsJobRolesToSkillsQuery,
+  useDownloadAnalyticsJobRoleToSkillsQuery,
+  useDownloadAnalyticsUserToSkillsQuery,
+  useDownloadAnalyticsSkillToUsersQuery,
+  useDownloadMySharedStatQuery,
+  useLazyDownloadAnalyticsUserToSkillsQuery,
+  useLazyDownloadAnalyticsSkillToUsersQuery,
   useGetUserResultPreviewQuery,
+  // Lazy download hooks
+  useLazyDownloadAnalyticsKPIQuery,
+  useLazyDownloadAnalyticsJobRolesToSkillsQuery,
+  useLazyDownloadMySharedStatQuery,
 } = api;

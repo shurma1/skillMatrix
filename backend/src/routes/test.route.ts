@@ -165,6 +165,105 @@ router.get(
 	}),
 	TestController.getUserTestResult
 );
+
+/**
+ * @openapi
+ * /api/test/{testId}/result/user/{userId}:
+ *   get:
+ *     summary: Get test result for a specific user
+ *     tags:
+ *       - Test
+ *     security:
+ *       - JWT: []
+ *     x-permissions: []
+ *     parameters:
+ *       - in: path
+ *         name: testId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User test result
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserTestResultDTO'
+ */
+router.get(
+	'/:testId/result/user/:userId',
+	permissionMiddleware({ needAuth: true }),
+	TestController.getUserTestResultByUser
+);
+
+/**
+ * @openapi
+ * /api/test/{testId}/result/user/{userId}:
+ *   delete:
+ *     summary: Delete a specific user's test result
+ *     tags:
+ *       - Test
+ *     security:
+ *       - JWT: []
+ *     x-permissions: []
+ *     parameters:
+ *       - in: path
+ *         name: testId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Deleted
+ */
+router.delete(
+	'/:testId/result/user/:userId',
+	permissionMiddleware({ needAuth: true }),
+	TestController.deleteUserTestResult
+);
+
+/**
+ * @openapi
+ * /api/test/{testId}/can-delete:
+ *   get:
+ *     summary: Check if current user can delete the test
+ *     tags:
+ *       - Test
+ *     security:
+ *       - JWT: []
+ *     x-permissions: []
+ *     parameters:
+ *       - in: path
+ *         name: testId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Whether the user can delete
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 can:
+ *                   type: boolean
+ */
+router.get(
+	'/:testId/can-delete',
+	permissionMiddleware({ needAuth: true }),
+	TestController.canDeleteTest
+);
 /**
  * @openapi
  * /api/test/{testId}:
@@ -195,6 +294,76 @@ router.get(
 		needAuth: true,
 	}),
 	TestController.getTest
+);
+
+/**
+ * @openapi
+ * /api/test/{testId}/full:
+ *   get:
+ *     summary: Get full test with questions and answers
+ *     tags:
+ *       - Test
+ *     security:
+ *       - JWT: []
+ *     x-permissions: []
+ *     parameters:
+ *       - in: path
+ *         name: testId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Full Test
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TestDTO'
+ */
+router.get(
+	'/:testId/full',
+	permissionMiddleware({ 
+		needAuth: true,
+		permission: ['VIEW_ALL'] 
+	}),
+	TestController.getTestFull
+);
+
+/**
+ * @openapi
+ * /api/test/{testId}:
+ *   put:
+ *     summary: Update a test (title, needScore, timeLimit, questions)
+ *     tags:
+ *       - Test
+ *     security:
+ *       - JWT: []
+ *     x-permissions:
+ *       - EDIT_ALL
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateTestDTO'
+ *     parameters:
+ *       - in: path
+ *         name: testId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Updated test
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TestDTO'
+ */
+router.put(
+	'/:testId',
+	permissionMiddleware({ needAuth: true, permission: ['EDIT_ALL'] }),
+	TestController.updateTest
 );
 
 export default router;

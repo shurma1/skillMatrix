@@ -243,6 +243,19 @@ class SkillController {
 			next(err);
 		}
 	}
+
+	async getAllUsersCombined(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { id } = req.params;
+			
+			const users = await SkillService.getAllUsersBySkillId(id);
+			
+			res.json(users);
+			
+		} catch (err) {
+			next(err);
+		}
+	}
 }
 
 export default new SkillController();

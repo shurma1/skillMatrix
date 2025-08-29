@@ -67,6 +67,80 @@ class AnalyticsController {
 			next(err);
 		}
 	}
+
+	async downloadSkillToUsers(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { skillId } = req.params;
+			const file = await AnalyticsService.downloadSkillToUsers(skillId);
+			res.setHeader('Content-Type', file.contentType);
+			res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(file.filename)}`);
+			res.send(file.buffer);
+		} catch (err) {
+			next(err);
+		}
+	}
+
+	async downloadUserToSkills(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { userId } = req.params;
+			const file = await AnalyticsService.downloadUserToSkills(userId);
+			res.setHeader('Content-Type', file.contentType);
+			res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(file.filename)}`);
+			res.send(file.buffer);
+		} catch (err) {
+			next(err);
+		}
+	}
+
+	async skillToUsers(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { skillId } = req.params;
+			
+			const data = await AnalyticsService.skillToUsers(skillId);
+			
+			res.json(data);
+		} catch (err) {
+			next(err);
+		}
+	}
+
+	async userToSkills(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { userId } = req.params;
+			
+			const data = await AnalyticsService.userToSkills(userId);
+			
+			res.json(data);
+		} catch (err) {
+			next(err);
+		}
+	}
+
+	async getMySkillsStat(req: Request, res: Response, next: NextFunction) {
+		try {
+			const userId = req.authUser!.id;
+			
+			const data = await AnalyticsService.userToSkills(userId);
+			
+			res.json(data);
+		} catch (err) {
+			next(err);
+		}
+	}
+
+	async downloadMySkillsStat(req: Request, res: Response, next: NextFunction) {
+		try {
+			const userId = req.authUser!.id;
+			
+			const file = await AnalyticsService.downloadUserToSkills(userId);
+			res.setHeader('Content-Type', file.contentType);
+			res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(file.filename)}`);
+			res.send(file.buffer);
+		} catch (err) {
+			next(err);
+		}
+	}
+	
 }
 
 export default new AnalyticsController();

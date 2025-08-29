@@ -12,6 +12,8 @@ interface SkillTestCardProps {
   deleting: boolean;
   userTestResult?: UserTestResultDTO;
   isUserTestResultLoading: boolean;
+  canTakeTest?: boolean;
+  takeTestDisabledReason?: string;
   onCreateTest: (data: CreateTestDTO) => void;
   onDeleteTest: () => void;
   onEditTest: () => void;
@@ -20,12 +22,14 @@ interface SkillTestCardProps {
   onViewTestResults: () => void;
 }
 
-const SkillTestCard: React.FC<SkillTestCardProps> = ({ 
-  test, 
+const SkillTestCard: React.FC<SkillTestCardProps> = ({
+  test,
   hasTest,
   loading,
   userTestResult,
   isUserTestResultLoading,
+  canTakeTest = true,
+  takeTestDisabledReason,
   onEditTest,
   onTakeTest,
   onGoToCreateTest,
@@ -38,8 +42,8 @@ const SkillTestCard: React.FC<SkillTestCardProps> = ({
   const renderTestActions = () => {
     if (!hasTest) {
       return (
-        <PermissionButton 
-          type="primary" 
+        <PermissionButton
+          type="primary"
           onClick={onGoToCreateTest}
         >
           Создать тест
@@ -51,8 +55,8 @@ const SkillTestCard: React.FC<SkillTestCardProps> = ({
       <Space>
         {hasTestResult ? (
           <Tooltip title={`Тест уже пройден (${userTestResult?.score}/${userTestResult?.needScore} баллов). ${isTestPassed ? 'Результат засчитан.' : 'Для повторного прохождения обратитесь к администратору.'}`}>
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               disabled
               onClick={onTakeTest}
             >
@@ -60,20 +64,28 @@ const SkillTestCard: React.FC<SkillTestCardProps> = ({
             </Button>
           </Tooltip>
         ) : (
-          <Button type="primary" onClick={onTakeTest}>
-            Пройти тест
-          </Button>
+          canTakeTest ? (
+            <Button type="primary" onClick={onTakeTest}>
+              Пройти тест
+            </Button>
+          ) : (
+            <Tooltip title={takeTestDisabledReason || 'Для доступа к тесту ваш уровень должен быть больше 1-го, но меньше 3-го'}>
+              <Button type="primary" disabled onClick={onTakeTest}>
+                Пройти тест
+              </Button>
+            </Tooltip>
+          )
         )}
         
         {hasTestResult && (
-          <Button 
+          <Button
             icon={<EyeOutlined />}
             onClick={onViewTestResults}
           >
             Посмотреть все результаты
           </Button>
         )}
-        <PermissionButton 
+        <PermissionButton
           icon={<EditOutlined />}
           onClick={onEditTest}
         >
@@ -100,7 +112,7 @@ const SkillTestCard: React.FC<SkillTestCardProps> = ({
             <p><strong>Название:</strong> {test.title}</p>
             <p><strong>Вопросов:</strong> {test.questionsCount}</p>
             <p><strong>Порог:</strong> {test.needScore}</p>
-            <p><strong>Лимит времени:</strong> {test.timeLimit} сек.</p>
+            <p><strong>Лимит времени:</strong> {Math.max(1, Math.round((test.timeLimit || 60) / 60))} мин.</p>
           </div>
 
           {/* Результаты пользователя */}
@@ -113,8 +125,8 @@ const SkillTestCard: React.FC<SkillTestCardProps> = ({
                 border: `1px solid ${isTestPassed ? token.colorSuccess : token.colorWarning}`,
               }}
             >
-              <h4 style={{ 
-                margin: '0 0 12px 0', 
+              <h4 style={{
+                margin: '0 0 12px 0',
                 color: isTestPassed ? token.colorSuccess : token.colorWarning,
               }}>
                 Ваши результаты

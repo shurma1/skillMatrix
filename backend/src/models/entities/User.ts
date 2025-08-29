@@ -10,6 +10,7 @@ interface UserAttributes{
 	email?: string;
 	password_hash: string;
 	avatar_id?: string | null;
+	creationAt?: Date;
 }
 
 type UserCreationAttributes = Omit<UserAttributes, 'id'>

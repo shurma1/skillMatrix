@@ -2,8 +2,9 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { message, Typography, Button, Space, Spin } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
-import { useGetTestQuery } from '@/store/endpoints';
+import { useGetTestQuery, useGetTestFullQuery } from '@/store/endpoints';
 import type { CreateTestDTO } from '@/types/api/test';
+import { useUpdateTestMutation } from '@/store/endpoints';
 import TestForm from './TestForm';
 
 const { Title } = Typography;
@@ -15,17 +16,16 @@ const TestEditContainer: React.FC = () => {
   }>();
   const navigate = useNavigate();
   
-  const { 
-    data: test, 
-    isLoading: isTestLoading,
-    error: testError 
-  } = useGetTestQuery(testId, { skip: !testId });
+  const { data: preview, isLoading: isPreviewLoading } = useGetTestQuery(testId, { skip: !testId });
+  const { data: full, isLoading: isFullLoading, error: fullError } = useGetTestFullQuery(testId, { skip: !testId });
+
+  const [updateTest, { isLoading: isUpdating }] = useUpdateTestMutation();
 
   const handleSubmit = async (values: CreateTestDTO) => {
     try {
-      // TODO: Добавить API endpoint для обновления теста
-      message.info('API для редактирования теста пока не реализован');
-      console.log('Update test values:', values);
+      await updateTest({ testId, body: values }).unwrap();
+      message.success('Тест обновлён');
+      navigate(`/skills/${skillId}`);
     } catch (error) {
       console.error('Error updating test:', error);
       message.error('Ошибка при обновлении теста');
@@ -36,7 +36,7 @@ const TestEditContainer: React.FC = () => {
     navigate(`/skills/${skillId}`);
   };
 
-  if (isTestLoading) {
+  if (isPreviewLoading || isFullLoading) {
     return (
       <div style={{ 
         display: 'flex', 
@@ -49,7 +49,7 @@ const TestEditContainer: React.FC = () => {
     );
   }
 
-  if (testError || !test) {
+  if (fullError || !full) {
     return (
       <div style={{ 
         textAlign: 'center', 
@@ -68,10 +68,12 @@ const TestEditContainer: React.FC = () => {
 
   // Преобразование данных теста для формы
   const initialValues: Partial<CreateTestDTO> = {
-    title: test.title || '',
-    needScore: test.needScore,
-    timeLimit: test.timeLimit,
-    // PreviewTestDto doesn't include questions; keep empty to edit via UI
+    title: preview?.title || '',
+    needScore: full.needScore,
+    // Backend returns seconds; UI expects minutes
+    timeLimit: Math.max(1, Math.round((full.timeLimit || 60) / 60)),
+    // Include questions from full test response
+    questions: full.questions || [],
   };
 
   return (
@@ -96,7 +98,8 @@ const TestEditContainer: React.FC = () => {
 
       <TestForm 
         onSubmit={handleSubmit}
-        initialValues={initialValues}
+  initialValues={initialValues}
+  loading={isUpdating}
       />
     </Space>
   );

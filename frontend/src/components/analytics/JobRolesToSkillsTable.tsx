@@ -7,7 +7,8 @@ type LeftCell = string | number | null;
 
 interface JobRolesToSkillsData {
   left: { colLabels: string[]; data: LeftCell[][] };
-  right: { colLabels: [string[], number[]]; data: number[][] };
+  // Backend provides three arrays: [jobRoles, actual, totals]. We use the first two; third is ignored.
+  right: { colLabels: [string[], number[], number[]]; data: number[][] };
 }
 
 interface Props {
@@ -98,7 +99,7 @@ const JobRolesToSkillsTable: React.FC<Props> = ({ data }) => {
     }));
 
     // Правые колонки с группированными заголовками
-    const [jobRoles, actual] = data.right.colLabels;
+  const [jobRoles, actual] = data.right.colLabels;
 
   const rightCols = jobRoles.map((jobRole, idx) => ({
       title: (

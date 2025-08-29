@@ -20,13 +20,19 @@ interface TestResultViewUIProps {
   isLoading: boolean;
   error: unknown;
   onNavigateHome: () => void;
+  canDelete?: boolean;
+  onDelete?: () => void;
+  deleting?: boolean;
 }
 
 const TestResultViewUI: React.FC<TestResultViewUIProps> = ({
   testResult,
   isLoading,
   error,
-  onNavigateHome
+  onNavigateHome,
+  canDelete = false,
+  onDelete,
+  deleting = false,
 }) => {
   const { token } = theme.useToken();
 
@@ -199,12 +205,13 @@ const TestResultViewUI: React.FC<TestResultViewUIProps> = ({
       </Card>
 
       {/* Действия */}
-      <div style={{ textAlign: 'center' }}>
-        <Button 
-          type="primary" 
-          size="large" 
-          onClick={onNavigateHome}
-        >
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 12 }}>
+        {canDelete && (
+          <Button danger size="large" loading={deleting} onClick={onDelete}>
+            Удалить результат
+          </Button>
+        )}
+        <Button type="primary" size="large" onClick={onNavigateHome}>
           На главную
         </Button>
       </div>

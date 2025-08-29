@@ -10,7 +10,7 @@ import {
 	File,
 	FileToSkillVersion,
 	UserSkillView,
-	UserToConfirmSkills
+	UserToConfirmSkills, Test
 } from "../models";
 import {SkillVersionInstance} from "../models/entities/SkillVersion";
 import {loadSql} from "../utils/loadSql";
@@ -21,6 +21,7 @@ import {UserSkillSearch} from "./user.repossitory";
 import {FileInstance} from "../models/entities/File";
 import TestRepository from "./test.repository";
 import user from "../models/entities/User";
+import SkillService from "../services/skill.service";
 
 export interface SkillWithTagsInstance extends SkillInstance {
 	tags: TagInstance[];
@@ -39,6 +40,34 @@ export interface UserSkillMatrixResult {
 	skillId: string;
 	userId: string;
 	level: number;
+}
+
+export interface UsersBySkillResult {
+	userId: string;
+	login: string;
+	firstname: string;
+	lastname: string;
+	patronymic: string | null;
+	targetLevel: number;
+	currentLevel: number;
+	relationshipTypes: string;
+}
+
+export interface SkillsByUserResult {
+	skillId: string;
+	title: string;
+	documentId: string | null;
+	targetLevel: number;
+	currentLevel: number;
+	verifierId: string;
+	authorId: string | null;
+	version: number;
+	approvedDate: Date;
+	auditDate: Date;
+	verifierFirstname: string;
+	verifierLastname: string;
+	authorFirstname: string | null;
+	authorLastname: string | null;
 }
 
 export interface SkillCreation {
@@ -389,6 +418,27 @@ class SkillRepository {
 		return !! await TagToSkill.findOne({where: {skillId, tagId}});
 	}
 	
+	async getByTest(testId: string): Promise<SkillWithVersion | null> {
+		const test = await Test.findByPk(testId);
+		if (!test) return null;
+
+		const currentVersion = await SkillVersion.findByPk(test.skillVersionId) as SkillVersionInstance | null;
+		if (!currentVersion) return null;
+
+		const latestVersion = await this.getLastVersion(currentVersion.skillId) as SkillVersionInstance | null;
+		if (!latestVersion) return null;
+
+		const skill = await Skill.findOne({ where: { id: latestVersion.skillId }, include: { model: Tag } }) as (SkillInstance & { tag: TagInstance[] }) | null;
+		if (!skill) return null;
+
+		const files = await FileToSkillVersion.findAll({ where: { skillVersionId: latestVersion.id } });
+		const fileId = files.length ? files[0].fileId : undefined;
+		const tags = (skill.tag as unknown as TagType[]) || [];
+		const linkedTestId = await TestRepository.getTestIdBySkill(skill.id);
+
+		return this.unionSkill(skill, latestVersion, tags, fileId, linkedTestId || undefined);
+	}
+	
 	async deleteTag(skillId: string, tagId: string) {
 		await TagToSkill.destroy({where: {skillId, tagId}});
 	}
@@ -452,6 +502,42 @@ class SkillRepository {
 		);
 		
 		return !! results.length;
+	}
+	
+	async getUsersBySkillId(skillId: string): Promise<UsersBySkillResult[]> {
+		const sql = loadSql('get_users_by_skill_id');
+		
+		return await Sequelize.query<UsersBySkillResult>(
+			sql,
+			{
+				replacements: { skillId },
+				type: QueryTypes.SELECT
+			}
+		);
+	}
+	
+	async getSkillsByUserId(userId: string): Promise<SkillsByUserResult[]> {
+		const sql = loadSql('get_skills_by_user_id');
+		
+		return await Sequelize.query<SkillsByUserResult>(
+			sql,
+			{
+				replacements: { userId },
+				type: QueryTypes.SELECT
+			}
+		);
+	}
+
+	async getAllUsersBySkillId(skillId: string): Promise<UsersBySkillResult[]> {
+		const sql = loadSql('get_all_skill_users_combined');
+		
+		return await Sequelize.query<UsersBySkillResult>(
+			sql,
+			{
+				replacements: { skillId },
+				type: QueryTypes.SELECT
+			}
+		);
 	}
 	
 	

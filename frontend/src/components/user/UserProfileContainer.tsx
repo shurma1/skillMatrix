@@ -22,6 +22,7 @@ import UserInfoSection from './UserInfoSection';
 import UserJobRolesSection from '../jobrole/UserJobRolesSection';
 import UserSkillsSection from '../skill/UserSkillsSection';
 import JobRoleSkillsList from '../jobrole/JobRoleSkillsList';
+import UserToSkillsCard from '@/components/analytics/UserToSkillsCard';
 import EditUserModal from '../modals/user/EditUserModal';
 import AddJobRoleModal from '../modals/jobrole/AddJobRoleModal';
 import AddSkillModal from '../modals/skill/AddSkillModal';
@@ -220,6 +221,7 @@ const UserProfileContainer: React.FC = () => {
         onDelete={handleDeleteSkill}
         onEditTarget={setEditSkillTarget}
       />
+      <UserToSkillsCard userId={userId} />
 
       <EditUserModal
         open={editOpen}

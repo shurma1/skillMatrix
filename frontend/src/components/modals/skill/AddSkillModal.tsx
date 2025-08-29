@@ -1,7 +1,8 @@
-import React from 'react';
-import { Modal, Form, Select } from 'antd';
+import React, { useMemo, useRef, useState } from 'react';
+import { Modal, Form, Select, Spin } from 'antd';
 import type { SkillWithCurrentVersionDTO } from '@/types/api/skill';
 import SkillLevelSelect from '@/components/shared/SkillLevelSelect';
+import { useSearchSkillsQuery } from '@/store/endpoints';
 
 interface AddSkillModalProps {
   open: boolean;
@@ -26,8 +27,16 @@ const AddSkillModal: React.FC<AddSkillModalProps> = ({
   onSubmit
 }) => {
   const [form] = Form.useForm<FormData>();
+  const [search, setSearch] = useState('');
+  const debounceRef = useRef<number | null>(null);
   
   const safeOptions = Array.isArray(options) ? options : [];
+
+  // Remote search when user types
+  const { data: searchData, isFetching } = useSearchSkillsQuery(
+    { query: search, limit: 10, page: 1 },
+    { skip: !search }
+  );
 
   const handleOk = async () => {
     try {
@@ -42,12 +51,26 @@ const AddSkillModal: React.FC<AddSkillModalProps> = ({
     onCancel();
   };
 
-  const skillOptions = safeOptions
-    .filter(skill => !disabledIds.includes(skill.id))
-    .map(skill => ({
-      label: skill.title,
-      value: skill.id
-    }));
+  const listForSelect: SkillWithCurrentVersionDTO[] = useMemo(() => {
+    // Use remote results when a search query is present; otherwise fallback to provided options
+    return search ? (searchData?.rows ?? []) : safeOptions;
+  }, [search, searchData?.rows, safeOptions]);
+
+  const skillOptions = useMemo(() => (
+    (listForSelect || [])
+      .filter((skill) => !disabledIds.includes(skill.id))
+      .map((skill) => ({ label: skill.title, value: skill.id }))
+  ), [listForSelect, disabledIds]);
+
+  const handleSearch = (value: string) => {
+    // simple debounce to avoid flooding requests
+    if (debounceRef.current) {
+      window.clearTimeout(debounceRef.current);
+    }
+    debounceRef.current = window.setTimeout(() => {
+      setSearch(value.trim());
+    }, 250);
+  };
   
   return (
     <Modal
@@ -75,9 +98,12 @@ const AddSkillModal: React.FC<AddSkillModalProps> = ({
         >
           <Select
             showSearch
-            placeholder="Выберите навык"
-            optionFilterProp="label"
+            allowClear
+            placeholder="Введите название для поиска"
+            filterOption={false}
+            onSearch={handleSearch}
             options={skillOptions}
+            notFoundContent={isFetching ? <Spin size="small" /> : null}
           />
         </Form.Item>
         

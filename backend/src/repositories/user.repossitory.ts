@@ -11,6 +11,7 @@ import {SkillType} from "../models/types/SkillType";
 import {SkillConfirmType} from "../models/types/SkillConfirmType";
 import {JobRoleInstance} from "../models/entities/JobRole";
 import {UserToConfirmSkillsInstance} from "../models/entities/UserToConfirmSkills";
+import {UserSkillSearchDto} from "../dtos/userSkillSearch.dto";
 
 
 export interface UserSkillSearch {
@@ -294,6 +295,30 @@ class UserRepository {
 	
 	async getAll() {
 		return await User.findAll();
+	}
+	
+	async getUserServicedSkills(userId: string) {
+		const sql = loadSql('get_user_serviced_skills');
+		return await Sequelize.query<{
+			id: string,
+			type: string,
+			title: string,
+			isActive: boolean,
+			approvedDate: Date,
+			auditDate: Date,
+			authorId: string | null,
+			verifierId: string,
+			version: number,
+			tags: { id: string; name: string }[],
+			testId?: string | null,
+			documentId?: string | null,
+		}>(
+			sql,
+			{
+				replacements: { userId },
+				type: QueryTypes.SELECT
+			}
+		);
 	}
 	
 	async getConfirmations(

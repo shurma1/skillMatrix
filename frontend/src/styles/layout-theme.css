@@ -1,6 +1,9 @@
 /* Переопределяем стили Sider для корректной работы с темами */
 .ant-layout-sider {
   background: var(--ant-color-bg-container) !important;
+  height: 100vh;
+  position: sticky;
+  top: 0;
 }
 
 /* Убираем жестко заданный фон для темной темы */
@@ -11,4 +14,6 @@
 /* Стили для Content */
 .ant-layout-content {
   background: var(--ant-color-bg-layout) !important;
+  height: 100vh;
+  overflow: auto;
 }

@@ -15,6 +15,8 @@ interface SkillInfoCardProps {
   versionCount: number;
   onOpenVersions: () => void;
   onEditSkill: () => void;
+  canEditSkill: boolean;
+  canOpenVersions: boolean;
 }
 
 const SkillInfoCard: React.FC<SkillInfoCardProps> = ({
@@ -25,14 +27,16 @@ const SkillInfoCard: React.FC<SkillInfoCardProps> = ({
   loadingUsers,
   versionCount,
   onOpenVersions,
-  onEditSkill
+  onEditSkill,
+  canEditSkill,
+  canOpenVersions,
 }) => (
   <Card
     title={<Title level={3} style={{ margin: 0 }}>Информация о навыке</Title>}
     extra={
       <Space>
-        <Button onClick={onEditSkill}>Изменить навык</Button>
-        <Button onClick={onOpenVersions}>
+        <Button onClick={onEditSkill} disabled={!canEditSkill}>Изменить навык</Button>
+        <Button onClick={onOpenVersions} disabled={!canOpenVersions}>
           Версии ({versionCount})
         </Button>
       </Space>

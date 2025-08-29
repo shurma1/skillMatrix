@@ -277,7 +277,42 @@ router.get(
 		permission: ['VIEW_ALL']
 	}),
 	SkillController.getAllUsers
-)
+);
+
+/**
+ * @openapi
+ * /api/skill/{id}/allUsers:
+ *   get:
+ *     summary: List all users who have the skill (direct and through job roles)
+ *     tags:
+ *       - Skill
+ *     security:
+ *       - JWT: []
+ *     x-permissions:
+ *       - VIEW_ALL
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Users list including those with skill through job roles
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/UserSkillSearchDto'
+ */
+router.get(
+	'/:id/allUsers',
+	permissionMiddleware({
+		needAuth: true,
+	}),
+	SkillController.getAllUsersCombined
+);
 
 
 /**
@@ -505,8 +540,7 @@ router.put(
 router.get(
 	'/:id/version',
 	permissionMiddleware({
-		needAuth: true,
-		permission: ['VIEW_ALL']
+		needAuth: true
 	}),
 	SkillController.getVersions
 );

@@ -130,7 +130,6 @@ router.get(
 	'/:id',
 	permissionMiddleware({
 		needAuth: true,
-		permission: ['VIEW_ALL']
 	}),
 	validateSchema(checkID(), ['params']),
 	UserController.getByID
@@ -552,7 +551,6 @@ router.post(
 	'/:id/skill/:skillId/confirmation',
 	permissionMiddleware({
 		needAuth: true,
-		permission: ['EDIT_ALL']
 	}),
 	UserController.addConfirmation
 );

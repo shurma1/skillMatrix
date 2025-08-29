@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Form, Select, Upload, Input, DatePicker } from 'antd';
 import dayjs from 'dayjs';
+import { Checkbox } from 'antd';
 import type { UploadProps } from 'antd';
 import { useSearchUsersQuery, useUploadFileMutation, useGetSkillQuery } from '@/store/endpoints';
 import type { CreateSkillVersionDTO, UpdateSkillVersionDTO } from '@/types/api/skill';
@@ -10,6 +11,10 @@ interface CreateVersionModalProps {
   open: boolean;
   onCancel: () => void;
   onSubmit: (data: CreateSkillVersionDTO | UpdateSkillVersionDTO) => Promise<void>;
+  onSubmitEx?: (
+    data: CreateSkillVersionDTO | UpdateSkillVersionDTO,
+    options?: { autoTransferTest?: boolean }
+  ) => Promise<void>;
   loading: boolean;
   skillId: string;
   title?: string;
@@ -24,6 +29,7 @@ interface FormData {
   authorId: string;
   verifierId: string;
   approvedDate?: any;
+  autoTransferTest?: boolean;
 }
 
 /**
@@ -33,6 +39,7 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
   open,
   onCancel,
   onSubmit,
+  onSubmitEx,
   loading,
   skillId,
   title,
@@ -124,9 +131,17 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
         if (payload && (payload as any).approvedDate) {
           (createPayload as any).approvedDate = (payload as any).approvedDate;
         }
-        await onSubmit(createPayload);
+        if (onSubmitEx) {
+          await onSubmitEx(createPayload, { autoTransferTest: values.autoTransferTest });
+        } else {
+          await onSubmit(createPayload);
+        }
       } else {
-        await onSubmit(payload);
+        if (onSubmitEx) {
+          await onSubmitEx(payload);
+        } else {
+          await onSubmit(payload);
+        }
       }
 
       handleCancel();
@@ -178,6 +193,7 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
           authorId: initialAuthorId,
           verifierId: initialVerifierId,
           approvedDate: initialApprovedDate ? dayjs(initialApprovedDate) : dayjs(),
+          autoTransferTest: true,
         }}
       >
         <Form.Item name="approvedDate" label="Дата утверждения">
@@ -201,6 +217,14 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
             }))}
           />
         </Form.Item>
+
+        {(!initialAuthorId && !initialVerifierId) && (
+          <Form.Item name="autoTransferTest" valuePropName="checked">
+            <Checkbox defaultChecked>
+              Автоматически перенести тест
+            </Checkbox>
+          </Form.Item>
+        )}
 
         <Form.Item
           name="verifierId"

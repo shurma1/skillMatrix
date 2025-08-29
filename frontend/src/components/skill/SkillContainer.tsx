@@ -10,11 +10,13 @@ import {
   useGetFileInfoQuery,
   useGetTestResultQuery,
   useGetMyJobrolesQuery,
+  useGetMySkillsQuery,
   useSearchTagsQuery,
   useUpdateSkillMutation,
   api,
 } from '@/store/endpoints';
 import { useAppDispatch } from '@/hooks/storeHooks';
+import { usePermissions } from '@/hooks/usePermissions';
 import type { SkillWithCurrentVersionDTO, UpdateSkillDTO } from '@/types/api/skill';
 import type { PreviewTestDto, CreateTestDTO } from '@/types/api/test';
 import type { UserSkillSearchDto } from '@/types/api/user';
@@ -22,6 +24,7 @@ import type { TagDTO } from '@/types/api/tag';
 import SkillInfoCard from './SkillInfoCard';
 import SkillTestCard from './SkillTestCard';
 import FileCard from './FileCard';
+import SkillToUsersCard from '@/components/analytics/SkillToUsersCard';
 import EditSkillModal from '@/components/modals/skill/EditSkillModal';
 // no duplicate imports
 
@@ -29,6 +32,7 @@ const SkillContainer: React.FC = () => {
   const { skillId = '' } = useParams<{ skillId: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const { hasPermission } = usePermissions();
 
   // no direct user usage here
 
@@ -53,6 +57,10 @@ const SkillContainer: React.FC = () => {
     data: userTestResult,
     isFetching: isUserTestResultLoading,
   } = useGetTestResultQuery(skill?.testId as string, { skip: !skill?.testId });
+
+  // Совокупные навыки текущего пользователя (включая профильные и по должностям)
+  const { data: mySkills } = useGetMySkillsQuery();
+  const mySkillRow = useMemo(() => (mySkills || []).find(s => s.skillId === skillId), [mySkills, skillId]);
 
   // User queries для автора и проверяющего
   const { 
@@ -111,6 +119,24 @@ const SkillContainer: React.FC = () => {
   const hasFile = Boolean(skill?.fileId);
   const loadingUsers = isAuthorLoading || isVerifierLoading;
   const versionCount = versions.length;
+  const canTakeTestByLevel = useMemo(() => {
+    const lvl = mySkillRow?.level ?? 0;
+    const target = mySkillRow?.targetLevel;
+    if (target === 1) return false;
+    return lvl >= 1 && lvl < 3;
+  }, [mySkillRow?.level, mySkillRow?.targetLevel]);
+  const canSeeAnalytics = Boolean(
+    skillId && hasPermission('ANALYTICS_VIEW')
+  );
+  const canEditSkill = hasPermission('EDIT_ALL');
+  const canOpenVersions = hasPermission('VIEW_ALL');
+  const takeTestDisabledReason = useMemo(() => {
+    if (!mySkillRow) return 'Кнопка доступна только при уровне подтверждения 1–2.';
+    if (mySkillRow.targetLevel === 1) return 'Недоступно: требуемый уровень для пользователя — 1.';
+    const lvl = mySkillRow.level ?? 0;
+    if (lvl < 1 || lvl >= 3) return 'Кнопка доступна только при уровне подтверждения 1–2.';
+    return undefined;
+  }, [mySkillRow]);
 
   // Event handlers
   const handleOpenVersions = useCallback(() => {
@@ -184,6 +210,8 @@ const SkillContainer: React.FC = () => {
         versionCount={versionCount}
         onOpenVersions={handleOpenVersions}
         onEditSkill={handleOpenEdit}
+  canEditSkill={canEditSkill}
+  canOpenVersions={canOpenVersions}
       />
       <EditSkillModal
         open={isEditOpen}
@@ -216,7 +244,12 @@ const SkillContainer: React.FC = () => {
         onTakeTest={handleTakeTest}
         onGoToCreateTest={handleGoToCreateTest}
         onViewTestResults={handleViewTestResults}
+  canTakeTest={canTakeTestByLevel}
+  takeTestDisabledReason={takeTestDisabledReason}
       />
+
+  {/* Analytics: Users by Skill (visible only with ANALYTICS_VIEW permission) */}
+  {canSeeAnalytics && <SkillToUsersCard skillId={skillId} />}
     </Space>
   );
 };

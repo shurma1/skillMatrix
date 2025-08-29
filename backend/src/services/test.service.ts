@@ -15,6 +15,7 @@ import SkillRepository from "../repositories/skill.repository";
 import {SkillVersionInstance} from "../models/entities/SkillVersion";
 import {ApiError} from "../error/apiError";
 import UserService from "./user.service";
+import {SkillConfirmType} from "../models/types/SkillConfirmType";
 
 class TestService {
 	async createTest(skillId: string, dto: CreateTestDTO) {
@@ -114,7 +115,7 @@ class TestService {
 		}
 	
 		const session = await TestRepository.getTestSession(sessionId) as TestSession;
-		console.log('[SESSION]', session)
+		
 		if(! session) {
 			throw ApiError.errorByType('SESSION_NOT_FOUND');
 		}
@@ -141,6 +142,14 @@ class TestService {
 			answers: session.answers
 		});
 		await TestRepository.removeTestSession(sessionId);
+		
+		if(score >= testFull.needScore) {
+			const skill = await SkillRepository.getByTest(sessionTestId);
+			if(!skill) {
+				return;
+			}
+			await UserService.addConfirmation(userId, skill.id, SkillConfirmType.Acquired, 3);
+		}
 	}
 
 	async sendAnswer(sessionId: string, userId: string, dto: SendAnswerDTO) {
@@ -242,9 +251,84 @@ class TestService {
 		
 		return new PreviewTestDto(test.id, test.needScore, test.title, test.timeLimit, test.questionsCount)
 	}
+
+	async getTestFull(testId: string) {
+		const testFull = await TestRepository.getTestById(testId);
+		if (!testFull) {
+			throw ApiError.errorByType('TEST_NOT_FOUND');
+		}
+		const questions = Array.isArray(testFull.questions)
+			? testFull.questions.map((q) => new QuestionDTO(
+				q.id,
+				q.text,
+				Array.isArray(q.answerVariants)
+					? q.answerVariants.map((a) => new AnswerVariantDTO(a.id, a.text, a.isTrue))
+					: []
+			))
+			: [];
+		return new TestDTO(testFull.id, testFull.questionsCount, testFull.needScore, testFull.timeLimit, questions);
+	}
 	
 	async isTestAlreadyCreateInSkillVersion(skillVersionId: string) {
 		return !! await TestRepository.getTestBySkillVersion(skillVersionId);
+	}
+
+	async deleteUserResult(testId: string, userId: string) {
+		await UserService.checkIsUserExist(userId);
+		const test = await TestRepository.getTest(testId);
+		if (!test) {
+			throw ApiError.errorByType('TEST_NOT_FOUND');
+		}
+		await TestRepository.deleteUserTest(userId, testId);
+	}
+
+	async canDeleteTest(testId: string, requesterId: string, permissions: string[] = []): Promise<boolean> {
+		// If has EDIT_ALL (or any edit-like permission), allow
+		if (permissions.includes('EDIT_ALL') || permissions.includes('EDIT_SKILLS')) return true;
+
+		const test = await TestRepository.getTest(testId);
+		if (!test) return false;
+
+		// Resolve skillId from latest SkillVersion that holds this test
+		const skillVersion = await SkillRepository.getVersion(test.skillVersionId);
+		if (!skillVersion) return false;
+		const skillId = skillVersion.skillId;
+
+		// Author or verifier of the skill can delete
+		return await SkillService.isAuthorOrVerifier(requesterId, skillId);
+	}
+
+	async updateTest(testId: string, dto: CreateTestDTO) {
+		// Basic validations
+		if (dto.questions.length < dto.needScore) {
+			throw ApiError.errorByType('SCORE_CANNOT_BE_MORE_THAN_QUESTION_LENGTH');
+		}
+
+		const existing = await TestRepository.getTestById(testId);
+		if (!existing) {
+			throw ApiError.errorByType('TEST_NOT_FOUND');
+		}
+
+		const updated = await TestRepository.updateTest(testId, {
+			skillVersionId: existing.skillVersionId,
+			title: dto.title,
+			needScore: dto.needScore,
+			timeLimit: dto.timeLimit,
+			questionsCount: dto.questions.length,
+			questions: dto.questions,
+		});
+
+		const testFull = await TestRepository.getTestById(updated.id);
+		const questions = Array.isArray(testFull.questions)
+			? testFull.questions.map((q) => new QuestionDTO(
+				q.id,
+				q.text,
+				Array.isArray(q.answerVariants)
+					? q.answerVariants.map((a) => new AnswerVariantDTO(a.id, a.text, a.isTrue))
+					: []
+			))
+			: [];
+		return new TestDTO(testFull.id, testFull.questionsCount, testFull.needScore, testFull.timeLimit, questions);
 	}
 }
 

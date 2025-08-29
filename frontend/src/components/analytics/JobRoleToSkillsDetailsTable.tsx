@@ -1,4 +1,4 @@
-import React, { Children, useLayoutEffect, useMemo, useState, type FC } from 'react';
+import React, { useLayoutEffect, useMemo, useState, type FC } from 'react';
 import { Table } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { blue } from "@ant-design/colors";
@@ -177,8 +177,8 @@ const JobRoleToSkillsDetailsTable: React.FC<Props> = ({ data }) => {
                     width: 50,
                     align: 'center' as const,
                     render: (value: number) => (
-                      <div style={{ 
-                        fontWeight: 'bold', 
+                      <div style={{
+                        fontWeight: 'bold',
                         fontSize: '10px',
                         color: blue[6]
                       }}>

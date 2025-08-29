@@ -27,7 +27,7 @@ const SkillUsersSection: React.FC<SkillUsersSectionProps> = ({
         <List
           dataSource={users}
           renderItem={user => {
-            const initials = [user.login, user.firstname, user.patronymic]
+            const initials = [user.lastname, user.firstname]
               .filter(Boolean)
               .map(p => p[0])
               .join('')
@@ -53,7 +53,7 @@ const SkillUsersSection: React.FC<SkillUsersSectionProps> = ({
                       }}
                     >
                       <Avatar size={24}>{initials}</Avatar>
-                      {user.login} {user.firstname} {user.patronymic}
+                      {user.lastname} {user.firstname} {user.patronymic}
                       <Link
                         to={`/users/${user.userId}`}
                         title="Перейти к пользователю"

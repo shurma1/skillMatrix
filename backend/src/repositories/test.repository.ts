@@ -191,6 +191,45 @@ class TestRepository {
 	async isTestAlreadyPassed(userId: string, testId: string) {
 		return !! await UserTest.findOne({where: {userId, testId}});
 	}
+
+		async deleteUserTest(userId: string, testId: string): Promise<number> {
+			const userTests = await UserTest.findAll({ where: { userId, testId } });
+			if (!userTests.length) return 0;
+
+			const ids = userTests.map(ut => ut.id);
+			await UserTestResult.destroy({ where: { userTestId: ids } });
+			const deleted = await UserTest.destroy({ where: { id: ids } });
+			return deleted;
+		}
+
+			async updateTest(testId: string, data: CreateTestData): Promise<TestInstance> {
+				const test = await Test.findByPk(testId) as TestInstance | null;
+				if (!test) throw new Error('TEST_NOT_FOUND');
+
+				// Update basic fields
+				test.title = data.title;
+				test.needScore = data.needScore;
+				test.timeLimit = data.timeLimit;
+				test.questionsCount = data.questionsCount;
+				await test.save();
+
+				// Replace questions and answers
+				const existingQuestions = await Question.findAll({ where: { testId } });
+				const qIds = existingQuestions.map(q => q.id);
+				if (qIds.length) {
+					await AnswerVariant.destroy({ where: { questionId: qIds } });
+				}
+				await Question.destroy({ where: { testId } });
+
+				for (const q of data.questions) {
+					const question = await Question.create({ testId: test.id, text: q.text });
+					for (const av of q.answerVariants) {
+						await AnswerVariant.create({ questionId: question.id, text: av.text, isTrue: av.isTrue });
+					}
+				}
+
+				return test;
+			}
 }
 
 export default new TestRepository();

@@ -5,8 +5,10 @@
   "main": "index.js",
   "scripts": {
     "start:dev": "nodemon src/index.ts env mode=development",
-    "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js",
+  "build": "tsc -p tsconfig.json && npm run copy:sql && npm run copy:view",
+    "start": "node dist/src/index.js",
+  "copy:sql": "mkdir -p dist/sql && cp -R src/sql/* dist/sql/",
+  "copy:view": "mkdir -p dist/src/view && cp -R src/view/* dist/src/view/",
     "generate:doc": "node scripts/generate-doc.js",
     "lint": "eslint src --ext .ts,.js",
     "lint:fix": "eslint src --ext .ts,.js --fix",

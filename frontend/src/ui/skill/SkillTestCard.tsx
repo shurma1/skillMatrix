@@ -15,7 +15,11 @@ const SkillTestCard: React.FC<SkillTestCardProps> = ({ test, creating, onCreateT
   const [form] = Form.useForm<CreateTestDTO>();
   const [showCreate, setShowCreate] = useState(false);
 
-  const handleSubmit = (values: CreateTestDTO) => { onCreateTest(values); };
+  const handleSubmit = (values: CreateTestDTO) => {
+    const minutes = Number(values.timeLimit) || 1;
+    const payload: CreateTestDTO = { ...values, timeLimit: Math.round(minutes * 60) };
+    onCreateTest(payload);
+  };
 
   return (
     <Card
@@ -27,18 +31,18 @@ const SkillTestCard: React.FC<SkillTestCardProps> = ({ test, creating, onCreateT
           <p><b>Название:</b> {test.title}</p>
           <p><b>Вопросов:</b> {test.questionsCount}</p>
           <p><b>Порог:</b> {test.needScore}</p>
-          <p><b>Лимит времени:</b> {test.timeLimit} сек.</p>
+          <p><b>Лимит времени:</b> {Math.max(1, Math.round((test.timeLimit || 60) / 60))} мин.</p>
         </div>
       ) : showCreate ? (
-        <Form form={form} layout="vertical" onFinish={handleSubmit} initialValues={{ needScore: 1, timeLimit: 60, title: '', questions: [] }}>
+  <Form form={form} layout="vertical" onFinish={handleSubmit} initialValues={{ needScore: 1, timeLimit: 1, title: '', questions: [] }}>
           <Form.Item name="title" label="Название" rules={[{ required: true, message: 'Введите название' }]}>
             <Input />
           </Form.Item>
           <Form.Item name="needScore" label="Необходимый балл" rules={[{ required: true }]}>
             <InputNumber min={1} />
           </Form.Item>
-          <Form.Item name="timeLimit" label="Лимит времени (сек)" rules={[{ required: true }]}>
-            <InputNumber min={10} />
+          <Form.Item name="timeLimit" label="Лимит времени (мин)" rules={[{ required: true }]}>
+            <InputNumber min={1} placeholder="Лимит времени в минутах" />
           </Form.Item>
           <Form.Item shouldUpdate>
             {() => <PermissionButton type="primary" htmlType="submit" loading={creating}>Создать</PermissionButton>}

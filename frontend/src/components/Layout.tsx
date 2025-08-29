@@ -84,8 +84,8 @@ const Layout: FC<LayoutProps> = ({ children }) => {
 	};
 
 	return (
-		<ANTDLayout style={{ minHeight: '100vh' }}>
-			<Sider width={250} style={{ display: 'flex', flexDirection: 'column' }}>
+		<ANTDLayout style={{ height: '100vh', overflow: 'hidden' }}>
+			<Sider width={250} style={{ display: 'flex', flexDirection: 'column', height: '100vh', position: 'sticky', top: 0 }}>
 				<Title
 					level={4}
 					style={{
@@ -123,7 +123,8 @@ const Layout: FC<LayoutProps> = ({ children }) => {
 					style={{
 						padding: 24,
 						margin: 0,
-						minHeight: '100vh',
+						height: '100vh',
+						overflow: 'auto',
 						backgroundColor: isDark ? '#000000' : blue[0],
 						color: token.colorText
 					}}

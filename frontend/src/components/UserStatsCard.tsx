@@ -1,8 +1,6 @@
 import React from 'react';
-import { Card, Progress, Statistic, Row, Col, Typography, theme } from 'antd';
+import { Card, Statistic, Row, Col, theme } from 'antd';
 import { useGetProfileStatsQuery } from '@/store/endpoints';
-
-const { Text } = Typography;
 
 const UserStatsCard: React.FC = () => {
   const { token } = theme.useToken();
@@ -62,11 +60,11 @@ const UserStatsCard: React.FC = () => {
             title="Прогресс"
             value={stats.percent}
             suffix="%"
-            valueStyle={{ 
-              color: stats.percent >= 100 
-                ? token.colorSuccess 
-                : stats.percent >= 75 
-                  ? token.colorWarning 
+            valueStyle={{
+              color: stats.percent >= 100
+                ? token.colorSuccess
+                : stats.percent >= 75
+                  ? token.colorWarning
                   : token.colorInfo
             }}
           />

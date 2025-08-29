@@ -13,11 +13,14 @@ import {
 import {
   useGetMyJobrolesQuery,
   useGetMySkillsQuery,
+  useGetMyServicedSkillsQuery,
   api,
 } from '@/store/endpoints';
 import type { UserSkillSearchDto } from '@/types/api/user';
 import { useAppDispatch } from '@/hooks/storeHooks';
 import UserStatsCard from '@/components/UserStatsCard';
+import MySharedStatCard from '@/components/analytics/MySharedStatCard';
+import ServicedSkillsSection from './ServicedSkillsSection';
 
 const { Text } = Typography;
 
@@ -32,6 +35,7 @@ const HomePageContainer: React.FC = () => {
 
   const { data: mySkills, isFetching: isSkillsLoading } = useGetMySkillsQuery();
   const { data: myJobroles, isFetching: isJobrolesLoading } = useGetMyJobrolesQuery();
+  const { data: myServicedSkills = [], isFetching: isServicedSkillsLoading } = useGetMyServicedSkillsQuery();
 
   const dispatch = useAppDispatch();
   const [roleSkills, setRoleSkills] = useState<Record<string, UserSkillSearchDto[]>>({});
@@ -114,22 +118,23 @@ const HomePageContainer: React.FC = () => {
 		
 		<UserStatsCard />
 		
-      <Card>
+  <Card>
         <List
           dataSource={items}
           loading={loading}
           renderItem={({ us, jobroleTags }) => {
             const type = determineSkillType(us);
             const isTargetReached = us.level >= us.targetLevel;
-            const isExpired: boolean = 'isExpired' in us ? Boolean((us as unknown as { isExpired?: boolean }).isExpired) : false; // TODO: backend support needed
+            const isOverdue = Boolean(us.isOverdue);
 
-            // Visual priority: New > Expired > Confirmed > Neutral
-            const borderColor = us.isNew
-              ? token.colorInfo
-              : isExpired
+            // Visual priority with override: if confirmed, show as confirmed even if overdue
+            // Priority: Confirmed (green) > Overdue (red) > New (info) > Neutral
+            const borderColor = us.isConfirmed
+              ? token.colorSuccess
+              : isOverdue
                 ? token.colorError
-                : us.isConfirmed
-                  ? token.colorSuccess
+                : us.isNew
+                  ? token.colorInfo
                   : token.colorBorder;
 
             const safeTarget = Math.max(1, us.targetLevel || 1);
@@ -163,7 +168,7 @@ const HomePageContainer: React.FC = () => {
                       {us.isNew && (
                         <Text style={{ color: token.colorInfo }}>(Новый)</Text>
                       )}
-                      {!us.isNew && isExpired && (
+                      {!us.isNew && isOverdue && !us.isConfirmed && (
                         <Text style={{ color: token.colorError }}>(Просрочен)</Text>
                       )}
                       {/* Target reached is indicated by the progress status; no extra tag/text */}
@@ -202,6 +207,19 @@ const HomePageContainer: React.FC = () => {
           <Skeleton active paragraph={{ rows: 3 }} />
         )}
       </Card>
+
+      <div style={{ marginTop: 24 }}>
+        <MySharedStatCard />
+      </div>
+
+      {myServicedSkills.length > 0 && (
+        <div style={{ marginTop: 24 }}>
+          <ServicedSkillsSection 
+            skills={myServicedSkills} 
+            loading={isServicedSkillsLoading} 
+          />
+        </div>
+      )}
     </Flex>
   );
 };

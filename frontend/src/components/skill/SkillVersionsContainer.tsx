@@ -10,8 +10,9 @@ import {
   useCreateSkillVersionMutation,
   useUpdateSkillVersionMutation
 } from '@/store/endpoints';
+import { useCreateTestMutation } from '@/store/endpoints';
 import { api } from '@/store/endpoints';
-import { useAppDispatch } from '@/hooks/storeHooks';
+import { useAppDispatch, useAppSelector } from '@/hooks/storeHooks';
 import type { SkillVersionDTO, CreateSkillVersionDTO, UpdateSkillVersionDTO } from '@/types/api/skill';
 import SkillVersionCard from './SkillVersionCard';
 import CreateVersionModal from '../modals/skill/CreateVersionModal';
@@ -25,6 +26,7 @@ const { Title, Text } = Typography;
  */
 const SkillVersionsContainer: React.FC = () => {
   const dispatch = useAppDispatch();
+  const accessToken = useAppSelector(state => state.auth.accessToken);
   const { skillId = '' } = useParams<{ skillId: string }>();
   const navigate = useNavigate();
   const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
@@ -49,11 +51,23 @@ const SkillVersionsContainer: React.FC = () => {
   const [deleteVersion] = useDeleteSkillVersionMutation();
   const [createVersion, { isLoading: isCreatingVersion }] = useCreateSkillVersionMutation();
   const [updateVersion, { isLoading: isUpdatingVersion }] = useUpdateSkillVersionMutation();
+  const [createTest] = useCreateTestMutation();
 
   // Для скачивания файлов создаем отдельную функцию
   const downloadFileById = async (fileId: string): Promise<Blob | null> => {
     try {
-      const response = await fetch(`/api/file/${fileId}`);
+      const doFetch = () => fetch(`/api/file/${fileId}`,
+        {
+          headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+          credentials: 'include',
+        }
+      );
+      let response = await doFetch();
+      if (response.status === 401) {
+        // Try refresh and retry once
+        await fetch('/api/auth/refresh', { method: 'POST', credentials: 'include' });
+        response = await doFetch();
+      }
       if (response.ok) {
         return await response.blob();
       }
@@ -98,6 +112,69 @@ const SkillVersionsContainer: React.FC = () => {
       message.success('Версия создана');
       setIsCreateModalOpen(false);
       // no refetch to avoid flicker
+    } catch (error) {
+      message.error(extractErrMessage(error) || 'Ошибка создания версии');
+    }
+  };
+
+  // Extended create flow: optionally transfer test from previous version
+  const handleCreateVersionSubmitEx = async (
+    data: CreateSkillVersionDTO | UpdateSkillVersionDTO,
+    options?: { autoTransferTest?: boolean }
+  ) => {
+    const auto = Boolean(options?.autoTransferTest);
+    try {
+      // If auto transfer requested and current skill has a test, fetch it
+      let oldTest: any = null;
+      let oldTestPreview: any = null;
+      if (auto && skill?.testId) {
+        try {
+          // fetch full and preview in parallel to get title + questions
+          const [fullRes, previewRes] = await Promise.all([
+            dispatch(api.endpoints.getTestFull.initiate(skill.testId)).unwrap(),
+            dispatch(api.endpoints.getTest.initiate(skill.testId)).unwrap(),
+          ]);
+          oldTest = fullRes;
+          oldTestPreview = previewRes;
+        } catch {}
+      }
+
+      // Create new version first
+      const createdVersion = await createVersion({ id: skillId, body: data as CreateSkillVersionDTO }).unwrap();
+
+      // Refill versions cache
+      dispatch(
+        api.util.updateQueryData('listSkillVersions', skillId, (draft: SkillVersionDTO[] | undefined) => {
+          if (!draft) return;
+          draft.unshift(createdVersion);
+        })
+      );
+
+      // If old test was fetched, create a new test for this skill based on old data
+    if (auto && oldTest) {
+        const newTestPayload = {
+          skillId,
+      title: oldTestPreview?.title || 'Тест',
+          needScore: oldTest.needScore,
+          timeLimit: oldTest.timeLimit,
+          questions: (oldTest.questions || []).map((q: any) => ({
+            text: q.text,
+            answerVariants: (q.answerVariants || []).map((a: any) => ({
+              text: a.text,
+              isTrue: a.isTrue,
+            })),
+          })),
+        };
+        try {
+          await createTest(newTestPayload as any).unwrap();
+          message.success('Версия и тест созданы');
+        } catch (e) {
+          message.warning('Версия создана, но не удалось перенести тест');
+        }
+      } else {
+        message.success('Версия создана');
+      }
+      setIsCreateModalOpen(false);
     } catch (error) {
       message.error(extractErrMessage(error) || 'Ошибка создания версии');
     }
@@ -272,6 +349,7 @@ const SkillVersionsContainer: React.FC = () => {
         open={isCreateModalOpen}
         onCancel={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateVersionSubmit}
+        onSubmitEx={handleCreateVersionSubmitEx}
         loading={isCreatingVersion}
         skillId={skillId}
       />

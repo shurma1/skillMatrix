@@ -125,11 +125,23 @@ class UserController {
 		try {
 			const userId = req.authUser!.id;
 			
-			const skills = await UserService.getAllSkills(userId);
+			const skills = await UserService.getAllMySkills(userId);
 			
 			const filteredSkills = skills.filter(skill => skill.isActive);
 			
 			res.json(filteredSkills);
+		} catch (err) {
+			next(err);
+		}
+	}
+	
+	async getMyServicedSkills(req: Request, res: Response, next: NextFunction) {
+		try {
+			const userId = req.authUser!.id;
+			
+			const skills = await UserService.getUserServicedSkills(userId);
+		
+			res.json(skills);
 		} catch (err) {
 			next(err);
 		}
@@ -260,7 +272,17 @@ class UserController {
 	
 	async addConfirmation(req: Request, res: Response, next: NextFunction) {
 		try {
+			const permissions = req.userPermissions;
+			const userId = req.authUser?.id;
+			
 			const { id, skillId } = req.params;
+			
+			const isAuthorOrVerifier = userId ? await SkillService.isAuthorOrVerifier(userId, skillId) : false;
+			const isPermissionsExists = !! permissions && permissions.includes('EDIT_ALL');
+			
+			if(! isAuthorOrVerifier && ! isPermissionsExists) {
+				throw ApiError.errorByType('PERMISSION_DENIED');
+			}
 			
 			const { level } = req.body;
 			

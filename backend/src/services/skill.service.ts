@@ -169,9 +169,11 @@ class SkillService {
 		const usersFromJobroleSkill = await JobRoleRepository.getUsersBySkillId(skillId);
 		
 		const userIds = [
-			...users.map(user => user.userId),
-			...usersFromJobroleSkill.map(user => user.id)
-		]
+			...new Set([
+				...users.map(user => user.userId),
+				...usersFromJobroleSkill.map(user => user.id)
+			])
+		];
 		
 		if(authorId) {
 			await UserService.addConfirmation(authorId, skillId, SkillConfirmType.Acquired, 5);
@@ -442,6 +444,11 @@ class SkillService {
 			}
 		}
 		
+	}
+
+	async getAllUsersBySkillId(skillId: string) {
+		await this.checkSkillExist(skillId);
+		return await SkillRepository.getAllUsersBySkillId(skillId);
 	}
 }
 
