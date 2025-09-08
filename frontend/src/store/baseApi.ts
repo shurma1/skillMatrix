@@ -37,6 +37,13 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
   const isRefreshCall = typeof args === 'object' && (args as FetchArgs).url?.includes('/api/auth/refresh');
   
   if (result.error && result.error.status === 401 && !isRefreshCall) {
+    const state = api.getState() as RootState;
+    const hasRefresh = !!state.auth.refreshToken;
+    if (!hasRefresh) {
+      // Нет refresh токена — немедленно logout
+      api.dispatch(logout());
+      return result;
+    }
     // Если refresh уже выполняется, ждем его завершения
     if (isRefreshing && refreshPromise) {
       try {

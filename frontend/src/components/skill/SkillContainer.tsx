@@ -61,9 +61,46 @@ const SkillContainer: React.FC = () => {
     isFetching: isUserTestResultLoading,
   } = useGetTestResultQuery(skill?.testId as string, { skip: !skill?.testId });
 
+  // My job roles (to update jobrole skills caches on view and для поиска уровня навыка по должностям)
+  const { data: myJobroles } = useGetMyJobrolesQuery();
+
   // Совокупные навыки текущего пользователя (включая профильные и по должностям)
   const { data: mySkills } = useGetMySkillsQuery();
+  // Базовый поиск навыка среди агрегированных (профильные + должностные) навыков пользователя
   const mySkillRow = useMemo(() => (mySkills || []).find(s => s.skillId === skillId), [mySkills, skillId]);
+
+  // Если навыка нет в общей выдаче /api/me/skills, дополнительно ищем его в навыках по должностям
+  const [jobroleSkillRow, setJobroleSkillRow] = useState<UserSkillSearchDto | undefined>();
+
+  useEffect(() => {
+    if (!skillId || !myJobroles || myJobroles.length === 0) return;
+    // Если уже нашли навык в общей выдаче, сбрасываем локальное состояние и не ищем дальше
+    if (mySkillRow) {
+      if (jobroleSkillRow) setJobroleSkillRow(undefined);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      for (const jr of myJobroles) {
+        try {
+          const res = await dispatch(
+            api.endpoints.getMySkillsInJobrole.initiate(jr.id)
+          ).unwrap();
+          const found = res.find((s) => s.skillId === skillId);
+          if (found) {
+            if (!cancelled) setJobroleSkillRow(found);
+            break;
+          }
+        } catch {
+          // пропускаем ошибки отдельных запросов, продолжаем
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [dispatch, myJobroles, skillId, mySkillRow, jobroleSkillRow]);
+
+  // Эффективная строка навыка с учётом поиска по должностям
+  const effectiveSkillRow = mySkillRow || jobroleSkillRow;
 
   // User queries для автора и проверяющего
   const { 
@@ -87,8 +124,6 @@ const SkillContainer: React.FC = () => {
   const [updateSkill, { isLoading: isUpdatingSkill }] = useUpdateSkillMutation();
   const [makeRevision, { isLoading: isMakingRevision }] = useMakeRevisionMutation();
 
-  // My job roles (to update jobrole skills caches on view)
-  const { data: myJobroles } = useGetMyJobrolesQuery();
   const { data: tagSearch = [] } = useSearchTagsQuery({ query: '' });
   const allTags: TagDTO[] = useMemo(() => tagSearch as unknown as TagDTO[], [tagSearch]);
 
@@ -130,11 +165,11 @@ const SkillContainer: React.FC = () => {
   const loadingUsers = isAuthorLoading || isVerifierLoading;
   const versionCount = versions.length;
   const canTakeTestByLevel = useMemo(() => {
-    const lvl = mySkillRow?.level ?? 0;
-    const target = mySkillRow?.targetLevel;
+    const lvl = effectiveSkillRow?.level ?? 0;
+    const target = effectiveSkillRow?.targetLevel;
     if (target === 1) return false;
     return lvl >= 1 && lvl < 3;
-  }, [mySkillRow?.level, mySkillRow?.targetLevel]);
+  }, [effectiveSkillRow?.level, effectiveSkillRow?.targetLevel]);
   const canSeeAnalytics = Boolean(
     skillId && hasPermission('ANALYTICS_VIEW')
   );
@@ -164,12 +199,12 @@ const SkillContainer: React.FC = () => {
     return false;
   }, [skill, currentUser, hasPermission]);
   const takeTestDisabledReason = useMemo(() => {
-    if (!mySkillRow) return 'Кнопка доступна только при уровне подтверждения 1–2.';
-    if (mySkillRow.targetLevel === 1) return 'Недоступно: требуемый уровень для пользователя — 1.';
-    const lvl = mySkillRow.level ?? 0;
+    if (!effectiveSkillRow) return 'Кнопка доступна только при уровне подтверждения 1–2.';
+    if (effectiveSkillRow.targetLevel === 1) return 'Недоступно: требуемый уровень для пользователя — 1.';
+    const lvl = effectiveSkillRow.level ?? 0;
     if (lvl < 1 || lvl >= 3) return 'Кнопка доступна только при уровне подтверждения 1–2.';
     return undefined;
-  }, [mySkillRow]);
+  }, [effectiveSkillRow]);
 
   // Event handlers
   const handleOpenVersions = useCallback(() => {

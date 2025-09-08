@@ -2,7 +2,6 @@ import { baseApi } from './baseApi';
 import type {
   LoginRequestDTO,
   AuthDTO,
-  RefreshRequestDTO,
   TokenDTO,
   UserDTO
 } from '../types/api/auth';
@@ -251,8 +250,8 @@ export const api = baseApi.injectEndpoints({
     login: build.mutation<AuthDTO, LoginRequestDTO>({
       query: (body) => ({ url: '/api/auth/login', method: 'POST', body }),
     }),
-    refresh: build.mutation<TokenDTO, RefreshRequestDTO>({
-      query: (body) => ({ url: '/api/auth/refresh', method: 'POST', body }),
+    refresh: build.mutation<TokenDTO, void>({
+      query: () => ({ url: '/api/auth/refresh', method: 'POST' }),
     }),
 
     // File

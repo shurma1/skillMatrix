@@ -26,12 +26,17 @@ class AuthController {
 		try {
 			const { refreshToken } = req.cookies;
 			
+			if (!refreshToken) {
+				return res.status(401).json({ message: 'Refresh token not found in cookies' });
+			}
+			
 			const tokens = await AuthService.refresh(refreshToken);
 			
 			res.cookie('refreshToken', tokens.refresh_token, {
 				httpOnly: true,
 				secure: false,
-				sameSite: 'lax'
+				sameSite: 'lax',
+				domain: 'localhost',
 			});
 			res.json(tokens);
 		} catch (err) {

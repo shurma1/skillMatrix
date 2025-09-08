@@ -7,6 +7,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {getString} from "@/utils/getString.ts";
 import { useAppSelector } from '@/hooks/storeHooks.ts';
 import { useProfileSync } from '@/hooks/useProfileSync';
+import { useAuthInit } from '@/hooks/useAuthInit';
 import UserBar from './UserBar';
 
 const { Content, Sider } = ANTDLayout;
@@ -23,6 +24,9 @@ const Layout: FC<LayoutProps> = ({ children }) => {
 	const permissions = useAppSelector(s => s.auth.permissions);
 	const currentRouteKey = RouteKeysByPath[location.pathname];
 	const { token } = theme.useToken();
+	
+	// Инициализируем аутентификацию при загрузке
+	useAuthInit();
 	
 	// Синхронизируем профиль пользователя при загрузке
 	useProfileSync();

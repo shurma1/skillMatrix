@@ -47,11 +47,11 @@ class AuthService {
 			throw ApiError.errorByType('USER_NOT_FOUND');
 		}
 		
+		// Генерируем новую пару токенов и просто перезаписываем token в БД (SaveToken делает upsert логики)
+		// Удаление старого токена (RemoveToken) создаёт окно гонки при параллельных refresh запросах,
+		// что приводит к INVALID_REFRESH_TOKEN для второго запроса. Поэтому мы не удаляем отдельно старый.
 		const tokens = TokenService.GenerateTokens({ userId: user.id });
 		await TokenService.SaveToken(user.id, tokens.refresh_token);
-		
-		await TokenService.RemoveToken(refreshToken);
-		
 		return tokens;
 	}
 }
