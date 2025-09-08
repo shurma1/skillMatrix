@@ -21,7 +21,6 @@ const LoginPageContainer: React.FC = () => {
     >
       <div
         style={{
-          padding: 24,
           width: '100%',
           display: 'flex',
           justifyContent: 'center'
