@@ -16,9 +16,7 @@ const RequirePermission: FC<PropsWithChildren<RequirePermissionProps>> = ({ chil
 
   const names = new Set(userPermissions.map((p) => p.name));
   const ok = need.every((perm) => names.has(perm));
-  if (!ok) {
-    return <Navigate to={RoutePaths.PermissionDenied} state={{ from: location }} replace />;
-  }
+  if (!ok) return <Navigate to={RoutePaths.PermissionDenied} state={{ from: location }} replace />;
   return <>{children}</>;
 };
 

@@ -29,16 +29,34 @@ export const getTestAuditDate = (): string => {
  * @param baseStyle - базовые стили
  * @returns объект стилей с желтой подсветкой при необходимости
  */
-export const getSkillAuditStyle = (auditDate: string, baseStyle: React.CSSProperties = {}) => {
+export const getSkillAuditStyle = (
+  auditDate: string,
+  baseStyle: React.CSSProperties = {},
+  options?: { isDark?: boolean }
+) => {
   const isAuditSoon = isSkillAuditSoon(auditDate);
-  
+
+  if (!isAuditSoon) return { ...baseStyle };
+
+  // Определяем тёмную тему либо через переданный флаг, либо через media query (fallback)
+  const isDark = options?.isDark ?? (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+  // Цвета адаптированы под темы (основаны на warning palette Ant Design)
+  const lightTheme = {
+    backgroundColor: '#fffbe6', // light warning bg (antd token colorWarningBg)
+    borderColor: '#faad14'
+  };
+  const darkTheme = {
+    backgroundColor: '#2f2611', // более тёмный янтарный, достаточный контраст с белым текстом
+    borderColor: '#d48806'
+  };
+
+  const themeColors = isDark ? darkTheme : lightTheme;
+
   return {
     ...baseStyle,
-    ...(isAuditSoon && {
-      backgroundColor: '#fffbe6',
-      borderColor: '#faad14',
-      borderWidth: '1px',
-      borderStyle: 'solid'
-    })
+    ...themeColors,
+    borderWidth: '1px',
+    borderStyle: 'solid'
   };
 };

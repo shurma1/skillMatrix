@@ -50,7 +50,9 @@ const PermissionsGate: FC<PermissionsGateProps> = ({ app }) => {
     }
   }, [accessToken, refetch]);
 
-  if (smoothedLoading) {
+  const showLoader = smoothedLoading;
+
+  if (showLoader) {
     return <Loader />;
   }
 

@@ -3,6 +3,7 @@ import type { FC } from 'react';
 import type { SkillWithCurrentVersionDTO } from '@/types/api/skill';
 import type { TagDTO } from '@/types/api/tag';
 import { getSkillAuditStyle } from '@/utils/skillAuditHelpers';
+import { useAppSelector } from '@/hooks/storeHooks';
 
 interface SkillsTableProps {
   skills: SkillWithCurrentVersionDTO[];
@@ -23,6 +24,7 @@ const SkillsTable: FC<SkillsTableProps> = ({
   onPageChange,
   onRowClick
 }) => {
+  const isDark = useAppSelector(s => s.theme.isDark);
   const columns = [
     {
       title: 'Номер документ',
@@ -67,7 +69,7 @@ const SkillsTable: FC<SkillsTableProps> = ({
       columns={columns}
       onRow={(record) => ({
         onClick: () => onRowClick(record),
-        style: getSkillAuditStyle(record.auditDate)
+    style: getSkillAuditStyle(record.auditDate, {}, { isDark })
       })}
       pagination={{
         current: page,

@@ -23,6 +23,7 @@ const ServicedSkillsSection: React.FC<ServicedSkillsSectionProps> = ({
 }) => {
   const [expandedSkills, setExpandedSkills] = useState<Set<string>>(new Set());
   const me = useAppSelector(s => s.auth.user);
+  const isDark = useAppSelector(s => s.theme.isDark);
 
   const handleSkillExpand = (skillId: string, expanded: boolean) => {
     setExpandedSkills(prev => {
@@ -199,7 +200,7 @@ const ServicedSkillsSection: React.FC<ServicedSkillsSectionProps> = ({
                     borderRadius: 8,
                     padding: 16,
                     marginBottom: 12
-                  })}
+                  }, { isDark })}
                 >
                   <div
                     style={{
@@ -251,7 +252,7 @@ const ServicedSkillsSection: React.FC<ServicedSkillsSectionProps> = ({
                       }}
                     >
                       <div>Версия: {skill.version}</div>
-                      <div>Аудит: {new Date(skill.auditDate).toLocaleDateString()}</div>
+                      <div>Ревизия: {new Date(skill.auditDate).toLocaleDateString()}</div>
                     </div>
                   </div>
                   
