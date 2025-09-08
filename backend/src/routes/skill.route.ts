@@ -4,6 +4,16 @@ import permissionMiddleware from "../middlewares/permission.middleware";
 
 const router = express.Router();
 
+
+router.post(
+	'/makeRevision',
+	permissionMiddleware({
+		needAuth: true,
+	}),
+	SkillController.makeRevision
+);
+
+
 /**
  * @openapi
  * /api/skill/search:

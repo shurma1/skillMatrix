@@ -91,6 +91,13 @@ base AS (
             :hasTagIds::boolean = FALSE
             OR t."id" IN (SELECT CAST(jsonb_array_elements_text(:tagIdsJson) AS uuid))
         )
+
+        -- needRevision фильтр - навыки, которые нуждаются в ревизии (auditDate <= текущая дата + 1 месяц)
+        -- Предыдущее условие было инвертировано и отсеивало старые записи, оставляя почти все остальные.
+        AND (
+            :needRevision::boolean = FALSE
+            OR swl."auditDate" <= (CURRENT_DATE + INTERVAL '1 month')
+        )
     GROUP BY
         swl."skillId",
         swl."type",
@@ -111,7 +118,7 @@ paged AS (
         b.*,
         COUNT(*) OVER() AS total_count
     FROM base b
-    ORDER BY b."title"
+    ORDER BY b."approvedDate" DESC, b."title"
     LIMIT COALESCE(:limit, 50)
     OFFSET COALESCE(:offset, 0)
 )
@@ -131,7 +138,7 @@ SELECT JSONB_BUILD_OBJECT(
             'version', "version",
             'testId', "testId",
             'tags', "tags"
-        ) ORDER BY "title"
+        ) ORDER BY "approvedDate" DESC, "title"
     ), '[]'::jsonb)
 ) AS result
 FROM paged;

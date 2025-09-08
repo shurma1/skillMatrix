@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/hooks/storeHooks';
 import { useGetProfileQuery } from '@/store/endpoints';
 import { setUser } from '@/store/authSlice';
+import { useSmoothedLoading } from '@/hooks/useSmoothedLoading';
 
 /**
  * Хук для загрузки и синхронизации данных профиля пользователя
@@ -10,7 +11,7 @@ export const useProfileSync = () => {
   const dispatch = useAppDispatch();
   const { accessToken } = useAppSelector(state => state.auth);
   
-  const { data: profile, isSuccess } = useGetProfileQuery(undefined, {
+  const { data: profile, isSuccess, isFetching } = useGetProfileQuery(undefined, {
     skip: !accessToken, // Не загружать, если нет токена
   });
 
@@ -21,5 +22,7 @@ export const useProfileSync = () => {
     }
   }, [isSuccess, profile, dispatch]);
 
-  return { profile, isLoading: !isSuccess && !!accessToken };
+  const smoothedLoading = useSmoothedLoading(isFetching && !!accessToken, !!profile);
+
+  return { profile, isLoading: smoothedLoading };
 };

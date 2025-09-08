@@ -3,6 +3,7 @@ import SkillService from "../services/skill.service";
 import {parseQueryArray} from "../utils/parseQueryArray";
 import {parseQueryDates} from "../utils/parseQueryDates";
 import calcPageLimitAndOffset from "../utils/calcPageLimitAndOffset";
+import {ApiError} from "../error/apiError";
 
 class SkillController {
 	async create(req: Request, res: Response, next: NextFunction) {
@@ -83,7 +84,8 @@ class SkillController {
 				approvedDates,
 				auditDates,
 				limit,
-				page
+				page,
+				needRevision
 			} = req.query;
 			
 			const [newLimit, offset] = calcPageLimitAndOffset(limit, page)
@@ -97,6 +99,8 @@ class SkillController {
 			const approvedDatesArray = parseQueryDates(approvedDates as string);
 			const auditDatesArray = parseQueryDates(auditDates as string);
 			
+			const needRevisionBool = needRevision === 'true';
+			
 			const skills = await SkillService.search(
 				decodedQuery,
 				newLimit,
@@ -106,6 +110,7 @@ class SkillController {
 				verifierIdsArray,
 				approvedDatesArray,
 				auditDatesArray,
+				needRevisionBool
 			);
 			
 			res.send(skills);
@@ -155,9 +160,10 @@ class SkillController {
 				authorId,
 				verifierid,
 				approvedDate,
+				auditDate
 			} = req.body;
 			
-			const skillVersion = await SkillService.updateVersion(versionId, id, fileId , authorId, verifierid, approvedDate);
+			const skillVersion = await SkillService.updateVersion(versionId, id, fileId , authorId, verifierid, approvedDate, auditDate);
 			
 			res.send(skillVersion);
 		} catch (err) {
@@ -251,6 +257,29 @@ class SkillController {
 			const users = await SkillService.getAllUsersBySkillId(id);
 			
 			res.json(users);
+			
+		} catch (err) {
+			next(err);
+		}
+	}
+	
+	async makeRevision(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { date, skillId } = req.body;
+			const userId = req.authUser!.id;
+			const permissions = req.userPermissions;
+			
+			
+			const isUserAuthorOrVerifier = await SkillService.isAuthorOrVerifier(userId);
+			const isUserAdmin = typeof permissions !== 'undefined' && permissions.includes('EDIT_ALL');
+			
+			if(!isUserAuthorOrVerifier && !isUserAdmin) {
+				throw ApiError.errorByType('PERMISSION_DENIED');
+			}
+			
+			await SkillService.makeRevision(date, skillId);
+			
+			res.send();
 			
 		} catch (err) {
 			next(err);

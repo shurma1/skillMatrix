@@ -29,13 +29,22 @@ class JobRoleRepository {
 	}
 
 	async search(query: string, limit: number, offset: number) {
+		// If query is empty or not a string, return all job roles with pagination.
+		if (typeof query !== 'string' || query.trim() === '') {
+			return await JobRole.findAndCountAll({
+				limit,
+				offset
+			});
+		}
+
+		const q = query.toLowerCase();
 		return await JobRole.findAndCountAll({
 			where: {
 				[Op.and]: [
 					where(
 						fn('lower', col('title')),
 						{
-							[Op.like]: `%${query.toLowerCase()}%`
+							[Op.like]: `%${q}%`
 						}
 					)
 				]

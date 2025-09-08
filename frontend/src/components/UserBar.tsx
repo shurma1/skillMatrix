@@ -26,7 +26,7 @@ const UserBar: React.FC = () => {
       </div>
       
       {/* Профиль пользователя */}
-      <Button
+  <Button
         type="text"
         block
         aria-current={isActive ? 'page' : undefined}

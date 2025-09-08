@@ -12,7 +12,8 @@ import type {
   CreateSkillDTO,
   UpdateSkillDTO,
   SkillVersionDTO,
-  CreateSkillVersionDTO
+  CreateSkillVersionDTO,
+  MakeRevisionDTO
 } from '../types/api/skill';
 import type { UpdateSkillVersionDTO } from '../types/api/skill';
 import type { FileDTO } from '../types/api/file';
@@ -63,14 +64,16 @@ export const api = baseApi.injectEndpoints({
     // Analytics
     getAnalyticsKPI: build.query<{ colLabels: string[]; rowLabels: string[]; data: number[][] }, void>({
       query: () => '/api/analytics/kpi',
-      providesTags: ['Profile'], // neutral tag; page is read-only
+      // Отключаем кеширование для аналитических данных, так как они постоянно изменяются
+      keepUnusedDataFor: 0,
     }),
     getAnalyticsJobRolesToSkills: build.query<{
       left: { colLabels: string[]; data: (string | number | null)[][] };
       right: { colLabels: [string[], number[], number[]]; data: number[][] };
     }, void>({
       query: () => '/api/analytics/jobRolesToSkills',
-      providesTags: ['Profile'],
+      // Отключаем кеширование для аналитических данных, так как они постоянно изменяются
+      keepUnusedDataFor: 0,
     }),
     getAnalyticsJobRoleToSkills: build.query<{
       left: { colLabels: string[]; data: (string | number | null)[][] };
@@ -81,7 +84,8 @@ export const api = baseApi.injectEndpoints({
         url: '/api/analytics/jobRoleToSkills',
         params: { jobRoleId, ...(userId && { userId }) }
       }),
-      providesTags: ['Profile'],
+      // Отключаем кеширование для аналитических данных, так как они постоянно изменяются
+      keepUnusedDataFor: 0,
     }),
     getAnalyticsUserToSkills: build.query<{
       user: {
@@ -101,7 +105,8 @@ export const api = baseApi.injectEndpoints({
       };
     }, string>({
       query: (userId) => `/api/analytics/userToSkills/${userId}`,
-      providesTags: ['Profile'],
+      // Отключаем кеширование для аналитических данных, так как они постоянно изменяются
+      keepUnusedDataFor: 0,
     }),
     getMySharedStat: build.query<{
       user: {
@@ -121,7 +126,8 @@ export const api = baseApi.injectEndpoints({
       };
     }, void>({
       query: () => '/api/me/sharedStat',
-      providesTags: ['Profile'],
+      // Отключаем кеширование для аналитических данных, так как они постоянно изменяются
+      keepUnusedDataFor: 0,
     }),
     downloadMySharedStat: build.query<{ blob: Blob; filename?: string }, void>({
       query: () => ({
@@ -151,7 +157,8 @@ export const api = baseApi.injectEndpoints({
       data: (string | number | null)[][];
     }, string>({
       query: (skillId) => `/api/analytics/skillToUsers/${skillId}`,
-      providesTags: ['Profile'],
+      // Отключаем кеширование для аналитических данных, так как они постоянно изменяются
+      keepUnusedDataFor: 0,
     }),
     // Downloads (Excel)
     downloadAnalyticsKPI: build.query<{ blob: Blob; filename?: string }, void>({
@@ -251,7 +258,7 @@ export const api = baseApi.injectEndpoints({
     // File
     getFileInfo: build.query<FileDTO, string>({
       query: (id) => `/api/file/${id}/info`,
-      providesTags: (_, __, id) => [{ type: 'File' as const, id }],
+      keepUnusedDataFor: 0,
     }),
     downloadFile: build.query<Blob, string>({
       query: (id) => ({ 
@@ -264,7 +271,6 @@ export const api = baseApi.injectEndpoints({
           return response.blob();
         }
       }),
-      providesTags: (_, __, id) => [{ type: 'File' as const, id }],
       keepUnusedDataFor: 0, // Don't cache blob data
     }),
     uploadFile: build.mutation<FileDTO, { name: string; file: File }>({
@@ -283,7 +289,7 @@ export const api = baseApi.injectEndpoints({
     // Image
     getImageInfo: build.query<ImageDTO, string>({
       query: (id) => `/api/image/${id}/info`,
-      providesTags: (_, __, id) => [{ type: 'Image' as const, id }],
+      keepUnusedDataFor: 0,
     }),
     getImage: build.query<Blob, { id: string; thumb?: boolean }>({
       query: ({ id, thumb }) => ({
@@ -298,7 +304,6 @@ export const api = baseApi.injectEndpoints({
           return response.blob();
         }
       }),
-      providesTags: (_, _2, { id }) => [{ type: 'Image' as const, id }],
       keepUnusedDataFor: 0, // Don't cache blob data
       serializeQueryArgs: ({ queryArgs }) => {
         // Create unique cache key but don't store data
@@ -324,7 +329,7 @@ export const api = baseApi.injectEndpoints({
       { query: string; limit?: number; page?: number }
     >({
       query: (params) => ({ url: '/api/jobrole/search', params }),
-      providesTags: ['JobRole'],
+      keepUnusedDataFor: 0,
     }),
     createJobRole: build.mutation<JobRoleDTO, CreateJobRoleDTO>({
       query: (body) => ({ url: '/api/jobrole', method: 'POST', body }),
@@ -332,7 +337,7 @@ export const api = baseApi.injectEndpoints({
     }),
     getJobRole: build.query<JobRoleDTO, string>({
       query: (id) => `/api/jobrole/${id}`,
-      providesTags: (_, __, id) => [{ type: 'JobRole' as const, id }],
+      keepUnusedDataFor: 0,
     }),
     updateJobRole: build.mutation<
       JobRoleDTO,
@@ -351,7 +356,7 @@ export const api = baseApi.injectEndpoints({
     }),
     listJobRoleUsers: build.query<JobRoleUserSearchDTO[], string>({
       query: (id) => `/api/jobrole/${id}/user`,
-      providesTags: (_, __, id) => [{ type: 'JobRole' as const, id }],
+      keepUnusedDataFor: 0,
     }),
     assignUserToJobRole: build.mutation<
       UserDTO,
@@ -376,7 +381,7 @@ export const api = baseApi.injectEndpoints({
     }),
     listJobRoleSkills: build.query<JobRoleSkillSearchDTO[], string>({
       query: (id) => `/api/jobrole/${id}/skill`,
-      providesTags: (_, __, id) => [{ type: 'JobRoleSkill' as const, id }],
+      keepUnusedDataFor: 0,
     }),
     addJobRoleSkill: build.mutation<
       JobRoleSkillSearchDTO,
@@ -423,10 +428,11 @@ export const api = baseApi.injectEndpoints({
         verifierIds?: string;
         approvedDates?: string;
         auditDates?: string;
+        needRevision?: boolean;
       }
     >({
       query: (params) => ({ url: '/api/skill/search', params }),
-      providesTags: ['Skill'],
+      keepUnusedDataFor: 0,
     }),
     createSkill: build.mutation<SkillWithCurrentVersionDTO, CreateSkillDTO>({
       query: (body) => ({ url: '/api/skill', method: 'POST', body }),
@@ -453,11 +459,11 @@ export const api = baseApi.injectEndpoints({
     }),
     listSkillUsers: build.query<UserSkillSearchDto[], string>({
       query: (id) => `/api/skill/${id}/user`,
-      providesTags: (_, __, id) => [{ type: 'SkillUsers' as const, id }]
+      keepUnusedDataFor: 0,
     }),
     listAllSkillUsers: build.query<UserSkillSearchDto[], string>({
       query: (id) => `/api/skill/${id}/allUsers`,
-      providesTags: (_, __, id) => [{ type: 'SkillUsers' as const, id }]
+      keepUnusedDataFor: 0,
     }),
     addTagToSkill: build.mutation<void, { id: string; tagId: string }>({
       query: ({ id, tagId }) => ({
@@ -469,7 +475,7 @@ export const api = baseApi.injectEndpoints({
     }),
     getSkillTags: build.query<TagDTO[], string>({
       query: (id) => `/api/skill/${id}/tags`,
-      providesTags: ['Tag']
+      keepUnusedDataFor: 0,
     }),
     removeTagFromSkill: build.mutation<void, { id: string; tagId: string }>({
       query: ({ id, tagId }) => ({
@@ -487,18 +493,22 @@ export const api = baseApi.injectEndpoints({
         method: 'POST',
         body
       }),
-  // Avoid refetch to prevent flicker; cache is updated manually in UI
-  invalidatesTags: [],
+      // Invalidate skill data to update version info on skill page
+      invalidatesTags: (_, __, { id }) => [
+        { type: 'Skill' as const, id },
+        'SkillVersions'
+      ],
     }),
     listSkillVersions: build.query<SkillVersionDTO[], string>({
       query: (id) => `/api/skill/${id}/version`,
-      providesTags: (_, __, id) => [{ type: 'SkillVersions' as const, id }]
+      providesTags: (_, __, id) => ['SkillVersions', { type: 'Skill' as const, id }],
     }),
     getSkillVersion: build.query<
       SkillVersionDTO,
       { id: string; versionId: string }
     >({
-      query: ({ id, versionId }) => `/api/skill/${id}/version/${versionId}`
+      query: ({ id, versionId }) => `/api/skill/${id}/version/${versionId}`,
+      keepUnusedDataFor: 0,
     }),
     deleteSkillVersion: build.mutation<
       void,
@@ -508,8 +518,11 @@ export const api = baseApi.injectEndpoints({
         url: `/api/skill/${id}/version/${versionId}`,
         method: 'DELETE'
       }),
-  // We'll update cache manually to avoid global spinners
-  invalidatesTags: [],
+      // Invalidate skill and versions data
+      invalidatesTags: (_, __, { id }) => [
+        { type: 'Skill' as const, id },
+        'SkillVersions'
+      ],
     }),
     updateSkillVersion: build.mutation<
       SkillVersionDTO,
@@ -520,18 +533,29 @@ export const api = baseApi.injectEndpoints({
         method: 'PUT',
         body,
       }),
-  // We'll update caches manually to avoid full list refetch and rerender
-  invalidatesTags: [],
+      // Invalidate skill and versions data
+      invalidatesTags: (_, __, { id }) => [
+        { type: 'Skill' as const, id },
+        'SkillVersions'
+      ],
+    }),
+    makeRevision: build.mutation<void, MakeRevisionDTO>({
+      query: (body) => ({
+        url: '/api/skill/makeRevision',
+        method: 'POST',
+        body
+      }),
+      invalidatesTags: (_, __, { skillId }) => [{ type: 'Skill' as const, id: skillId }],
     }),
 
     // Tag
     searchTags: build.query<TagSearchDTO[], { query: string }>({
       query: (params) => ({ url: '/api/tag/search', params }),
-      providesTags: ['Tag'],
+      keepUnusedDataFor: 0,
     }),
     getTag: build.query<TagDTO, string>({
       query: (id) => `/api/tag/${id}`,
-      providesTags: (_, __, id) => [{ type: 'Tag' as const, id }],
+      keepUnusedDataFor: 0,
     }),
     updateTag: build.mutation<TagDTO, { id: string; body: TagUpdateDTO }>({
       query: ({ id, body }) => ({
@@ -560,7 +584,11 @@ export const api = baseApi.injectEndpoints({
         method: 'POST',
         body: { ...body, skillId }
       }),
-      invalidatesTags: ['Test'],
+      // Invalidate both test and skill data to update test info on skill page
+      invalidatesTags: (_, __, { skillId }) => [
+        'Test',
+        { type: 'Skill' as const, id: skillId }
+      ],
     }),
     startTest: build.mutation<StartTestResponseDTO, StartTestDTO>({
       query: (body) => ({ url: '/api/test/start', method: 'POST', body }),
@@ -583,29 +611,33 @@ export const api = baseApi.injectEndpoints({
     }),
     getTestResult: build.query<UserTestResultDTO, string>({
       query: (testId) => `/api/test/${testId}/result`,
-      providesTags: (_, __, testId) => [{ type: 'Test' as const, id: testId }],
+      keepUnusedDataFor: 0,
     }),
     getUserTestResultByUser: build.query<UserTestResultDTO, { testId: string; userId: string }>({
       query: ({ testId, userId }) => `/api/test/${testId}/result/user/${userId}`,
-      providesTags: (_, __, { testId, userId }) => [
-        { type: 'Test' as const, id: testId },
-        { type: 'User' as const, id: userId },
-      ],
+      keepUnusedDataFor: 0,
     }),
     getTest: build.query<PreviewTestDto, string>({
-      query: (testId) => `/api/test/${testId}`
+      query: (testId) => `/api/test/${testId}`,
+      keepUnusedDataFor: 0,
     }),
     getTestFull: build.query<TestDTO, string>({
       query: (testId) => `/api/test/${testId}/full`,
-      providesTags: (_, __, testId) => [{ type: 'Test' as const, id: testId }],
+      keepUnusedDataFor: 0,
     }),
     updateTest: build.mutation<TestDTO, { testId: string; body: CreateTestDTO }>({
       query: ({ testId, body }) => ({ url: `/api/test/${testId}`, method: 'PUT', body }),
-      invalidatesTags: (_r, _e, { testId }) => [{ type: 'Test' as const, id: testId }],
+      // Also invalidate skill data since test info affects skill page
+      invalidatesTags: (_r, _e, { testId, body }) => [
+        { type: 'Test' as const, id: testId },
+        'Test',
+        // If we have skillId in the response, we can be more specific
+        'Skill'
+      ],
     }),
     getCanDeleteTest: build.query<{ can: boolean }, string>({
       query: (testId) => `/api/test/${testId}/can-delete`,
-      providesTags: (_, __, testId) => [{ type: 'Test' as const, id: testId }],
+      keepUnusedDataFor: 0,
     }),
     deleteUserTestResult: build.mutation<void, { testId: string; userId: string }>({
       query: ({ testId, userId }) => ({
@@ -620,7 +652,7 @@ export const api = baseApi.injectEndpoints({
       { query: string; limit?: number; page?: number }
     >({
       query: (params) => ({ url: '/api/user/search', params }),
-      providesTags: ['User'],
+      keepUnusedDataFor: 0,
     }),
     createUser: build.mutation<UserDTO, UserCreateDTO>({
       query: (body) => ({ url: '/api/user', method: 'POST', body }),
@@ -628,7 +660,7 @@ export const api = baseApi.injectEndpoints({
     }),
     getUser: build.query<UserDTO, string>({
       query: (id) => `/api/user/${id}`,
-      providesTags: (_, __, id) => [{ type: 'User' as const, id }],
+      keepUnusedDataFor: 0,
     }),
     updateUser: build.mutation<UserDTO, { id: string; body: UserUpdateDTO }>({
       query: ({ id, body }) => ({
@@ -644,7 +676,7 @@ export const api = baseApi.injectEndpoints({
     }),
     listUserSkills: build.query<UserSkillSearchDto[], string>({
       query: (id) => `/api/user/${id}/skill`,
-      providesTags: (_, __, id) => [{ type: 'UserSkills' as const, id }]
+      keepUnusedDataFor: 0,
     }),
     addUserSkill: build.mutation<
       UserSkillDto,
@@ -661,7 +693,8 @@ export const api = baseApi.injectEndpoints({
       UserSkillDto,
       { id: string; skillId: string }
     >({
-      query: ({ id, skillId }) => `/api/user/${id}/skill/${skillId}`
+      query: ({ id, skillId }) => `/api/user/${id}/skill/${skillId}`,
+      keepUnusedDataFor: 0,
     }),
     updateUserSkillTarget: build.mutation<
       UserSkillDto,
@@ -686,7 +719,8 @@ export const api = baseApi.injectEndpoints({
       invalidatesTags: (_, __, { id }) => [{ type: 'UserSkills' as const, id }]
     }),
     listUserJobroles: build.query<JobRoleDTO[], string>({
-      query: (id) => `/api/user/${id}/jobrole`
+      query: (id) => `/api/user/${id}/jobrole`,
+      keepUnusedDataFor: 0,
     }),
     addUserJobrole: build.mutation<
       JobRoleDTO,
@@ -703,9 +737,7 @@ export const api = baseApi.injectEndpoints({
       { id: string; jobroleId: string }
     >({
       query: ({ id, jobroleId }) => `/api/user/${id}/jobrole/${jobroleId}/skill`,
-      providesTags: (_, __, { id, jobroleId }) => [
-        { type: 'UserJobroleSkillsByJobrole' as const, id: `${id}_${jobroleId}` },
-      ],
+      keepUnusedDataFor: 0,
     }),
     removeUserJobrole: build.mutation<
       void,
@@ -720,7 +752,8 @@ export const api = baseApi.injectEndpoints({
       ConfirmationDTO[],
       { id: string; skillId: string }
     >({
-      query: ({ id, skillId }) => `/api/user/${id}/skill/${skillId}/confirmation`
+      query: ({ id, skillId }) => `/api/user/${id}/skill/${skillId}/confirmation`,
+      keepUnusedDataFor: 0,
     }),
     addUserSkillConfirmation: build.mutation<ConfirmationDTO, { id: string; skillId: string; body: ConfirmationCreateDTO }>({
       query: ({ id, skillId, body }) => ({
@@ -751,7 +784,7 @@ export const api = baseApi.injectEndpoints({
     }),
     getProfileStats: build.query<UserStatsDTO, void>({
       query: () => '/api/me/stats',
-      providesTags: ['Profile'],
+      keepUnusedDataFor: 0,
     }),
     updateProfile: build.mutation<UserDTO, UserUpdateDTO>({
       query: (body) => ({ url: '/api/me/profile', method: 'PUT', body }),
@@ -766,7 +799,8 @@ export const api = baseApi.injectEndpoints({
       invalidatesTags: ['ProfileSkill'] 
     }),
     getProfileSkill: build.query<UserSkillDto, string>({ 
-      query: (skillId) => `/api/me/profile/skill/${skillId}` 
+      query: (skillId) => `/api/me/profile/skill/${skillId}`,
+      keepUnusedDataFor: 0,
     }),
     updateProfileSkillTarget: build.mutation<UserSkillDto, { skillId: string; body: UpdateUserSkillTargetLevelDTO }>({ 
       query: ({ skillId, body }) => ({ url: `/api/me/profile/skill/${skillId}`, method: 'PUT', body }), 
@@ -778,19 +812,22 @@ export const api = baseApi.injectEndpoints({
       invalidatesTags: ['ProfileSkill'] 
     }),
     listProfileJobroles: build.query<JobRoleDTO[], void>({ 
-      query: () => '/api/me/profile/jobrole' 
+      query: () => '/api/me/profile/jobrole',
+      keepUnusedDataFor: 0,
     }),
     addProfileJobrole: build.mutation<JobRoleDTO, AddUserJobroleDTO>({ 
       query: (body) => ({ url: '/api/me/profile/jobrole', method: 'POST', body }) 
     }),
     listProfileSkillsInJobrole: build.query<UserSkillSearchDto[], string>({ 
-      query: (jobroleId) => `/api/me/profile/jobrole/${jobroleId}/skill` 
+      query: (jobroleId) => `/api/me/profile/jobrole/${jobroleId}/skill`,
+      keepUnusedDataFor: 0,
     }),
     removeProfileJobrole: build.mutation<void, string>({ 
       query: (jobroleId) => ({ url: `/api/me/profile/jobrole/${jobroleId}`, method: 'DELETE' }) 
     }),
     listProfileSkillConfirmations: build.query<ConfirmationDTO[], string>({ 
-      query: (skillId) => `/api/me/profile/skill/${skillId}/confirmation` 
+      query: (skillId) => `/api/me/profile/skill/${skillId}/confirmation`,
+      keepUnusedDataFor: 0,
     }),
     addProfileSkillConfirmation: build.mutation<ConfirmationDTO, { skillId: string; body: ConfirmationDTO }>({
       query: ({ skillId, body }) => ({
@@ -808,19 +845,19 @@ export const api = baseApi.injectEndpoints({
     // Current user data (without profile prefix)
     getMyJobroles: build.query<JobRoleDTO[], void>({
       query: () => '/api/me/jobrole',
-      providesTags: ['MyJobroles'],
+      keepUnusedDataFor: 0,
     }),
     getMySkills: build.query<UserSkillSearchDto[], void>({
       query: () => '/api/me/skills',
-      providesTags: ['MySkills'],
+      keepUnusedDataFor: 0,
     }),
     getMySkillsInJobrole: build.query<UserSkillSearchDto[], string>({
       query: (jobroleId) => `/api/me/jobrole/${jobroleId}/skills`,
-      providesTags: (_, __, jobroleId) => [{ type: 'MyJobroleSkills' as const, id: jobroleId }],
+      keepUnusedDataFor: 0,
     }),
     getMyServicedSkills: build.query<SkillWithCurrentVersionDTO[], void>({
       query: () => '/api/me/servicedSkills',
-      providesTags: ['MyServicedSkills'],
+      keepUnusedDataFor: 0,
     }),
 
     // Permissions
@@ -898,6 +935,7 @@ export const {
   useGetSkillVersionQuery,
   useDeleteSkillVersionMutation,
   useUpdateSkillVersionMutation,
+  useMakeRevisionMutation,
   useSearchTagsQuery,
   useGetTagQuery,
   useUpdateTagMutation,

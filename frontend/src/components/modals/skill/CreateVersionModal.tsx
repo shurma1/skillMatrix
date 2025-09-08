@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Form, Select, Upload, Input, DatePicker } from 'antd';
+import { Modal, Form, Select, Upload, Input } from 'antd';
 import dayjs from 'dayjs';
 import { Checkbox } from 'antd';
 import type { UploadProps } from 'antd';
 import { useSearchUsersQuery, useUploadFileMutation, useGetSkillQuery } from '@/store/endpoints';
 import type { CreateSkillVersionDTO, UpdateSkillVersionDTO } from '@/types/api/skill';
 import { extractErrMessage } from '../../../utils/errorHelpers';
+import DatePickerWithPaste from '@/components/DatePickerWithPaste.tsx';
 
 interface CreateVersionModalProps {
   open: boolean;
@@ -22,6 +23,7 @@ interface CreateVersionModalProps {
   initialAuthorId?: string;
   initialVerifierId?: string;
   initialApprovedDate?: string;
+  initialAuditDate?: string; // новая дата ревизии (если редактируем)
   currentFileName?: string;
 }
 
@@ -29,6 +31,7 @@ interface FormData {
   authorId: string;
   verifierId: string;
   approvedDate?: any;
+  auditDate?: any;
   autoTransferTest?: boolean;
 }
 
@@ -47,6 +50,7 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
   initialAuthorId,
   initialVerifierId,
   initialApprovedDate,
+  initialAuditDate,
   currentFileName,
 }) => {
   const [form] = Form.useForm<FormData>();
@@ -67,9 +71,10 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
         authorId: initialAuthorId,
         verifierId: initialVerifierId,
         approvedDate: initialApprovedDate ? dayjs(initialApprovedDate) : dayjs(),
+        auditDate: initialAuditDate ? dayjs(initialAuditDate) : (initialApprovedDate ? dayjs(initialApprovedDate).add(3, 'year') : dayjs().add(3, 'year')),
       });
     }
-  }, [open, initialAuthorId, initialVerifierId, initialApprovedDate, form]);
+  }, [open, initialAuthorId, initialVerifierId, initialApprovedDate, initialAuditDate, form]);
 
   const handleFileUpload = async (file: File): Promise<string | null> => {
     try {
@@ -91,13 +96,24 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
       const payload: UpdateSkillVersionDTO = {};
       // Approved date diff
       if (values.approvedDate) {
-        const iso = typeof values.approvedDate === 'string' 
-          ? values.approvedDate 
+        const iso = typeof values.approvedDate === 'string'
+          ? values.approvedDate
           : values.approvedDate.toDate ? values.approvedDate.toDate().toISOString() : undefined;
         if (iso) {
           // always include for create; for update include when provided
           (payload as any).approvedDate = iso;
         }
+      }
+      if (values.auditDate) {
+        const isoAudit = typeof values.auditDate === 'string'
+          ? values.auditDate
+          : values.auditDate.toDate ? values.auditDate.toDate().toISOString() : undefined;
+        if (isoAudit) {
+          (payload as any).auditDate = isoAudit;
+        }
+      } else if ((payload as any).approvedDate) {
+        // fallback генерируем дату ревизии +3 года
+        (payload as any).auditDate = dayjs((payload as any).approvedDate).add(3, 'year').toISOString();
       }
 
       // Author diff
@@ -130,6 +146,11 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
         };
         if (payload && (payload as any).approvedDate) {
           (createPayload as any).approvedDate = (payload as any).approvedDate;
+        }
+        if (payload && (payload as any).auditDate) {
+          (createPayload as any).auditDate = (payload as any).auditDate;
+        } else if ((createPayload as any).approvedDate) {
+          (createPayload as any).auditDate = dayjs((createPayload as any).approvedDate).add(3, 'year').toISOString();
         }
         if (onSubmitEx) {
           await onSubmitEx(createPayload, { autoTransferTest: values.autoTransferTest });
@@ -193,11 +214,24 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
           authorId: initialAuthorId,
           verifierId: initialVerifierId,
           approvedDate: initialApprovedDate ? dayjs(initialApprovedDate) : dayjs(),
+          auditDate: initialAuditDate ? dayjs(initialAuditDate) : (initialApprovedDate ? dayjs(initialApprovedDate).add(3, 'year') : dayjs().add(3, 'year')),
           autoTransferTest: true,
+        }}
+        onValuesChange={(changed) => {
+          if (changed.approvedDate) {
+            const newAudit = dayjs(changed.approvedDate).add(3, 'year');
+            form.setFieldsValue({ auditDate: newAudit });
+          }
         }}
       >
         <Form.Item name="approvedDate" label="Дата утверждения">
-          <DatePicker style={{ width: '100%' }} />
+          <DatePickerWithPaste
+			  style={{ width: '100%' }}
+			  
+		  />
+        </Form.Item>
+        <Form.Item name="auditDate" label="Дата ревизии (аудита)" rules={[{ required: true, message: 'Укажите дату ревизии' }]}>
+          <DatePickerWithPaste style={{ width: '100%' }} />
         </Form.Item>
         <Form.Item
           name="authorId"

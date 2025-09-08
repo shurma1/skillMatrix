@@ -27,6 +27,7 @@ export interface CreateSkillDTO {
   documentId?: string;
 }
 export interface UpdateSkillDTO { title?: string; isActive?: boolean; tags?: string[]; documentId?: string; }
-export interface CreateSkillVersionDTO { fileId?: string; authorId: string; verifierid: string; approvedDate?: string }
-// For updating a version, fields are optional; omit unchanged values
-export type UpdateSkillVersionDTO = Partial<CreateSkillVersionDTO>;
+export interface CreateSkillVersionDTO { fileId?: string; authorId: string; verifierid: string; approvedDate?: string; auditDate?: string }
+// For updating a version, fields are optional; omit unchanged values (auditDate now supported)
+export type UpdateSkillVersionDTO = Partial<CreateSkillVersionDTO> & { auditDate?: string };
+export interface MakeRevisionDTO { skillId: string; date: string; }

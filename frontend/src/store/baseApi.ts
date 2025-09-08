@@ -4,7 +4,7 @@ import type { RootState } from './store';
 import { logout, setTokens } from './authSlice';
 import type { TokenDTO } from '../types/api/auth';
 import {API_BASE_URL} from "@/config/api.ts";
-import { setServerOnline } from './appSlice';
+import { setServerOnline, setRefreshingTokens } from './appSlice';
 
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: API_BASE_URL,
@@ -16,6 +16,10 @@ const rawBaseQuery = fetchBaseQuery({
   },
   credentials: 'include',
 });
+
+// Глобальное состояние для отслеживания процесса refresh
+let isRefreshing = false;
+let refreshPromise: Promise<any> | null = null;
 
 const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (
   args,
@@ -33,22 +37,56 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
   const isRefreshCall = typeof args === 'object' && (args as FetchArgs).url?.includes('/api/auth/refresh');
   
   if (result.error && result.error.status === 401 && !isRefreshCall) {
-    const refreshResult = await rawBaseQuery(
-      {
-        url: '/api/auth/refresh',
-        method: 'POST',
-        credentials: 'include',
-      },
-      api,
-      extraOptions,
-    );
-    if (refreshResult.data) {
-      const tokens = refreshResult.data as TokenDTO;
-      api.dispatch(setTokens(tokens));
-  result = await rawBaseQuery(args, api, extraOptions);
-  api.dispatch(setServerOnline(true));
-    } else {
-      api.dispatch(logout());
+    // Если refresh уже выполняется, ждем его завершения
+    if (isRefreshing && refreshPromise) {
+      try {
+        await refreshPromise;
+        // После завершения refresh повторяем оригинальный запрос
+        result = await rawBaseQuery(args, api, extraOptions);
+        return result;
+      } catch (error) {
+        // Если refresh неудачный, возвращаем ошибку авторизации
+        return result;
+      }
+    }
+
+    // Запускаем refresh токенов
+    isRefreshing = true;
+    api.dispatch(setRefreshingTokens(true));
+    
+    refreshPromise = (async () => {
+      const refreshResult = await rawBaseQuery(
+        {
+          url: '/api/auth/refresh',
+          method: 'POST',
+          credentials: 'include',
+        },
+        api,
+        extraOptions,
+      );
+      
+      if (refreshResult.data) {
+        const tokens = refreshResult.data as TokenDTO;
+        api.dispatch(setTokens(tokens));
+        api.dispatch(setServerOnline(true));
+        return { success: true };
+      } else {
+        api.dispatch(logout());
+        throw new Error('Refresh failed');
+      }
+    })();
+
+    try {
+      await refreshPromise;
+      // Повторяем оригинальный запрос с новым токеном
+      result = await rawBaseQuery(args, api, extraOptions);
+    } catch (error) {
+      // Refresh failed, logout already called
+    } finally {
+      // Сбрасываем состояние refresh
+      isRefreshing = false;
+      refreshPromise = null;
+      api.dispatch(setRefreshingTokens(false));
     }
   }
   return result;
@@ -57,8 +95,25 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
 export const baseApi = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithReauth,
+  // Отключаем автоматический рефетч при изменении фокуса, чтобы избежать лишних запросов
+  refetchOnFocus: false,
+  // Отключаем автоматический рефетч при переподключении
+  refetchOnReconnect: false,
   tagTypes: [
   'User','Skill','SkillVersions','JobRole','Tag','File','Image','Test','UserSkill','UserSkills','SkillUsers','JobRoleSkill','Profile','ProfileSkill','MyJobroles','MySkills','MyJobroleSkills','MyServicedSkills','MyPermissions','UserJobroleSkillsByJobrole'
   ],
-  endpoints: () => ({}),
+  endpoints: (builder) => ({
+    logout: builder.mutation<{success: boolean}, void>({
+      query: () => ({ url: '/api/auth/logout', method: 'POST' }),
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+        } finally {
+          dispatch(logout());
+        }
+      }
+    }),
+  }),
 });
+
+export const { useLogoutMutation } = baseApi;

@@ -17,6 +17,7 @@ import MailService from "./mail.service";
 import MailRepository from "../repositories/mail.repository";
 import {formatDate} from "../utils/formatDate";
 import {generateAuditReminderHtml} from "../utils/mailTemplates";
+import {SkillVersionInstance} from "../models/entities/SkillVersion";
 
 const MOUNTS_BEFORE_AUDIT = config.get<number>('times.MOUNTS_BEFORE_AUDIT');
 const MOUNTS_TO_NOTIFY = config.get<number>('times.MOUNTS_TO_NOTIFY');
@@ -47,6 +48,7 @@ class SkillService {
 		verifierIds?: string[],
 		approvedDatesArray?: Date[],
 		auditDatesArray?: Date[],
+		needRevision: boolean = false
 	) {
 		const skills = await SkillRepository.search({
 			query,
@@ -56,7 +58,8 @@ class SkillService {
 			approvedDatesArray,
 			auditDatesArray,
 			limit,
-			offset
+			offset,
+			needRevision
 		})
 		
 		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -195,6 +198,7 @@ class SkillService {
 		authorId: string,
 		verifierid: string,
 		approvedDate?: string,
+		auditDate?: string
 	): Promise<SkillVersionDTO> {
 		const skillVersion = await this.checkSkillVersionExist(skillVersionId);
 		
@@ -206,13 +210,12 @@ class SkillService {
 		
 		const current = await SkillRepository.getVersion(skillVersionId);
 		const approved = approvedDate ? new Date(approvedDate) : current.approvedDate;
-		const auditDate = new Date(approved);
-		auditDate.setMonth(auditDate.getMonth() + MOUNTS_BEFORE_AUDIT);
+		const audit = auditDate ? new Date(auditDate) : current.auditDate;
 		
 		const finalVerifierId = verifierid ?? current.verifierId;
 		const finalAuthorId = (authorId ?? current.authorId) || undefined;
 		
-		const updated = await SkillRepository.updateVersion(skillVersionId, approved, auditDate, finalVerifierId, finalAuthorId, fileId);
+		const updated = await SkillRepository.updateVersion(skillVersionId, approved, audit, finalVerifierId, finalAuthorId, fileId);
 		if (!updated) {
 			throw ApiError.errorByType('SKILL_VERSION_NOT_FOUND');
 		}
@@ -374,12 +377,19 @@ class SkillService {
 		return await SkillRepository.isAuthorOrVerifier(userId, skillId);
 	}
 	
+	async checkIsAuthorOrVerifier(userId: string, skillId?: string) {
+		const isUserAuthorOrVerifier = await this.isAuthorOrVerifier(userId, skillId);
+		
+		if(! isUserAuthorOrVerifier) {
+			throw ApiError.errorByType('PERMISSION_DENIED');
+		}
+	}
+	
 	async getAll() {
 		return SkillRepository.getAll();
 	}
 	
 	async checkExpirationDateOfTheSkills() {
-		console.log('run task [2]')
 		const now = new Date();
 		const notifyUntil = new Date(now);
 		notifyUntil.setMonth(notifyUntil.getMonth() + MOUNTS_TO_NOTIFY);
@@ -444,6 +454,31 @@ class SkillService {
 			}
 		}
 		
+	}
+	
+	async makeRevision(date: Date, skillId: string) {
+		await this.checkSkillExist(skillId);
+		
+		const skill = await this.get(skillId);
+		
+		const revisionDate = new Date(skill.auditDate);
+		
+		const canMakeRevisionFromDate = new Date(revisionDate);
+		canMakeRevisionFromDate.setMonth(canMakeRevisionFromDate.getMonth() - 1);
+		
+		const nowDate = new Date(Date.now());
+		
+		if(nowDate < canMakeRevisionFromDate) {
+			throw ApiError.errorByType('PERMISSION_DENIED');
+		}
+		
+		const newRevisionDate = new Date(date);
+		
+		if(newRevisionDate < revisionDate) {
+			throw ApiError.errorByType('INVALID_DATE');
+		}
+		
+		await SkillRepository.updateRevisionDate(skill.id, newRevisionDate);
 	}
 
 	async getAllUsersBySkillId(skillId: string) {

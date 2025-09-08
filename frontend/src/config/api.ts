@@ -1,1 +1,4 @@
-export const API_BASE_URL = 'http://127.0.0.1:8090';
+
+const isDev = import.meta.env.DEV;
+
+export const API_BASE_URL = isDev ? 'http://localhost:8090' : '';

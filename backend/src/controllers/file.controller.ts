@@ -3,12 +3,12 @@ import FileService from "../services/file.service";
 import path from "path";
 import {getFileExtension} from "../utils/getFileExtension";
 import SkillService from "../services/skill.service";
+import { isDev } from '..';
 
 class FileController {
 	async upload(req: Request, res: Response, next: NextFunction) {
 		try {
 			const { name } = req.body;
-			
 			const fileInfo = await FileService.upload(name, req.file);
 			
 			res.status(201).send(fileInfo);
@@ -23,7 +23,11 @@ class FileController {
 			const { view } = req.query;
 			
 			const fileInfo = await FileService.getInfo(id);
-			const filePath = path.resolve(__dirname, '..', '..', 'uploads', fileInfo.filename);
+
+			const filePath = isDev 
+				? path.resolve(__dirname, '..', '..', 'uploads', fileInfo.filename)
+				: path.resolve(__dirname, '..', '..', '..', 'uploads', fileInfo.filename);
+
 			const fileExtension = getFileExtension(fileInfo.filename);
 			const fileName = fileExtension ?`${fileInfo.name}.${fileExtension}` : fileInfo.name;
 			

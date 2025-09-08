@@ -4,6 +4,7 @@ import Loader from '@/components/Loader';
 import { useAppDispatch, useAppSelector } from '@/hooks/storeHooks';
 import { useGetMyPermissionsQuery } from '@/store/endpoints';
 import { setPermissions } from '@/store/authSlice';
+import { useSmoothedLoading } from '@/hooks/useSmoothedLoading';
 
 interface PermissionsGateProps {
   app: ReactNode;
@@ -23,6 +24,11 @@ const PermissionsGate: FC<PermissionsGateProps> = ({ app }) => {
   } = useGetMyPermissionsQuery(undefined, {
     skip: !accessToken,
   });
+
+  const smoothedLoading = useSmoothedLoading(
+    (isLoading || isFetching) && !!accessToken,
+    !!data
+  );
 
   useEffect(() => {
     if (!accessToken) {
@@ -44,7 +50,7 @@ const PermissionsGate: FC<PermissionsGateProps> = ({ app }) => {
     }
   }, [accessToken, refetch]);
 
-  if (accessToken && (isLoading || isFetching)) {
+  if (smoothedLoading) {
     return <Loader />;
   }
 

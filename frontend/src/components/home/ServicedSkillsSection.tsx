@@ -8,6 +8,7 @@ import { useListAllSkillUsersQuery, useGetUserTestResultByUserQuery } from '@/st
 import { useAppSelector } from '@/hooks/storeHooks';
 import SkillProgressBar from '../shared/SkillProgressBar';
 import SkillConfirmationsContainer from '../skill/SkillConfirmationsContainer';
+import { getSkillAuditStyle } from '@/utils/skillAuditHelpers';
 
 const { Title } = Typography;
 
@@ -176,6 +177,7 @@ const ServicedSkillsSection: React.FC<ServicedSkillsSectionProps> = ({
             dataSource={skills}
             renderItem={skill => {
         const canCurate = Boolean(me && (me.id === skill.authorId || me.id === skill.verifierId));
+        
         const collapseItems = [
                 {
                   key: 'users',
@@ -190,7 +192,15 @@ const ServicedSkillsSection: React.FC<ServicedSkillsSectionProps> = ({
               ];
 
               return (
-                <List.Item style={{ display: 'block', paddingBottom: 16 }}>
+                <List.Item 
+                  style={getSkillAuditStyle(skill.auditDate, {
+                    display: 'block',
+                    paddingBottom: 16,
+                    borderRadius: 8,
+                    padding: 16,
+                    marginBottom: 12
+                  })}
+                >
                   <div
                     style={{
                       display: 'flex',

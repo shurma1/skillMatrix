@@ -22,6 +22,7 @@ import {FileInstance} from "../models/entities/File";
 import TestRepository from "./test.repository";
 import user from "../models/entities/User";
 import SkillService from "../services/skill.service";
+import {ApiError} from "../error/apiError";
 
 export interface SkillWithTagsInstance extends SkillInstance {
 	tags: TagInstance[];
@@ -242,7 +243,8 @@ class SkillRepository {
 		approvedDatesArray,
 		auditDatesArray,
 		limit,
-		offset
+		offset,
+		needRevision
 	}: {
 		query: string,
 		tags?: string[],
@@ -252,6 +254,7 @@ class SkillRepository {
 		auditDatesArray?: Date[],
 		limit: number,
 		offset: number,
+		needRevision: boolean
 	}) {
 		const sql = loadSql('search_skills');
 		
@@ -279,7 +282,9 @@ class SkillRepository {
 				auditDateStart,
 				auditDateEnd,
 				limit,
-				offset
+				offset,
+				
+				needRevision: needRevision || false
 			},
 			type: QueryTypes.SELECT,
 			plain: true
@@ -526,6 +531,20 @@ class SkillRepository {
 				type: QueryTypes.SELECT
 			}
 		);
+	}
+	
+	async updateRevisionDate(id: string, revisionDate: Date){
+		const version = await this.getLastVersion(id);
+		
+		if(! version) {
+			throw ApiError.errorByType('SKILL_VERSION_NOT_FOUND');
+		}
+		
+		console.log(version.auditDate, revisionDate);
+		
+		version.auditDate = revisionDate;
+		
+		await version.save();
 	}
 
 	async getAllUsersBySkillId(skillId: string): Promise<UsersBySkillResult[]> {

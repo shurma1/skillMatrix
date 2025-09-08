@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/hooks/storeHooks';
 import { useGetMyPermissionsQuery } from '@/store/endpoints';
 import { setPermissions } from '@/store/authSlice';
+import { useSmoothedLoading } from '@/hooks/useSmoothedLoading';
 
 /**
  * Хук для загрузки и синхронизации разрешений пользователя
@@ -14,7 +15,8 @@ export const usePermissionsSync = () => {
     data: permissions, 
     isSuccess,
     isError,
-    error 
+    error,
+    isFetching
   } = useGetMyPermissionsQuery(undefined, {
     skip: !accessToken, // Не загружать, если нет токена
   });
@@ -33,9 +35,11 @@ export const usePermissionsSync = () => {
     }
   }, [isError, dispatch]);
 
+  const smoothedLoading = useSmoothedLoading(isFetching && !!accessToken, !!permissions);
+
   return { 
     permissions, 
-    isLoading: !isSuccess && !!accessToken,
+    isLoading: smoothedLoading,
     isError,
     error 
   };

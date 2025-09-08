@@ -2,6 +2,7 @@ import { Table, Tag, Space } from 'antd';
 import type { FC } from 'react';
 import type { SkillWithCurrentVersionDTO } from '@/types/api/skill';
 import type { TagDTO } from '@/types/api/tag';
+import { getSkillAuditStyle } from '@/utils/skillAuditHelpers';
 
 interface SkillsTableProps {
   skills: SkillWithCurrentVersionDTO[];
@@ -65,7 +66,8 @@ const SkillsTable: FC<SkillsTableProps> = ({
       dataSource={skills}
       columns={columns}
       onRow={(record) => ({
-        onClick: () => onRowClick(record)
+        onClick: () => onRowClick(record),
+        style: getSkillAuditStyle(record.auditDate)
       })}
       pagination={{
         current: page,

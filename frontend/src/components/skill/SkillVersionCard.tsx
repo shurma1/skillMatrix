@@ -4,6 +4,8 @@ import PermissionButton from '@/components/shared/PermissionButton';
 import { DownloadOutlined, DeleteOutlined, CalendarOutlined, EditOutlined } from '@ant-design/icons';
 import type { SkillVersionDTO } from '@/types/api/skill';
 import { formatDate } from '../../utils/dateHelpers';
+import {shortString} from "@/utils/shortString.ts";
+import {getFileSize} from "@/utils/getFileSize.ts";
 
 const { Text } = Typography;
 
@@ -59,7 +61,7 @@ const SkillVersionCard: React.FC<SkillVersionCardProps> = ({
           <Popconfirm
             title="Удалить версию?"
             description={
-              isLatest 
+              isLatest
                 ? `Вы удаляете текущую версию ${version.version}. После удаления актуальной станет другая версия. Продолжить?`
                 : `Вы уверены, что хотите удалить версию ${version.version}? Это действие нельзя отменить.`
             }
@@ -69,9 +71,9 @@ const SkillVersionCard: React.FC<SkillVersionCardProps> = ({
             okType="danger"
             disabled={!canDeleteVersion}
           >
-            <Tooltip 
+            <Tooltip
               title={
-                !canDeleteVersion 
+                !canDeleteVersion
                   ? totalVersions === 1
                     ? "Нельзя удалить единственную версию"
                     : "Нет прав на удаление"
@@ -120,29 +122,24 @@ const SkillVersionCard: React.FC<SkillVersionCardProps> = ({
             </Text>
             <Space direction="vertical" size="small" style={{ width: '100%' }}>
               {version.files.map(file => (
-                <Card 
-                  key={file.id} 
-                  size="small" 
+                <Card
+                  key={file.id}
+                  size="small"
                   style={{ backgroundColor: token.colorFillSecondary }}
                   bodyStyle={{ padding: '8px 12px' }}
                 >
-                  <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center' 
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
                   }}>
                     <div style={{ flex: 1 }}>
                       <div>
-                        <Text strong>{file.name}</Text>
+                        <Text strong>{shortString(file.name)}</Text>
                       </div>
                       <div>
                         <Text type="secondary" style={{ fontSize: '12px' }}>
-                          {file.filename} • {(file.size / 1024).toFixed(1)} KB
-                        </Text>
-                      </div>
-                      <div>
-                        <Text type="secondary" style={{ fontSize: '12px' }}>
-                          Загружен: {file.createdAt ? formatDate(file.createdAt) : 'Дата неизвестна'}
+                         Размер: {getFileSize(file.size)}
                         </Text>
                       </div>
                     </div>
@@ -157,15 +154,6 @@ const SkillVersionCard: React.FC<SkillVersionCardProps> = ({
                   </div>
                 </Card>
               ))}
-            </Space>
-          </div>
-        )}
-
-        {/* Тест */}
-        {hasTest && (
-          <div>
-            <Space>
-              <Tag color="blue">Тест ID: {version.testId}</Tag>
             </Space>
           </div>
         )}

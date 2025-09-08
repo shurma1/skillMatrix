@@ -1,9 +1,9 @@
 import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { message, Space, Typography, Button, Spin, Alert, Empty } from 'antd';
 import PermissionButton from '@/components/shared/PermissionButton';
 import { ArrowLeftOutlined, PlusOutlined } from '@ant-design/icons';
-import { 
+import {
   useGetSkillQuery,
   useListSkillVersionsQuery,
   useDeleteSkillVersionMutation,
@@ -17,6 +17,7 @@ import type { SkillVersionDTO, CreateSkillVersionDTO, UpdateSkillVersionDTO } fr
 import SkillVersionCard from './SkillVersionCard';
 import CreateVersionModal from '../modals/skill/CreateVersionModal';
 import { extractErrMessage } from '../../utils/errorHelpers';
+import {API_BASE_URL} from "@/config/api.ts";
 
 const { Title, Text } = Typography;
 
@@ -28,21 +29,20 @@ const SkillVersionsContainer: React.FC = () => {
   const dispatch = useAppDispatch();
   const accessToken = useAppSelector(state => state.auth.accessToken);
   const { skillId = '' } = useParams<{ skillId: string }>();
-  const navigate = useNavigate();
   const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
   const [editingVersion, setEditingVersion] = React.useState<SkillVersionDTO | null>(null);
   const [deletingId, setDeletingId] = React.useState<string | null>(null);
 
   // API запросы
-  const { 
-    data: skill, 
+  const {
+    data: skill,
     isFetching: isSkillLoading,
-    error: skillError 
+    error: skillError
   } = useGetSkillQuery(skillId, { skip: !skillId });
 
-  const { 
-    data: versions = [], 
+  const {
+    data: versions = [],
     isFetching: isVersionsLoading,
     error: versionsError
   } = useListSkillVersionsQuery(skillId, { skip: !skillId });
@@ -56,7 +56,7 @@ const SkillVersionsContainer: React.FC = () => {
   // Для скачивания файлов создаем отдельную функцию
   const downloadFileById = async (fileId: string): Promise<Blob | null> => {
     try {
-      const doFetch = () => fetch(`/api/file/${fileId}`,
+      const doFetch = () => fetch(`${API_BASE_URL}/api/file/${fileId}`,
         {
           headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
           credentials: 'include',
@@ -65,7 +65,7 @@ const SkillVersionsContainer: React.FC = () => {
       let response = await doFetch();
       if (response.status === 401) {
         // Try refresh and retry once
-        await fetch('/api/auth/refresh', { method: 'POST', credentials: 'include' });
+        await fetch('${API_BASE_URL}/api/auth/refresh', { method: 'POST', credentials: 'include' });
         response = await doFetch();
       }
       if (response.ok) {
@@ -85,7 +85,8 @@ const SkillVersionsContainer: React.FC = () => {
 
   // Event handlers
   const handleGoBack = () => {
-    navigate(`/skills/${skillId}`);
+    // Используем window.location для принудительного обновления страницы
+    window.location.href = `/skills/${skillId}`;
   };
 
   const handleCreateVersion = () => {
@@ -111,6 +112,12 @@ const SkillVersionsContainer: React.FC = () => {
       );
       message.success('Версия создана');
       setIsCreateModalOpen(false);
+      
+      // Опционально: можно добавить автоматический переход к странице навыка
+      // setTimeout(() => {
+      //   window.location.href = `/skills/${skillId}`;
+      // }, 1000);
+      
       // no refetch to avoid flicker
     } catch (error) {
       message.error(extractErrMessage(error) || 'Ошибка создания версии');
@@ -175,6 +182,12 @@ const SkillVersionsContainer: React.FC = () => {
         message.success('Версия создана');
       }
       setIsCreateModalOpen(false);
+      
+      // Опционально: можно добавить автоматический переход к странице навыка
+      // setTimeout(() => {
+      //   window.location.href = `/skills/${skillId}`;
+      // }, 1000);
+      
     } catch (error) {
       message.error(extractErrMessage(error) || 'Ошибка создания версии');
     }
@@ -270,10 +283,10 @@ const SkillVersionsContainer: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
         minHeight: '400px'
       }}>
         <Spin size="large" />
@@ -286,19 +299,19 @@ const SkillVersionsContainer: React.FC = () => {
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
         {/* Header */}
         <div>
-          <Button 
-            type="text" 
-            icon={<ArrowLeftOutlined />} 
+          <Button
+            type="text"
+            icon={<ArrowLeftOutlined />}
             onClick={handleGoBack}
             style={{ marginBottom: '16px' }}
           >
             Вернуться к навыку
           </Button>
           
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'flex-start' 
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start'
           }}>
             <div>
               <Title level={2} style={{ margin: 0 }}>
@@ -309,8 +322,8 @@ const SkillVersionsContainer: React.FC = () => {
               </Text>
             </div>
             
-            <PermissionButton 
-              type="primary" 
+            <PermissionButton
+              type="primary"
               icon={<PlusOutlined />}
               loading={isCreatingVersion}
               onClick={handleCreateVersion}
@@ -352,6 +365,7 @@ const SkillVersionsContainer: React.FC = () => {
         onSubmitEx={handleCreateVersionSubmitEx}
         loading={isCreatingVersion}
         skillId={skillId}
+  initialAuditDate={skill?.auditDate}
       />
       <CreateVersionModal
         open={isEditModalOpen}
@@ -364,6 +378,7 @@ const SkillVersionsContainer: React.FC = () => {
         initialAuthorId={skill?.authorId || undefined}
         initialVerifierId={skill?.verifierId || undefined}
         initialApprovedDate={editingVersion?.approvedDate}
+  initialAuditDate={editingVersion?.auditDate}
         currentFileName={editingVersion?.files?.[0]?.filename || editingVersion?.files?.[0]?.name}
       />
     </div>

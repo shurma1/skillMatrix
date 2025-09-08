@@ -25,7 +25,8 @@ const TestEditContainer: React.FC = () => {
     try {
       await updateTest({ testId, body: values }).unwrap();
       message.success('Тест обновлён');
-      navigate(`/skills/${skillId}`);
+      // Используем window.location для принудительного обновления страницы
+      window.location.href = `/skills/${skillId}`;
     } catch (error) {
       console.error('Error updating test:', error);
       message.error('Ошибка при обновлении теста');

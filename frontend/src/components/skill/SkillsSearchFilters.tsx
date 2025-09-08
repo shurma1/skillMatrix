@@ -1,4 +1,4 @@
-import { Space, DatePicker } from 'antd';
+import { Space, DatePicker, Switch } from 'antd';
 import PermissionButton from '@/components/shared/PermissionButton';
 import { PlusOutlined } from '@ant-design/icons';
 import type { FC } from 'react';
@@ -20,6 +20,7 @@ interface SkillsSearchFiltersProps {
   verifierIds: string[];
   approvedRange: [Dayjs, Dayjs] | null;
   auditRange: [Dayjs, Dayjs] | null;
+  needRevision: boolean | undefined;
   tags: Tag[];
   users: UserDTO[];
   isTagsLoading: boolean;
@@ -30,6 +31,7 @@ interface SkillsSearchFiltersProps {
   onVerifierIdsChange: (verifierIds: string[]) => void;
   onApprovedRangeChange: (range: [Dayjs, Dayjs] | null) => void;
   onAuditRangeChange: (range: [Dayjs, Dayjs] | null) => void;
+  onNeedRevisionChange: (needRevision: boolean | undefined) => void;
   onCreateClick: () => void;
 }
 
@@ -42,12 +44,14 @@ const SkillsSearchFilters: FC<SkillsSearchFiltersProps> = ({
   users,
   isTagsLoading,
   isUsersLoading,
+  needRevision,
   onQueryChange,
   onTagIdsChange,
   onAuthorIdsChange,
   onVerifierIdsChange,
   onApprovedRangeChange,
   onAuditRangeChange,
+  onNeedRevisionChange,
   onCreateClick
 }) => (
   <Space wrap style={{ marginBottom: 16 }} size={[16, 16]}>
@@ -92,6 +96,16 @@ const SkillsSearchFilters: FC<SkillsSearchFiltersProps> = ({
       onChange={(dates) => onAuditRangeChange(dates as [Dayjs, Dayjs] | null)}
       placeholder={['Ревизия от', 'Ревизия до']}
     />
+    
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <Switch
+        checked={needRevision === true}
+        onChange={(checked) => {
+          onNeedRevisionChange(checked ? true : undefined);
+        }}
+      />
+      <span>Требует ревизии</span>
+    </div>
     
     <PermissionButton
       type="primary"

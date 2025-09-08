@@ -59,4 +59,20 @@ router.post(
 	AuthController.refresh
 );
 
+/**
+ * @openapi
+ * /api/auth/logout:
+ *   post:
+ *     summary: Logout user (invalidate refresh token and clear cookie)
+ *     tags:
+ *       - Auth
+ *     responses:
+ *       200:
+ *         description: Logout success
+ */
+router.post(
+	'/logout',
+	AuthController.logout
+);
+
 export default router;

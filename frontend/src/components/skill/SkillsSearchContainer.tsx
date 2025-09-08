@@ -32,6 +32,7 @@ const SkillsSearchContainer: React.FC = () => {
   const [verifierIds, setVerifierIds] = useState<string[]>([]);
   const [approvedRange, setApprovedRange] = useState<[Dayjs, Dayjs] | null>(null);
   const [auditRange, setAuditRange] = useState<[Dayjs, Dayjs] | null>(null);
+  const [needRevision, setNeedRevision] = useState<boolean | undefined>(undefined);
 
   // Modal state
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -60,6 +61,7 @@ const SkillsSearchContainer: React.FC = () => {
     auditDates: auditRange
       ? auditRange.map(d => d.format('YYYY-MM-DD')).join(',')
       : undefined,
+    needRevision: needRevision,
   });
   
   const skills = skillsResp?.rows || [];
@@ -84,7 +86,8 @@ const SkillsSearchContainer: React.FC = () => {
     authorIds.join(','), 
     verifierIds.join(','), 
     approvedRange?.map(d => d.format('YYYY-MM-DD')).join(','),
-    auditRange?.map(d => d.format('YYYY-MM-DD')).join(',')
+    auditRange?.map(d => d.format('YYYY-MM-DD')).join(','),
+    needRevision
   ]);
 
   // Event handlers
@@ -168,6 +171,7 @@ const SkillsSearchContainer: React.FC = () => {
         verifierIds={verifierIds}
         approvedRange={approvedRange}
         auditRange={auditRange}
+        needRevision={needRevision}
         tags={tagsResp}
         users={users}
         isTagsLoading={isTagsLoading}
@@ -178,6 +182,7 @@ const SkillsSearchContainer: React.FC = () => {
         onVerifierIdsChange={setVerifierIds}
         onApprovedRangeChange={setApprovedRange}
         onAuditRangeChange={setAuditRange}
+        onNeedRevisionChange={setNeedRevision}
         onCreateClick={() => setIsCreateOpen(true)}
       />
       

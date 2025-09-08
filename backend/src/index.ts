@@ -20,7 +20,6 @@ initEnv();
 export const ROOT_PATH = path.resolve(__dirname, '..');
 
 export const isDev = process.env.mode === "development";
-
 const PORT = Number(process.env.PORT || config.get("server.PORT") || 8000);
 
 const localIp = getLocalIp();
@@ -77,7 +76,7 @@ const start  = async () => {
 	
 	await SkillRepository.isAuthorOrVerifier('c3ecec0c-1438-44f4-a969-d745a6642f63', '3d5dd56b-0732-48fe-afac-2a99a15bd704')
 	
-	const ADDRESS = isDev ? 'http://localhost:${PORT}/api' : `http://${HOST}:${PORT}`;
+	const ADDRESS =`http://${isDev ? 'localhost' : HOST}:${PORT}`;
 	
 	server.listen(
 		PORT,

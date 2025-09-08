@@ -13,11 +13,13 @@ import {
   useGetMySkillsQuery,
   useSearchTagsQuery,
   useUpdateSkillMutation,
+  useGetProfileQuery,
+  useMakeRevisionMutation,
   api,
 } from '@/store/endpoints';
 import { useAppDispatch } from '@/hooks/storeHooks';
 import { usePermissions } from '@/hooks/usePermissions';
-import type { SkillWithCurrentVersionDTO, UpdateSkillDTO } from '@/types/api/skill';
+import type { SkillWithCurrentVersionDTO, UpdateSkillDTO, MakeRevisionDTO } from '@/types/api/skill';
 import type { PreviewTestDto, CreateTestDTO } from '@/types/api/test';
 import type { UserSkillSearchDto } from '@/types/api/user';
 import type { TagDTO } from '@/types/api/tag';
@@ -26,6 +28,7 @@ import SkillTestCard from './SkillTestCard';
 import FileCard from './FileCard';
 import SkillToUsersCard from '@/components/analytics/SkillToUsersCard';
 import EditSkillModal from '@/components/modals/skill/EditSkillModal';
+import MakeRevisionModal from '@/components/modals/skill/MakeRevisionModal';
 // no duplicate imports
 
 const SkillContainer: React.FC = () => {
@@ -82,14 +85,21 @@ const SkillContainer: React.FC = () => {
   // API mutations
   const [createTest, { isLoading: isCreatingTest }] = useCreateTestMutation();
   const [updateSkill, { isLoading: isUpdatingSkill }] = useUpdateSkillMutation();
+  const [makeRevision, { isLoading: isMakingRevision }] = useMakeRevisionMutation();
 
   // My job roles (to update jobrole skills caches on view)
   const { data: myJobroles } = useGetMyJobrolesQuery();
-    const { data: tagSearch = [] } = useSearchTagsQuery({ query: '' });
-    const allTags: TagDTO[] = useMemo(() => tagSearch as unknown as TagDTO[], [tagSearch]);
+  const { data: tagSearch = [] } = useSearchTagsQuery({ query: '' });
+  const allTags: TagDTO[] = useMemo(() => tagSearch as unknown as TagDTO[], [tagSearch]);
 
-    // Edit modal state
-    const [isEditOpen, setIsEditOpen] = useState(false);
+  // Get current user profile
+  const { data: currentUser } = useGetProfileQuery();
+
+  // Edit modal state
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  
+  // Revision modal state
+  const [isRevisionOpen, setIsRevisionOpen] = useState(false);
 
   // Mark skill as seen (isNew = false) in RTK Query caches when visiting Skill page
   useEffect(() => {
@@ -130,6 +140,29 @@ const SkillContainer: React.FC = () => {
   );
   const canEditSkill = hasPermission('EDIT_ALL');
   const canOpenVersions = hasPermission('VIEW_ALL');
+  
+  // Проверяем доступность кнопки ревизии
+  const canMakeRevision = useMemo(() => {
+    if (!skill || !currentUser) return false;
+    
+    // Пользователи с правами "EDIT_ALL" могут проводить ревизию
+    if (hasPermission('EDIT_ALL')) return true;
+    
+    // Авторы и проверяющие могут проводить ревизию
+    if (skill.authorId === currentUser.id || skill.verifierId === currentUser.id) {
+      // Проверяем что текущая дата больше чем (дата ревизии - один месяц)
+      if (skill.auditDate) {
+        const auditDate = new Date(skill.auditDate);
+        const oneMonthBefore = new Date(auditDate);
+        oneMonthBefore.setMonth(oneMonthBefore.getMonth() - 1);
+        const now = new Date();
+        return now > oneMonthBefore;
+      }
+      return true; // Если даты ревизии нет, то можно проводить ревизию
+    }
+    
+    return false;
+  }, [skill, currentUser, hasPermission]);
   const takeTestDisabledReason = useMemo(() => {
     if (!mySkillRow) return 'Кнопка доступна только при уровне подтверждения 1–2.';
     if (mySkillRow.targetLevel === 1) return 'Недоступно: требуемый уровень для пользователя — 1.';
@@ -146,6 +179,9 @@ const SkillContainer: React.FC = () => {
   const handleOpenEdit = useCallback(() => setIsEditOpen(true), []);
   const handleCloseEdit = useCallback(() => setIsEditOpen(false), []);
 
+  const handleOpenRevision = useCallback(() => setIsRevisionOpen(true), []);
+  const handleCloseRevision = useCallback(() => setIsRevisionOpen(false), []);
+
   const handleSubmitEdit = useCallback(async (values: UpdateSkillDTO) => {
     if (!skillId) return;
     try {
@@ -156,6 +192,16 @@ const SkillContainer: React.FC = () => {
       message.error('Ошибка при обновлении навыка');
     }
   }, [skillId, updateSkill]);
+
+  const handleSubmitRevision = useCallback(async (values: MakeRevisionDTO) => {
+    try {
+      await makeRevision(values).unwrap();
+      message.success('Ревизия проведена успешно');
+      setIsRevisionOpen(false);
+    } catch {
+      message.error('Ошибка при проведении ревизии');
+    }
+  }, [makeRevision]);
 
   const handleCreateTest = useCallback(async (data: CreateTestDTO) => {
     try {
@@ -210,8 +256,10 @@ const SkillContainer: React.FC = () => {
         versionCount={versionCount}
         onOpenVersions={handleOpenVersions}
         onEditSkill={handleOpenEdit}
-  canEditSkill={canEditSkill}
-  canOpenVersions={canOpenVersions}
+        onMakeRevision={handleOpenRevision}
+        canEditSkill={canEditSkill}
+        canOpenVersions={canOpenVersions}
+        canMakeRevision={canMakeRevision}
       />
       <EditSkillModal
         open={isEditOpen}
@@ -220,6 +268,15 @@ const SkillContainer: React.FC = () => {
         tags={allTags}
         onCancel={handleCloseEdit}
         onSubmit={handleSubmitEdit}
+      />
+      
+      <MakeRevisionModal
+        open={isRevisionOpen}
+        confirmLoading={isMakingRevision}
+        skillId={skillId}
+        currentAuditDate={skill?.auditDate}
+        onCancel={handleCloseRevision}
+        onSubmit={handleSubmitRevision}
       />
       
       {hasFile && (

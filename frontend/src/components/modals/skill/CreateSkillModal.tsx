@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, Form, Input, Select, DatePicker, Upload, message, Button } from 'antd';
+import { Modal, Form, Input, Select, Upload, message, Button } from 'antd';
 import type { FC } from 'react';
 import type { Dayjs } from 'dayjs';
 import type { UploadProps } from 'antd';
@@ -15,6 +15,7 @@ import TagSelectWithActions from '../../shared/TagSelectWithActions';
 import CreateTagModal from '../tag/CreateTagModal';
 import EditTagModal from '../tag/EditTagModal';
 import PermissionButton from '@/components/shared/PermissionButton';
+import DatePickerWithPaste from "@/components/DatePickerWithPaste.tsx";
 
 interface CreateSkillModalProps {
   open: boolean;
@@ -167,7 +168,7 @@ const CreateSkillModal: FC<CreateSkillModalProps> = ({
             label="Дата утверждения"
             rules={[{ required: true, message: 'Укажите дату утверждения' }]}
           >
-            <DatePicker style={{ width: '100%' }} />
+            <DatePickerWithPaste style={{ width: '100%' }} />
           </Form.Item>
           
           <Form.Item

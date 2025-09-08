@@ -18,7 +18,8 @@ const TestCreateContainer: React.FC = () => {
     try {
       await createTest({ skillId, ...values }).unwrap();
       message.success('Тест успешно создан');
-      navigate(`/skills/${skillId}`);
+      // Используем window.location для принудительного обновления страницы
+      window.location.href = `/skills/${skillId}`;
     } catch (error) {
       console.error('Error creating test:', error);
       message.error('Ошибка при создании теста');

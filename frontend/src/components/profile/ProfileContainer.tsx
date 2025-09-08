@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { message, Space } from 'antd';
+import { message, Space, Button, Popconfirm } from 'antd';
 import { getUserInitials } from '@/utils/user';
 import { useAppDispatch } from '@/hooks/storeHooks';
 import { updateUserAvatar } from '@/store/authSlice';
@@ -9,6 +9,7 @@ import {
   useUpdateProfileMutation
 } from '@/store/endpoints';
 import EditUserModal from '../modals/user/EditUserModal';
+import { useLogoutMutation } from '@/store/baseApi.ts';
 import UserInfoSection from "@/components/user/UserInfoSection.tsx";
 
 const ProfileContainer: React.FC = () => {
@@ -56,6 +57,12 @@ const ProfileContainer: React.FC = () => {
     }
   };
 
+  const [logoutMutation, { isLoading: isLoggingOut }] = useLogoutMutation();
+
+  const handleLogout = async () => {
+    try { await logoutMutation().unwrap(); } catch { /* ignore */ }
+  };
+
   return (
     <Space direction="vertical" size={32} style={{ width: '100%' }}>
 		<UserInfoSection
@@ -65,6 +72,18 @@ const ProfileContainer: React.FC = () => {
 			onEdit={() => setEditOpen(true)}
 			onAvatarChange={(avatar_id: string) => handleUpdateProfile({ avatar_id })}
 		/>
+
+      <div>
+        <Popconfirm
+          title="Выйти из аккаунта?"
+          okText="Да"
+            cancelText="Нет"
+          onConfirm={handleLogout}
+          disabled={isLoggingOut}
+        >
+          <Button danger loading={isLoggingOut}>Выйти</Button>
+        </Popconfirm>
+      </div>
 
       <EditUserModal
         open={editOpen}

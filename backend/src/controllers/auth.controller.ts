@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import AuthService from "../services/auth.service";
+import TokenService from "../services/token.service";
 
 class AuthController {
 	async login(req: Request, res: Response, next: NextFunction) {
@@ -33,6 +34,25 @@ class AuthController {
 				sameSite: 'lax'
 			});
 			res.json(tokens);
+		} catch (err) {
+			next(err);
+		}
+	}
+
+	async logout(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { refreshToken } = req.cookies;
+			if (refreshToken) {
+				await TokenService.RemoveToken(refreshToken);
+			}
+			// Очищаем куку (должны совпасть опции с установкой)
+			res.clearCookie('refreshToken', {
+				httpOnly: true,
+				secure: false,
+				sameSite: 'lax',
+				domain: 'localhost'
+			});
+			res.json({ success: true });
 		} catch (err) {
 			next(err);
 		}

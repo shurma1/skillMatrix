@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { message, Space } from 'antd';
 import { getUserInitials } from '@/utils/user';
 import { useAppSelector, useAppDispatch } from '@/hooks/storeHooks';
+import { useSmoothedLoading } from '@/hooks/useSmoothedLoading';
 import { updateUserAvatar } from '@/store/authSlice';
 import type { UserUpdateDTO } from '@/types/api/user';
 import {
@@ -62,6 +63,11 @@ const UserProfileContainer: React.FC = () => {
     isFetching: isSkillsLoading,
     refetch: refetchSkills
   } = useListUserSkillsQuery(userId, { skip: !userId });
+  
+  // Сглаженные состояния загрузки для предотвращения мигания
+  const smoothedUserLoading = useSmoothedLoading(isUserLoading, !!user);
+  const smoothedJobrolesLoading = useSmoothedLoading(isJobrolesLoading, userJobroles.length > 0);
+  const smoothedSkillsLoading = useSmoothedLoading(isSkillsLoading, userSkills.length > 0);
   
   const { data: allSkillsSearch } = useSearchSkillsQuery({ query: '' });
   const { data: allJobrolesSearch } = useSearchJobRolesQuery({ query: '' });
@@ -196,7 +202,7 @@ const UserProfileContainer: React.FC = () => {
     <Space direction="vertical" size={32} style={{ width: '100%' }}>
       <UserInfoSection
         user={user}
-        loading={isUserLoading}
+        loading={smoothedUserLoading}
         initials={initials}
         onEdit={() => setEditOpen(true)}
         onAvatarChange={(avatar_id) => handleUpdateUser({ avatar_id })}
@@ -206,7 +212,7 @@ const UserProfileContainer: React.FC = () => {
       
       <UserJobRolesSection
         jobroles={userJobroles}
-        loading={isJobrolesLoading}
+        loading={smoothedJobrolesLoading}
         onAdd={() => setAddJobroleOpen(true)}
         onDelete={handleDeleteJobrole}
         userId={userId}
@@ -215,7 +221,7 @@ const UserProfileContainer: React.FC = () => {
       
       <UserSkillsSection
         skills={userSkills}
-        loading={isSkillsLoading}
+        loading={smoothedSkillsLoading}
         userId={userId}
         onAdd={() => setAddSkillOpen(true)}
         onDelete={handleDeleteSkill}

@@ -154,6 +154,11 @@ const API_ERROR = {
 		description: 'You don\'t have enough permissions.',
 		code: 403,
 	},
+	INVALID_DATE: {
+		type: 'INVALID_DATE',
+		description: 'Date is invalid.',
+		code: 400,
+	},
 	PERMISSION_ALREADY_EXISTS: {
 		type: 'PERMISSION_ALREADY_EXISTS',
 		description: 'Permission already exists.',
