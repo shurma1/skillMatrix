@@ -261,8 +261,8 @@ export const api = baseApi.injectEndpoints({
       keepUnusedDataFor: 0,
     }),
     downloadFile: build.query<Blob, string>({
-      query: (id) => ({ 
-        url: `/api/file/${id}`, 
+      query: (id) => ({
+        url: `/api/file/${id}`,
         responseHandler: async (response) => {
           if (!response.ok) {
             const errorText = await response.text();
@@ -628,7 +628,7 @@ export const api = baseApi.injectEndpoints({
     updateTest: build.mutation<TestDTO, { testId: string; body: CreateTestDTO }>({
       query: ({ testId, body }) => ({ url: `/api/test/${testId}`, method: 'PUT', body }),
       // Also invalidate skill data since test info affects skill page
-      invalidatesTags: (_r, _e, { testId, body }) => [
+      invalidatesTags: (_r, _e, { testId }) => [
         { type: 'Test' as const, id: testId },
         'Test',
         // If we have skillId in the response, we can be more specific
@@ -767,10 +767,10 @@ export const api = baseApi.injectEndpoints({
         // Note: We cannot know jobroleId here; specific panel refetch is driven by the list's own providesTags when it's active
       ],
     }),
-    deleteUserSkillConfirmation: build.mutation<void, { id: string; skillId: string; confirmationId: string }>({ 
-      query: ({ id, skillId, confirmationId })=> ({ 
-        url: `/api/user/${id}/skill/${skillId}/confirmation/${confirmationId}`, 
-        method: 'DELETE' 
+    deleteUserSkillConfirmation: build.mutation<void, { id: string; skillId: string; confirmationId: string }>({
+      query: ({ id, skillId, confirmationId })=> ({
+        url: `/api/user/${id}/skill/${skillId}/confirmation/${confirmationId}`,
+        method: 'DELETE'
       }),
   invalidatesTags: (_result, _error, { id }) => [
         { type: 'UserSkills' as const, id },
@@ -790,42 +790,42 @@ export const api = baseApi.injectEndpoints({
       query: (body) => ({ url: '/api/me/profile', method: 'PUT', body }),
       invalidatesTags: ['Profile'],
     }),
-    listProfileSkills: build.query<UserSkillSearchDto[], void>({ 
-      query: () => '/api/me/profile/skill', 
-      providesTags: ['ProfileSkill'] 
+    listProfileSkills: build.query<UserSkillSearchDto[], void>({
+      query: () => '/api/me/profile/skill',
+      providesTags: ['ProfileSkill']
     }),
-    addProfileSkill: build.mutation<UserSkillDto, AddUserSkillDTO>({ 
-      query: (body) => ({ url: '/api/me/profile/skill', method: 'POST', body }), 
-      invalidatesTags: ['ProfileSkill'] 
+    addProfileSkill: build.mutation<UserSkillDto, AddUserSkillDTO>({
+      query: (body) => ({ url: '/api/me/profile/skill', method: 'POST', body }),
+      invalidatesTags: ['ProfileSkill']
     }),
-    getProfileSkill: build.query<UserSkillDto, string>({ 
+    getProfileSkill: build.query<UserSkillDto, string>({
       query: (skillId) => `/api/me/profile/skill/${skillId}`,
       keepUnusedDataFor: 0,
     }),
-    updateProfileSkillTarget: build.mutation<UserSkillDto, { skillId: string; body: UpdateUserSkillTargetLevelDTO }>({ 
-      query: ({ skillId, body }) => ({ url: `/api/me/profile/skill/${skillId}`, method: 'PUT', body }), 
+    updateProfileSkillTarget: build.mutation<UserSkillDto, { skillId: string; body: UpdateUserSkillTargetLevelDTO }>({
+      query: ({ skillId, body }) => ({ url: `/api/me/profile/skill/${skillId}`, method: 'PUT', body }),
       // Also refresh my jobrole skills lists so UI stays consistent
-      invalidatesTags: ['ProfileSkill', 'MyJobroleSkills', 'MySkills'] 
+      invalidatesTags: ['ProfileSkill', 'MyJobroleSkills', 'MySkills']
     }),
-    deleteProfileSkill: build.mutation<void, string>({ 
-      query: (skillId) => ({ url: `/api/me/profile/skill/${skillId}`, method: 'DELETE' }), 
-      invalidatesTags: ['ProfileSkill'] 
+    deleteProfileSkill: build.mutation<void, string>({
+      query: (skillId) => ({ url: `/api/me/profile/skill/${skillId}`, method: 'DELETE' }),
+      invalidatesTags: ['ProfileSkill']
     }),
-    listProfileJobroles: build.query<JobRoleDTO[], void>({ 
+    listProfileJobroles: build.query<JobRoleDTO[], void>({
       query: () => '/api/me/profile/jobrole',
       keepUnusedDataFor: 0,
     }),
-    addProfileJobrole: build.mutation<JobRoleDTO, AddUserJobroleDTO>({ 
-      query: (body) => ({ url: '/api/me/profile/jobrole', method: 'POST', body }) 
+    addProfileJobrole: build.mutation<JobRoleDTO, AddUserJobroleDTO>({
+      query: (body) => ({ url: '/api/me/profile/jobrole', method: 'POST', body })
     }),
-    listProfileSkillsInJobrole: build.query<UserSkillSearchDto[], string>({ 
+    listProfileSkillsInJobrole: build.query<UserSkillSearchDto[], string>({
       query: (jobroleId) => `/api/me/profile/jobrole/${jobroleId}/skill`,
       keepUnusedDataFor: 0,
     }),
-    removeProfileJobrole: build.mutation<void, string>({ 
-      query: (jobroleId) => ({ url: `/api/me/profile/jobrole/${jobroleId}`, method: 'DELETE' }) 
+    removeProfileJobrole: build.mutation<void, string>({
+      query: (jobroleId) => ({ url: `/api/me/profile/jobrole/${jobroleId}`, method: 'DELETE' })
     }),
-    listProfileSkillConfirmations: build.query<ConfirmationDTO[], string>({ 
+    listProfileSkillConfirmations: build.query<ConfirmationDTO[], string>({
       query: (skillId) => `/api/me/profile/skill/${skillId}/confirmation`,
       keepUnusedDataFor: 0,
     }),
@@ -837,7 +837,7 @@ export const api = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['ProfileSkill', 'MyJobroleSkills', 'MySkills'],
     }),
-    deleteProfileSkillConfirmation: build.mutation<void, { skillId: string; confirmationId: string }>({ 
+    deleteProfileSkillConfirmation: build.mutation<void, { skillId: string; confirmationId: string }>({
       query: ({ skillId, confirmationId }) => ({ url: `/api/me/profile/skill/${skillId}/confirmation/${confirmationId}`, method: 'DELETE' }),
       invalidatesTags: ['ProfileSkill', 'MyJobroleSkills', 'MySkills'],
     }),
