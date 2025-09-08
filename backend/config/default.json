@@ -5,7 +5,7 @@
     "SECURE": false
   },
   "database": {
-    "NAME": "store",
+    "NAME": "skillMatrix",
     "USER": "postgres",
     "PASSWORD": "root",
   "HOST": "localhost",
