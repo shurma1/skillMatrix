@@ -8,7 +8,7 @@ import {
   useListUserSkillConfirmationsQuery,
   useConfirmFileAcknowledgmentMutation 
 } from '@/store/endpoints';
-import DocumentViewer from '../document/DocumentViewer';
+import DocumentViewer from '../document/DocumentViewer_new';
 import { extractErrMessage } from '../../utils/errorHelpers';
 import SkillLevelDisplay from '../shared/SkillLevelDisplay';
 import { useAppSelector } from '@/hooks/storeHooks';

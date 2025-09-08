@@ -3,7 +3,7 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
 //костыль
-const isDev = process.env.NODE_ENV === 'development' || process.argv.includes('mode=development') || !process.env.NODE_ENV;
+const isDev = process.env.npm_lifecycle_script!.includes('mode=development');
 
 const uploadPath = isDev ? '../../uploads' : '../../../uploads';
 const storage = multer.diskStorage({
