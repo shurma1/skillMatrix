@@ -39,25 +39,17 @@ const EditSkillModal: FC<EditSkillModalProps> = ({ open, confirmLoading, skill, 
   useEffect(() => {
     if (!open) return;
     if (!skill) {
-      console.log('EditSkillModal: skill is undefined when modal is open');
       return;
     }
-    console.log('EditSkillModal: initializing form with skill data:', skill);
     
     const formValues = {
       title: skill.title,
       isActive: skill.isActive,
       documentId: skill.documentId || '',
     };
-    console.log('EditSkillModal: setting form values:', formValues);
     
     // initialize form values from skill when modal opens
     form.setFieldsValue(formValues);
-    
-    // Check what the form actually contains after setting
-    setTimeout(() => {
-      console.log('EditSkillModal: form values after set (delayed):', form.getFieldsValue());
-    }, 100);
     
     setSelectedTags((skill.tags || []).map(t => t.id));
   }, [skill, form, open]);

@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  Card, 
-  Button, 
-  Radio, 
-  Typography, 
-  Progress, 
-  Modal, 
+import {
+  Card,
+  Button,
+  Radio,
+  Typography,
+  Progress,
+  Modal,
   Space,
   message,
   Spin
@@ -132,14 +132,10 @@ const TestTakeUI: React.FC<TestTakeProps> = ({
   const [modal, contextHolder] = Modal.useModal();
 
   const handleEndTest = () => {
-    console.log('TestTakeUI handleEndTest called', { submitted });
-    
     if (submitted) {
-      console.log('Test already submitted, returning');
       return;
     }
-    
-    console.log('Setting submitted to true and calling onEndTest');
+	
     setSubmitted(true);
     onEndTest();
   };
@@ -181,8 +177,6 @@ const TestTakeUI: React.FC<TestTakeProps> = ({
   };
 
   const showEndTestConfirmation = () => {
-    console.log('showEndTestConfirmation called');
-    
     modal.confirm({
       title: 'Завершить тест?',
       icon: <ExclamationCircleOutlined />,
@@ -190,7 +184,6 @@ const TestTakeUI: React.FC<TestTakeProps> = ({
       okText: 'Да, завершить',
       cancelText: 'Отмена',
       onOk: () => {
-        console.log('Modal confirmed, calling handleEndTest');
         handleEndTest();
       },
     });
@@ -209,11 +202,11 @@ const TestTakeUI: React.FC<TestTakeProps> = ({
 
   if (loading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '50vh' 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '50vh'
       }}>
         <Spin size="large" />
       </div>
@@ -225,10 +218,10 @@ const TestTakeUI: React.FC<TestTakeProps> = ({
       {contextHolder}
       {/* Заголовок и таймер */}
       <Card style={{ marginBottom: 24 }}>
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center' 
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
         }}>
           <div>
             <Title level={3} style={{ margin: 0 }}>
@@ -242,9 +235,9 @@ const TestTakeUI: React.FC<TestTakeProps> = ({
             <div style={{ fontSize: '24px', fontWeight: 'bold' }}>
               {formatTime}
             </div>
-            <Progress 
-              percent={progressPercent} 
-              size="small" 
+            <Progress
+              percent={progressPercent}
+              size="small"
               status={timeLeft < 300 ? 'exception' : 'normal'}
               showInfo={false}
             />
@@ -252,9 +245,9 @@ const TestTakeUI: React.FC<TestTakeProps> = ({
         </div>
         
         {violations > 0 && (
-          <div style={{ 
-            marginTop: 16, 
-            padding: '8px 12px', 
+          <div style={{
+            marginTop: 16,
+            padding: '8px 12px',
             borderRadius: 4,
             border: '1px solid var(--ant-color-warning-border)',
             backgroundColor: 'var(--ant-color-warning-bg)'
@@ -267,8 +260,8 @@ const TestTakeUI: React.FC<TestTakeProps> = ({
       </Card>
 
       {/* Прогресс теста */}
-      <Progress 
-        percent={progress} 
+      <Progress
+        percent={progress}
         style={{ marginBottom: 24 }}
         strokeColor={{
           '0%': '#108ee9',
@@ -282,21 +275,21 @@ const TestTakeUI: React.FC<TestTakeProps> = ({
           {currentQuestion.text}
         </Title>
 
-        <Radio.Group 
-          value={selectedAnswers[currentQuestion.id] || ''} 
+        <Radio.Group
+          value={selectedAnswers[currentQuestion.id] || ''}
           onChange={(e) => handleAnswerSelect(
-            currentQuestion.id, 
+            currentQuestion.id,
             e.target.value
           )}
           style={{ width: '100%' }}
         >
           <Space direction="vertical" style={{ width: '100%' }}>
             {currentQuestion.answerVariants.map((answer) => (
-              <Radio 
-                key={answer.id} 
+              <Radio
+                key={answer.id}
                 value={answer.id}
-                style={{ 
-                  padding: '12px', 
+                style={{
+                  padding: '12px',
                   border: '1px solid var(--ant-color-border)',
                   borderRadius: 4,
                   marginBottom: 8,
@@ -311,13 +304,13 @@ const TestTakeUI: React.FC<TestTakeProps> = ({
       </Card>
 
       {/* Навигация */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center' 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
       }}>
-        <Button 
-          onClick={handlePrevQuestion} 
+        <Button
+          onClick={handlePrevQuestion}
           disabled={currentQuestionIndex === 0}
         >
           Предыдущий вопрос
@@ -329,16 +322,16 @@ const TestTakeUI: React.FC<TestTakeProps> = ({
           </Button>
           
           {isLastQuestion ? (
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               onClick={showEndTestConfirmation}
               disabled={!selectedAnswers[currentQuestion.id]}
             >
               Завершить тест
             </Button>
           ) : (
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               onClick={handleNextQuestion}
               disabled={!selectedAnswers[currentQuestion.id]}
             >

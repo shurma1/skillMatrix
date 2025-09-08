@@ -343,7 +343,7 @@ class SkillService {
 		}
 		
 		const confirmations = await UserService.getConfirmations(userId, skill.id);
-		console.log(confirmations);
+		
 		const currentLevel = confirmations.length === 0 ? 0 : confirmations[0].level;
 		
 		if(currentLevel > 0) {

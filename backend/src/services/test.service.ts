@@ -181,8 +181,6 @@ class TestService {
 		
 		session.answers.push({ questionId: dto.questionId, answerId: dto.answerId });
 		
-		console.log('[SESSION ANSWERS]', session);
-		
 		await TestRepository.saveTestSession(sessionId, session);
 	}
 

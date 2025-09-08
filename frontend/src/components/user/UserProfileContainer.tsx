@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useMemo, useState} from 'react';
 import { useParams } from 'react-router-dom';
 import { message, Space } from 'antd';
 import { getUserInitials } from '@/utils/user';
@@ -71,12 +71,6 @@ const UserProfileContainer: React.FC = () => {
   
   const { data: allSkillsSearch } = useSearchSkillsQuery({ query: '' });
   const { data: allJobrolesSearch } = useSearchJobRolesQuery({ query: '' });
-	
-	useEffect(() => {
-		if (userSkills.length > 0) {
-			console.log('User skills updated:', userSkills.length, userSkills);
-		}
-	}, [userSkills.length]); // Only depend on length to reduce noise
   
   // Mutations
   const [updateUser, { isLoading: isUpdatingUser }] = useUpdateUserMutation();
