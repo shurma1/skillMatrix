@@ -63,7 +63,8 @@ base AS (
     LEFT JOIN "tags" t ON t."id" = tts."tagId"
     LEFT JOIN "tests" test ON test."skillVersionId" = swl."skillId"
     WHERE
-        (:query IS NULL OR swl."title" ILIKE :query OR swl."type" ILIKE :query)
+        -- Поиск: теперь проверяем совпадение query не только с названием (title) и типом, но и с номером документа (documentId)
+        (:query IS NULL OR swl."title" ILIKE :query OR swl."type" ILIKE :query OR swl."documentId" ILIKE :query)
 
         -- authorIds фильтр
         AND (

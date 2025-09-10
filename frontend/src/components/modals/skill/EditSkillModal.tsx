@@ -148,8 +148,8 @@ const EditSkillModal: FC<EditSkillModalProps> = ({ open, confirmLoading, skill, 
           </Form.Item>
 
           {skill?.type === 'document' && (
-            <Form.Item name="documentId" label="ID документа">
-              <Input placeholder="Введите ID документа" />
+            <Form.Item name="documentId" label="Номер документа">
+              <Input placeholder="Введите Номер документа" />
             </Form.Item>
           )}
 

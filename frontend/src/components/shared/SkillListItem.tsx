@@ -110,13 +110,15 @@ const SkillListItem: React.FC<SkillListItemProps> = ({
           <div style={{ fontWeight: 600 }}>{levelsText}</div>
           {hasTest && (
             <Tooltip title="Открыть детальные результаты">
-              <Button
-                size="small"
-                onClick={stopPropagation as unknown as React.MouseEventHandler}
-                href={`/test/${skill.testId}/result/view`}
-              >
-                Детали результата
-              </Button>
+				<Button
+					size="small"
+					onClick={(e) => {
+						e.stopPropagation();
+						window.location.href = `/test/${skill.testId}/result/view?userId=${userId}`;
+					}}
+				>
+					Детали результата
+				</Button>
             </Tooltip>
           )}
         </div>

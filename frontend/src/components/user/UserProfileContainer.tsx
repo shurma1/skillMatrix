@@ -13,8 +13,8 @@ import {
   useListUserSkillsQuery,
   useAddUserJobroleMutation,
   useAddUserSkillMutation,
-  useSearchSkillsQuery,
-  useSearchJobRolesQuery,
+  useLazySearchSkillsQuery,
+  useLazySearchJobRolesQuery,
   useUpdateUserSkillTargetMutation,
   useRemoveUserJobroleMutation,
   useDeleteUserSkillMutation
@@ -69,8 +69,9 @@ const UserProfileContainer: React.FC = () => {
   const smoothedJobrolesLoading = useSmoothedLoading(isJobrolesLoading, userJobroles.length > 0);
   const smoothedSkillsLoading = useSmoothedLoading(isSkillsLoading, userSkills.length > 0);
   
-  const { data: allSkillsSearch } = useSearchSkillsQuery({ query: '' });
-  const { data: allJobrolesSearch } = useSearchJobRolesQuery({ query: '' });
+  // Ленивые запросы для получения всех навыков/должностей (инициализируем выше модальных эффектов)
+  const [triggerAllSkills, { data: allSkillsSearch }] = useLazySearchSkillsQuery();
+  const [triggerAllJobroles, { data: allJobrolesSearch }] = useLazySearchJobRolesQuery();
   
   // Mutations
   const [updateUser, { isLoading: isUpdatingUser }] = useUpdateUserMutation();
@@ -89,6 +90,19 @@ const UserProfileContainer: React.FC = () => {
     skillId: string;
     targetLevel: number;
   } | null>(null);
+
+  // Триггерим загрузку опций при открытии соответствующих модалок (один раз)
+  React.useEffect(() => {
+    if (addSkillOpen && !allSkillsSearch) {
+      triggerAllSkills({ query: '' });
+    }
+  }, [addSkillOpen, allSkillsSearch, triggerAllSkills]);
+
+  React.useEffect(() => {
+    if (addJobroleOpen && !allJobrolesSearch) {
+      triggerAllJobroles({ query: '' });
+    }
+  }, [addJobroleOpen, allJobrolesSearch, triggerAllJobroles]);
 
   // Computed values
   const initials = useMemo(() => user ? getUserInitials(user) : '', [user]);

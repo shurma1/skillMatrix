@@ -197,8 +197,8 @@ const CreateSkillModal: FC<CreateSkillModalProps> = ({
           </Form.Item>
           
           {typeValue === 'document' && (
-            <Form.Item name="documentId" label="ID документа">
-              <Input placeholder="Введите ID документа" />
+            <Form.Item name="documentId" label="Номер документа">
+              <Input placeholder="Введите Номер документа" />
             </Form.Item>
           )}
           

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Select, Flex, Space } from 'antd';
 import PermissionButton from '@/components/shared/PermissionButton';
 import { EditOutlined, PlusOutlined } from '@ant-design/icons';
@@ -19,10 +19,9 @@ const TagSelectWithActions: React.FC<TagSelectWithActionsProps> = ({
   onEditTag,
   onCreateTag
 }) => {
-  const [selectedTagIds, setSelectedTagIds] = useState<string[]>(value || []);
+  const selectedTagIds = value || [];
 
   const handleChange = (values: string[]) => {
-    setSelectedTagIds(values);
     onChange?.(values);
   };
 

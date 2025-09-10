@@ -125,7 +125,13 @@ const SkillContainer: React.FC = () => {
   const [makeRevision, { isLoading: isMakingRevision }] = useMakeRevisionMutation();
 
   const { data: tagSearch = [] } = useSearchTagsQuery({ query: '' });
-  const allTags: TagDTO[] = useMemo(() => tagSearch as unknown as TagDTO[], [tagSearch]);
+  const allTags: TagDTO[] = useMemo(() => {
+    const fetched = (tagSearch as unknown as TagDTO[]) || [];
+    const skillTags = (skill?.tags as TagDTO[] | undefined) || [];
+    const map = new Map<string, TagDTO>();
+    [...skillTags, ...fetched].forEach(t => { if (t && t.id) map.set(t.id, t); });
+    return Array.from(map.values());
+  }, [tagSearch, skill?.tags]);
 
   // Get current user profile
   const { data: currentUser } = useGetProfileQuery();

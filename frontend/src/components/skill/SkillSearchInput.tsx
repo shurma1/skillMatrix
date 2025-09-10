@@ -15,11 +15,11 @@ const SkillSearchInput: FC<SkillSearchInputProps> = ({
 }) => (
   <Input
     allowClear
-    placeholder={placeholder || 'Поиск навыков'}
+    placeholder={placeholder || 'Поиск по названию / номеру'}
     value={value}
     onChange={(e) => onChange(e.target.value)}
     prefix={<SearchOutlined />}
-    style={{ width: 240 }}
+    style={{ width: 255 }}
   />
 );
 

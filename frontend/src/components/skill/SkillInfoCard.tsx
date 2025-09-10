@@ -80,7 +80,7 @@ const SkillInfoCard: React.FC<SkillInfoCardProps> = ({
           </Paragraph>
           {skill.type === 'document' && skill.documentId && (
             <Paragraph style={{ margin: 0 }}>
-              <Text strong>ID документа: </Text>
+              <Text strong>Номер документа: </Text>
               {skill.documentId}
             </Paragraph>
           )}
