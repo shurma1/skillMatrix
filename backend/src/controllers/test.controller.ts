@@ -91,7 +91,7 @@ class TestController {
 		try {
 			const { testId } = req.params as { testId: string };
 			const requesterId = req.authUser!.id;
-			const permissions = (req as any).permissions as string[] | undefined;
+			const permissions = req.userPermissions;
 			const can = await TestService.canDeleteTest(testId, requesterId, permissions || []);
 			res.status(200).json({ can });
 		} catch (err) {

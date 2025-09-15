@@ -10,6 +10,9 @@ interface TagSelectWithActionsProps {
   tags: TagDTO[];
   onEditTag?: (tag: TagDTO) => void;
   onCreateTag?: () => void;
+  remoteSearch?: boolean;
+  onSearchChange?: (value: string) => void;
+  loading?: boolean;
 }
 
 const TagSelectWithActions: React.FC<TagSelectWithActionsProps> = ({
@@ -17,7 +20,10 @@ const TagSelectWithActions: React.FC<TagSelectWithActionsProps> = ({
   onChange,
   tags,
   onEditTag,
-  onCreateTag
+  onCreateTag,
+  remoteSearch,
+  onSearchChange,
+  loading
 }) => {
   const selectedTagIds = value || [];
 
@@ -40,6 +46,11 @@ const TagSelectWithActions: React.FC<TagSelectWithActionsProps> = ({
         value={selectedTagIds}
         onChange={handleChange}
         style={{ width: '100%' }}
+        showSearch
+        filterOption={remoteSearch ? false : undefined}
+        onSearch={remoteSearch ? onSearchChange : undefined}
+        loading={loading}
+        notFoundContent={loading ? 'Загрузка...' : undefined}
         optionRender={(option) => (
           <Flex justify="space-between" align="center">
             <span>{option.label}</span>

@@ -1,10 +1,5 @@
 import { baseApi } from './baseApi';
-import type {
-  LoginRequestDTO,
-  AuthDTO,
-  TokenDTO,
-  UserDTO
-} from '../types/api/auth';
+import type { LoginRequestDTO, AuthDTO, UserDTO } from '../types/api/auth';
 import type { PaginatedResponse } from '../types/api/common';
 import type {
   SkillWithCurrentVersionDTO,
@@ -249,9 +244,6 @@ export const api = baseApi.injectEndpoints({
     // Auth
     login: build.mutation<AuthDTO, LoginRequestDTO>({
       query: (body) => ({ url: '/api/auth/login', method: 'POST', body }),
-    }),
-    refresh: build.mutation<TokenDTO, void>({
-      query: () => ({ url: '/api/auth/refresh', method: 'POST' }),
     }),
 
     // File
@@ -899,7 +891,6 @@ export const api = baseApi.injectEndpoints({
 
 export const {
   useLoginMutation,
-  useRefreshMutation,
   useGetFileInfoQuery,
   useDownloadFileQuery,
   useUploadFileMutation,

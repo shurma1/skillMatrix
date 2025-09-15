@@ -9,11 +9,12 @@ import {
   useUpdateProfileMutation
 } from '@/store/endpoints';
 import EditUserModal from '../modals/user/EditUserModal';
-import { useLogoutMutation } from '@/store/baseApi.ts';
+import { authManager } from '@/utils/AuthManager';
 import UserInfoSection from "@/components/user/UserInfoSection.tsx";
 
 const ProfileContainer: React.FC = () => {
   const dispatch = useAppDispatch();
+  
   
   // Data queries
   const { data: user, isFetching: isUserLoading } = useGetProfileQuery();
@@ -57,10 +58,20 @@ const ProfileContainer: React.FC = () => {
     }
   };
 
-  const [logoutMutation, { isLoading: isLoggingOut }] = useLogoutMutation();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
-    try { await logoutMutation().unwrap(); } catch { /* ignore */ }
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+    try {
+      // authManager.forceLogout() уже выполняет:
+      // 1. POST /api/auth/logout 
+      // 2. localStorage.removeItem('auth')
+      // 3. onLogout callback -> dispatch(logout())
+      await authManager.forceLogout();
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (

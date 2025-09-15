@@ -32,7 +32,7 @@ class AuthController {
 			
 			const tokens = await AuthService.refresh(refreshToken);
 			
-			res.cookie('refreshToken', tokens.refresh_token, {
+			res.cookie('refreshToken', tokens.refreshToken, {
 				httpOnly: true,
 				secure: false,
 				sameSite: 'lax',

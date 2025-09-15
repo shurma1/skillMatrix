@@ -77,7 +77,7 @@ const AnalyticsContainer: React.FC = () => {
 							<JobRoleToSkillsDetailsCardAsync
 								data={jobRoleToSkillsDetails.data}
 								isFetching={jobRoleToSkillsDetails.isFetching || jobRoleToSkillsDetails.isLoading}
-								error={jobRoleToSkillsDetails.error}
+								error={jobRoleToSkillsDetails.error as any}
 								selectedJobRoleId={selectedJobRoleId}
 								onJobRoleChange={handleJobRoleChange}
 							/>

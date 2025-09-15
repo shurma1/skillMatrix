@@ -116,13 +116,13 @@ export const UserPermissionsModal: React.FC<UserPermissionsModalProps> = ({
         </div>
       )}
       
-      {hasError && (
+      {!!hasError &&
         <Alert
           message="Ошибка при загрузке разрешений"
           type="error"
           style={{ marginBottom: 16 }}
         />
-      )}
+      }
       
       {isEditingSelf && (
         <Alert
@@ -146,8 +146,8 @@ export const UserPermissionsModal: React.FC<UserPermissionsModalProps> = ({
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ marginBottom: '4px' }}>
-                        <Text strong style={{ 
-                          display: 'block', 
+                        <Text strong style={{
+                          display: 'block',
                           fontSize: '14px',
                           lineHeight: '1.4',
                           color: isDisabled && isEnabled ? '#bfbfbf' : undefined
@@ -161,8 +161,8 @@ export const UserPermissionsModal: React.FC<UserPermissionsModalProps> = ({
                         </Text>
                       </div>
                       <div>
-                        <Text type="secondary" style={{ 
-                          fontSize: '12px', 
+                        <Text type="secondary" style={{
+                          fontSize: '12px',
                           display: 'block',
                           lineHeight: '1.3',
                           wordBreak: 'break-word',
@@ -173,9 +173,9 @@ export const UserPermissionsModal: React.FC<UserPermissionsModalProps> = ({
                       </div>
                     </div>
                     
-                    <div style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
                       gap: '8px',
                       flexShrink: 0,
                       paddingTop: '2px'

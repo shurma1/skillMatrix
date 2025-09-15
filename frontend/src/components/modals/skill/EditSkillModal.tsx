@@ -8,6 +8,7 @@ import {
   useUpdateTagMutation,
   useSearchTagsQuery
 } from '@/store/endpoints';
+import { useDebounce } from '@/hooks/useDebounce';
 import TagSelectWithActions from '@/components/shared/TagSelectWithActions';
 import CreateTagModal from '../tag/CreateTagModal';
 import EditTagModal from '../tag/EditTagModal';
@@ -25,6 +26,8 @@ interface EditSkillModalProps {
 const EditSkillModal: FC<EditSkillModalProps> = ({ open, confirmLoading, skill, tags, onCancel, onSubmit }) => {
   const [form] = Form.useForm<UpdateSkillDTO & { selectedTags: string[]; documentId?: string }>();
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [tagQuery, setTagQuery] = useState('');
+  const debouncedTagQuery = useDebounce(tagQuery, 400);
 
   // Tag modals state
   const [isCreateTagOpen, setIsCreateTagOpen] = useState(false);
@@ -34,7 +37,7 @@ const EditSkillModal: FC<EditSkillModalProps> = ({ open, confirmLoading, skill, 
   // Tag mutations
   const [createTag, { isLoading: isCreatingTag }] = useCreateTagMutation();
   const [updateTag, { isLoading: isUpdatingTag }] = useUpdateTagMutation();
-  const { refetch: refetchTags } = useSearchTagsQuery({ query: '' });
+  const { refetch: refetchTags, data: searchedTags, isFetching: isTagsLoading } = useSearchTagsQuery({ query: debouncedTagQuery });
 
   useEffect(() => {
     if (!open) return;
@@ -157,9 +160,12 @@ const EditSkillModal: FC<EditSkillModalProps> = ({ open, confirmLoading, skill, 
             <TagSelectWithActions
               value={selectedTags}
               onChange={setSelectedTags}
-              tags={tags}
+              tags={debouncedTagQuery ? (searchedTags || []).map(tag => ({ ...tag, skillsCount: 0 })) : tags}
               onEditTag={handleEditTagClick}
               onCreateTag={() => setIsCreateTagOpen(true)}
+              remoteSearch
+              onSearchChange={setTagQuery}
+              loading={isTagsLoading}
             />
           </Form.Item>
         </Form>

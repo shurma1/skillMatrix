@@ -12,7 +12,7 @@ interface PermissionsGateProps {
 
 const PermissionsGate: FC<PermissionsGateProps> = ({ app }) => {
   const dispatch = useAppDispatch();
-  const { accessToken } = useAppSelector((s) => s.auth);
+  const { accessToken, permissions: storedPermissions } = useAppSelector((s) => s.auth);
 
   const {
     data,
@@ -20,10 +20,9 @@ const PermissionsGate: FC<PermissionsGateProps> = ({ app }) => {
     isFetching,
     isSuccess,
     isError,
+    error,
     refetch,
-  } = useGetMyPermissionsQuery(undefined, {
-    skip: !accessToken,
-  });
+  } = useGetMyPermissionsQuery(undefined, { skip: !accessToken });
 
   const smoothedLoading = useSmoothedLoading(
     (isLoading || isFetching) && !!accessToken,
@@ -31,24 +30,29 @@ const PermissionsGate: FC<PermissionsGateProps> = ({ app }) => {
   );
 
   useEffect(() => {
-    if (!accessToken) {
+    if (!accessToken && storedPermissions.length) {
       dispatch(setPermissions([]));
     }
-  }, [accessToken, dispatch]);
+  }, [accessToken, dispatch]); // убрал storedPermissions.length из зависимостей чтобы избежать цикла
   
   useEffect(() => {
     if (isSuccess && data) {
-      dispatch(setPermissions(data));
-    } else if (isError) {
+      // Сравнение по длине и id (предполагаем стабильный порядок)
+      const same = data.length === storedPermissions.length && data.every((p, i) => p.id === storedPermissions[i]?.id);
+      if (!same) {
+        dispatch(setPermissions(data));
+      }
+    } else if (isError && storedPermissions.length) {
       dispatch(setPermissions([]));
     }
-  }, [isSuccess, isError, data, dispatch]);
-  
+  }, [isSuccess, isError, data, dispatch]); // убрал storedPermissions из зависимостей
+  // Повторяем запрос только если он был прерван (Abort) во время refresh цикла
   useEffect(() => {
-    if (accessToken) {
+    const status = (error as any)?.status;
+    if (status === 'ABORTED') {
       refetch();
     }
-  }, [accessToken, refetch]);
+  }, [error, refetch]);
 
   const showLoader = smoothedLoading;
 

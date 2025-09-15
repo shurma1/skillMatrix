@@ -1,8 +1,10 @@
 import { configureStore, combineReducers, type AnyAction } from '@reduxjs/toolkit';
-import authReducer, { logout } from './authSlice';
+import authReducer, { logout, setTokens } from './authSlice';
 import themeReducer from './themeSlice';
 import { baseApi } from './baseApi';
 import appReducer from './appSlice';
+import { authManager } from '@/utils/AuthManager';
+import { setRefreshingTokens } from './appSlice';
 
 // Собираем основной комбинированный редьюсер
 const appCombinedReducer = combineReducers({
@@ -49,6 +51,20 @@ export const store = configureStore({
         ],
       },
     }).concat(baseApi.middleware),
+});
+
+// Wire AuthManager callbacks once store is created
+authManager.setCallbacks({
+  onTokensUpdated: (t) => {
+    // t.refreshToken может быть пустой строкой — игнорируем
+    store.dispatch(setTokens({ accessToken: (t as any).accessToken, refreshToken: '' } as any));
+  },
+  onLogout: () => {
+    store.dispatch(logout());
+  },
+  onRefreshingStateChange: (b) => {
+    store.dispatch(setRefreshingTokens(b));
+  }
 });
 
 export type RootState = ReturnType<typeof store.getState>;
