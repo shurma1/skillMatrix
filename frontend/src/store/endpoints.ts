@@ -154,6 +154,15 @@ export const api = baseApi.injectEndpoints({
       // Отключаем кеширование для аналитических данных, так как они постоянно изменяются
       keepUnusedDataFor: 0,
     }),
+    getAnalyticsDatesFamiliarization: build.query<{
+      colLabels: string[];
+      data: { fio: string; date: string | null }[];
+      skill?: { title: string; version: number; documentId?: string };
+    }, string>({
+      query: (skillId) => `/api/analytics/datesFamiliarization/${skillId}`,
+      // Отключаем кеширование для аналитических данных, так как они постоянно изменяются
+      keepUnusedDataFor: 0,
+    }),
     // Downloads (Excel)
     downloadAnalyticsKPI: build.query<{ blob: Blob; filename?: string }, void>({
       query: () => ({
@@ -227,6 +236,23 @@ export const api = baseApi.injectEndpoints({
     downloadAnalyticsSkillToUsers: build.query<{ blob: Blob; filename?: string }, string>({
       query: (skillId) => ({
         url: `/api/analytics/skillToUsers/${skillId}/download`,
+        responseHandler: async (response) => {
+          if (!response.ok) {
+            const text = await response.text();
+            throw new Error(text || `HTTP ${response.status}`);
+          }
+          const cd = response.headers.get('Content-Disposition') || undefined;
+          const match = cd?.match(/filename\*=UTF-8''([^;]+)/);
+          const filename = match ? decodeURIComponent(match[1]) : undefined;
+          const blob = await response.blob();
+          return { blob, filename };
+        },
+      }),
+      keepUnusedDataFor: 0,
+    }),
+    downloadAnalyticsDatesFamiliarization: build.query<{ blob: Blob; filename?: string }, string>({
+      query: (skillId) => ({
+        url: `/api/analytics/datesFamiliarization/${skillId}/download`,
         responseHandler: async (response) => {
           if (!response.ok) {
             const text = await response.text();
@@ -994,15 +1020,19 @@ export const {
   useGetAnalyticsJobRoleToSkillsQuery,
   useGetAnalyticsUserToSkillsQuery,
   useGetAnalyticsSkillToUsersQuery,
+  useGetAnalyticsDatesFamiliarizationQuery,
+  useLazyGetAnalyticsDatesFamiliarizationQuery,
   useGetMySharedStatQuery,
   useDownloadAnalyticsKPIQuery,
   useDownloadAnalyticsJobRolesToSkillsQuery,
   useDownloadAnalyticsJobRoleToSkillsQuery,
   useDownloadAnalyticsUserToSkillsQuery,
   useDownloadAnalyticsSkillToUsersQuery,
+  useDownloadAnalyticsDatesFamiliarizationQuery,
   useDownloadMySharedStatQuery,
   useLazyDownloadAnalyticsUserToSkillsQuery,
   useLazyDownloadAnalyticsSkillToUsersQuery,
+  useLazyDownloadAnalyticsDatesFamiliarizationQuery,
   useGetUserResultPreviewQuery,
   // Lazy download hooks
   useLazyDownloadAnalyticsKPIQuery,

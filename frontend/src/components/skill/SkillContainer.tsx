@@ -27,6 +27,7 @@ import SkillInfoCard from './SkillInfoCard';
 import SkillTestCard from './SkillTestCard';
 import FileCard from './FileCard';
 import SkillToUsersCard from '@/components/analytics/SkillToUsersCard';
+import DatesFamiliarizationCard from '@/components/analytics/DatesFamiliarizationCard';
 import EditSkillModal from '@/components/modals/skill/EditSkillModal';
 import MakeRevisionModal from '@/components/modals/skill/MakeRevisionModal';
 // no duplicate imports
@@ -348,6 +349,9 @@ const SkillContainer: React.FC = () => {
 
   {/* Analytics: Users by Skill (visible only with ANALYTICS_VIEW permission) */}
   {canSeeAnalytics && <SkillToUsersCard skillId={skillId} />}
+  
+  {/* Analytics: Dates of Familiarization (visible only with ANALYTICS_VIEW permission) */}
+  {canSeeAnalytics && <DatesFamiliarizationCard skillId={skillId} />}
     </Space>
   );
 };
