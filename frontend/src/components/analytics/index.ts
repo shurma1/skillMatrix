@@ -5,3 +5,4 @@ export { default as JobRolesToSkillsTable } from './JobRolesToSkillsTable';
 export { default as JobRolesToSkillsCard } from './JobRolesToSkillsCard';
 export { default as JobRoleToSkillsDetailsTable } from './JobRoleToSkillsDetailsTable';
 export { default as JobRoleToSkillsDetailsCard } from './JobRoleToSkillsDetailsCard';
+export { default as DatesFamiliarizationCard } from './DatesFamiliarizationCard';
