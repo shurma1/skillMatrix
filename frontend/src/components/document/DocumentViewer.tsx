@@ -3,7 +3,8 @@ import { Card, Button, message, Spin, Alert, Space, Typography, Tabs } from 'ant
 import { DownloadOutlined, FileTextOutlined, FileImageOutlined, FilePdfOutlined, FileUnknownOutlined } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store/store';
-import { API_BASE_URL } from '@/config/api';
+// API_BASE_URL no longer needed here; requests go through authManager
+import { authManager } from '@/utils/AuthManager';
 import { extractErrMessage } from '@/utils/errorHelpers.ts';
 import {
   getDocumentTypeName,
@@ -141,24 +142,12 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   };
 
   // API functions
-  const fetchFileBlob = useCallback(async (signal?: AbortSignal): Promise<Blob> => {
-    const url = `${API_BASE_URL}/api/file/${fileId}`;
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
-      credentials: 'include',
-      signal,
-    });
-
-    if (!response.ok) {
-      throw new Error(`Ошибка загрузки файла: ${response.status} ${response.statusText}`);
-    }
-
+  const fetchFileBlob = useCallback(async (): Promise<Blob> => {
+    // Центральный маршрут: AuthManager добавит токен и выполнит refresh при необходимости
+    const response = await authManager.fetch(`/api/file/${fileId}`);
+    // Ошибочные статусы уже преобразуются в Error('HTTP xxx') — сюда не попадём если не ok
     return response.blob();
-  }, [fileId, accessToken]);
+  }, [fileId]);
 
   // Document processing functions
   const processDocxFile = async (arrayBuffer: ArrayBuffer) => {
@@ -233,10 +222,8 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
     setIsLoading(true);
     setLoadError(null);
 
-    const abortController = new AbortController();
-
     try {
-      const blob = await fetchFileBlob(abortController.signal);
+  const blob = await fetchFileBlob();
       
       if (!isMounted) return;
 
@@ -287,9 +274,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
       }
     }
 
-    return () => {
-      abortController.abort();
-    };
+  return undefined;
   }, [accessToken, renderType, fileId]);
 
   // Event handlers

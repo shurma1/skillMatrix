@@ -1,10 +1,73 @@
 import express from 'express';
-import AuthController from "../controllers/auth.controller";
 import AnalyticsController from "../controllers/analytics.controller";
 import permissionMiddleware from "../middlewares/permission.middleware";
 
 const router = express.Router();
 
+/**
+ * @openapi
+ * /api/analytics/datesFamiliarization/{skillId}:
+ *   get:
+ *     summary: Get dates of familiarization for a specific skill
+ *     description: Returns all users connected to a skill with their familiarization dates
+ *     tags:
+ *       - Analytics
+ *     security:
+ *       - JWT: []
+ *     parameters:
+ *       - in: path
+ *         name: skillId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: The skill ID to get familiarization dates for
+ *     responses:
+ *       200:
+ *         description: Users with their familiarization dates
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 colLabels:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example: ["ФИО", "Дата ознакомления"]
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       fio:
+ *                         type: string
+ *                       date:
+ *                         type: string
+ *                         format: date
+ *                         nullable: true
+ *       404:
+ *         description: Skill not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get(
+	'/datesFamiliarization/:skillId',
+	permissionMiddleware({
+		needAuth: true,
+		permission: ['ANALYTICS_VIEW']
+	}),
+	AnalyticsController.datesFamiliarization
+);
+
+router.get(
+	'/datesFamiliarization/:skillId/download',
+	permissionMiddleware({
+		needAuth: true,
+		permission: ['ANALYTICS_VIEW']
+	}),
+	AnalyticsController.downloadDatesFamiliarization
+);
 
 router.get(
 	'/kpi',

@@ -540,8 +540,6 @@ class SkillRepository {
 			throw ApiError.errorByType('SKILL_VERSION_NOT_FOUND');
 		}
 		
-		console.log(version.auditDate, revisionDate);
-		
 		version.auditDate = revisionDate;
 		
 		await version.save();

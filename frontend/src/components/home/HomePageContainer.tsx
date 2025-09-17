@@ -17,7 +17,7 @@ import {
   api,
 } from '@/store/endpoints';
 import type { UserSkillSearchDto } from '@/types/api/user';
-import { useAppDispatch } from '@/hooks/storeHooks';
+import { useAppDispatch, useAppSelector } from '@/hooks/storeHooks';
 import UserStatsCard from '@/components/UserStatsCard';
 import MySharedStatCard from '@/components/analytics/MySharedStatCard';
 import ServicedSkillsSection from './ServicedSkillsSection';
@@ -38,6 +38,16 @@ const HomePageContainer: React.FC = () => {
   const { data: myServicedSkills = [], isFetching: isServicedSkillsLoading } = useGetMyServicedSkillsQuery();
 
   const dispatch = useAppDispatch();
+  const user = useAppSelector(s => s.auth.user);
+  const fullName = useMemo(() => {
+    if (!user) return '';
+    const parts = [
+		user?.lastname || '',
+      	user?.firstname || '',
+		user?.patronymic || ''
+    ].filter(Boolean);
+    return parts.join(' ');
+  }, [user]);
   const [roleSkills, setRoleSkills] = useState<Record<string, UserSkillSearchDto[]>>({});
   const [isRoleSkillsLoading, setIsRoleSkillsLoading] = useState<boolean>(false);
 
@@ -109,12 +119,12 @@ const HomePageContainer: React.FC = () => {
 
   return (
 		<Flex vertical>
-		<Typography.Title
-			level={3}
-			style={{ marginTop: 0, marginBottom: 16 }}
-		>
-			Должности
-		</Typography.Title>
+    <Typography.Title
+      level={3}
+      style={{ marginTop: 0, marginBottom: 16 }}
+    >
+      {fullName || 'Профиль'}
+    </Typography.Title>
 		
 		<UserStatsCard />
 		
@@ -214,9 +224,9 @@ const HomePageContainer: React.FC = () => {
 
       {myServicedSkills.length > 0 && (
         <div style={{ marginTop: 24 }}>
-          <ServicedSkillsSection 
-            skills={myServicedSkills} 
-            loading={isServicedSkillsLoading} 
+          <ServicedSkillsSection
+            skills={myServicedSkills}
+            loading={isServicedSkillsLoading}
           />
         </div>
       )}

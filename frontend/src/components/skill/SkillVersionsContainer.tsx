@@ -12,12 +12,12 @@ import {
 } from '@/store/endpoints';
 import { useCreateTestMutation } from '@/store/endpoints';
 import { api } from '@/store/endpoints';
-import { useAppDispatch, useAppSelector } from '@/hooks/storeHooks';
+import { useAppDispatch } from '@/hooks/storeHooks';
 import type { SkillVersionDTO, CreateSkillVersionDTO, UpdateSkillVersionDTO } from '@/types/api/skill';
 import SkillVersionCard from './SkillVersionCard';
 import CreateVersionModal from '../modals/skill/CreateVersionModal';
 import { extractErrMessage } from '../../utils/errorHelpers';
-import {API_BASE_URL} from "@/config/api.ts";
+import { authManager } from '@/utils/AuthManager';
 
 const { Title, Text } = Typography;
 
@@ -27,7 +27,6 @@ const { Title, Text } = Typography;
  */
 const SkillVersionsContainer: React.FC = () => {
   const dispatch = useAppDispatch();
-  const accessToken = useAppSelector(state => state.auth.accessToken);
   const { skillId = '' } = useParams<{ skillId: string }>();
   const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
@@ -56,25 +55,10 @@ const SkillVersionsContainer: React.FC = () => {
   // Для скачивания файлов создаем отдельную функцию
   const downloadFileById = async (fileId: string): Promise<Blob | null> => {
     try {
-      const doFetch = () => fetch(`${API_BASE_URL}/api/file/${fileId}`,
-        {
-          headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
-          credentials: 'include',
-        }
-      );
-      let response = await doFetch();
-      if (response.status === 401) {
-        // Try refresh and retry once
-        await fetch('${API_BASE_URL}/api/auth/refresh', { method: 'POST', credentials: 'include' });
-        response = await doFetch();
-      }
-      if (response.ok) {
-        return await response.blob();
-      }
-      return null;
-    } catch {
-      return null;
-    }
+      const res = await authManager.fetch(`/api/file/${fileId}`);
+      if (!res.ok) return null;
+      return await res.blob();
+    } catch { return null; }
   };
 
   // Computed values

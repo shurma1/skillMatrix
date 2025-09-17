@@ -11,7 +11,6 @@ import {SkillType} from "../models/types/SkillType";
 import {SkillConfirmType} from "../models/types/SkillConfirmType";
 import {JobRoleInstance} from "../models/entities/JobRole";
 import {UserToConfirmSkillsInstance} from "../models/entities/UserToConfirmSkills";
-import {UserSkillSearchDto} from "../dtos/userSkillSearch.dto";
 
 
 export interface UserSkillSearch {

@@ -4,6 +4,7 @@ import dayjs from 'dayjs';
 import { Checkbox } from 'antd';
 import type { UploadProps } from 'antd';
 import { useSearchUsersQuery, useUploadFileMutation, useGetSkillQuery } from '@/store/endpoints';
+import { useDebounce } from '@/hooks/useDebounce';
 import type { CreateSkillVersionDTO, UpdateSkillVersionDTO } from '@/types/api/skill';
 import { extractErrMessage } from '../../../utils/errorHelpers';
 import DatePickerWithPaste from '@/components/DatePickerWithPaste.tsx';
@@ -55,9 +56,16 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
 }) => {
   const [form] = Form.useForm<FormData>();
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  // Independent search states for each select to avoid leaking search history
+  const [authorQuery, setAuthorQuery] = useState('');
+  const [verifierQuery, setVerifierQuery] = useState('');
+  const [activeSearch, setActiveSearch] = useState<'author' | 'verifier' | null>(null);
+  const debouncedAuthorQuery = useDebounce(authorQuery, 400);
+  const debouncedVerifierQuery = useDebounce(verifierQuery, 400);
 
   // API запросы
-  const { data: usersSearch } = useSearchUsersQuery({ query: '' });
+  const { data: authorUsersSearch, isFetching: isAuthorLoading } = useSearchUsersQuery({ query: debouncedAuthorQuery });
+  const { data: verifierUsersSearch, isFetching: isVerifierLoading } = useSearchUsersQuery({ query: debouncedVerifierQuery });
   const { data: skill } = useGetSkillQuery(skillId, { skip: !skillId });
   const [uploadFile] = useUploadFileMutation();
 
@@ -193,7 +201,16 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
     },
   };
 
-  const users = usersSearch?.rows || [];
+  const authorUsers = authorUsersSearch?.rows || [];
+  const verifierUsers = verifierUsersSearch?.rows || [];
+  const authorOptions = authorUsers.map(user => {
+    const fio = [user.lastname, user.firstname, user.patronymic].filter(Boolean).join(' ');
+    return { value: user.id, label: fio };
+  });
+  const verifierOptions = verifierUsers.map(user => {
+    const fio = [user.lastname, user.firstname, user.patronymic].filter(Boolean).join(' ');
+    return { value: user.id, label: fio };
+  });
 
   return (
     <Modal
@@ -236,30 +253,20 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
         <Form.Item
           name="authorId"
           label="Автор"
-          rules={[{ required: true, message: 'Выберите автора' }]}
+          rules={[{ required: false, message: 'Выберите автора' }]}
         >
           <Select
             showSearch
             placeholder="Выберите автора"
-            optionFilterProp="children"
-            filterOption={(input, option) =>
-              (option?.label as string).toLowerCase().includes(input.toLowerCase())
-            }
-            options={users.map(user => ({
-              value: user.id,
-              label: `${user.lastname} ${user.firstname}`.trim()
-            }))}
+            filterOption={false}
+            onSearch={(v) => setAuthorQuery(v)}
+            onFocus={() => { setActiveSearch('author'); setAuthorQuery(''); }}
+            onBlur={() => setActiveSearch(prev => prev === 'author' ? null : prev)}
+            loading={activeSearch === 'author' && isAuthorLoading}
+            notFoundContent={activeSearch === 'author' && isAuthorLoading ? 'Загрузка...' : null}
+            options={authorOptions}
           />
         </Form.Item>
-
-        {(!initialAuthorId && !initialVerifierId) && (
-          <Form.Item name="autoTransferTest" valuePropName="checked">
-            <Checkbox defaultChecked>
-              Автоматически перенести тест
-            </Checkbox>
-          </Form.Item>
-        )}
-
         <Form.Item
           name="verifierId"
           label="Проверяющий"
@@ -268,17 +275,22 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
           <Select
             showSearch
             placeholder="Выберите проверяющего"
-            optionFilterProp="children"
-            filterOption={(input, option) =>
-              (option?.label as string).toLowerCase().includes(input.toLowerCase())
-            }
-            options={users.map(user => ({
-              value: user.id,
-              label: `${user.lastname} ${user.firstname}`.trim()
-            }))}
+            filterOption={false}
+            onSearch={(v) => setVerifierQuery(v)}
+            onFocus={() => { setActiveSearch('verifier'); setVerifierQuery(''); }}
+            onBlur={() => setActiveSearch(prev => prev === 'verifier' ? null : prev)}
+            loading={activeSearch === 'verifier' && isVerifierLoading}
+            notFoundContent={activeSearch === 'verifier' && isVerifierLoading ? 'Загрузка...' : null}
+            options={verifierOptions}
           />
         </Form.Item>
-
+         {(!initialAuthorId && !initialVerifierId) && (
+          <Form.Item name="autoTransferTest" valuePropName="checked">
+            <Checkbox defaultChecked>
+              Автоматически перенести тест
+            </Checkbox>
+          </Form.Item>
+        )}
         {isDocumentType && (
           <>
             <Form.Item label="Текущий файл">

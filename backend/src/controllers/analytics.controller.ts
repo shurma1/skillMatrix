@@ -141,6 +141,31 @@ class AnalyticsController {
 		}
 	}
 	
+	async datesFamiliarization(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { skillId } = req.params;
+			
+			const data = await AnalyticsService.datesFamiliarization(skillId);
+			
+			res.json(data);
+		} catch (err) {
+			next(err);
+		}
+	}
+
+	async downloadDatesFamiliarization(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { skillId } = req.params;
+			
+			const file = await AnalyticsService.downloadDatesFamiliarization(skillId);
+			res.setHeader('Content-Type', file.contentType);
+			res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(file.filename)}`);
+			res.send(file.buffer);
+		} catch (err) {
+			next(err);
+		}
+	}
+	
 }
 
 export default new AnalyticsController();

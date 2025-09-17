@@ -1,107 +1,51 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query/react';
-import type { RootState } from './store';
-import { logout, setTokens } from './authSlice';
-import type { TokenDTO } from '../types/api/auth';
-import {API_BASE_URL} from "@/config/api.ts";
-import { setServerOnline, setRefreshingTokens } from './appSlice';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import type { BaseQueryFn } from '@reduxjs/toolkit/query/react';
+import { logout } from './authSlice';
+import { setServerOnline } from './appSlice';
+import { authManager } from '@/utils/AuthManager';
 
-const rawBaseQuery = fetchBaseQuery({
-  baseUrl: API_BASE_URL,
-  prepareHeaders: (headers, { getState }) => {
-  const state = getState() as RootState;
-    const token = state.auth.accessToken;
-  if (token) headers.set('Authorization', `Bearer ${token}`);
-    return headers;
-  },
-  credentials: 'include',
-});
-
-// Глобальное состояние для отслеживания процесса refresh
-let isRefreshing = false;
-let refreshPromise: Promise<any> | null = null;
-
-const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (
-  args,
-  api,
-  extraOptions,
-) => {
-  let result = await rawBaseQuery(args, api, extraOptions);
-  // Mark offline on network error (status undefined or 'FETCH_ERROR')
-  if ((result as any).error && (!('status' in (result as any).error) || (result as any).error.status === 'FETCH_ERROR')) {
-    api.dispatch(setServerOnline(false));
-  } else {
+type ArgShape = { url: string; method?: string; body?: any; params?: Record<string,string|number|boolean|undefined>|undefined; responseType?: 'json'|'blob'|'text'; responseHandler?: (r: Response)=>Promise<any> };
+const baseQuery: BaseQueryFn<string | ArgShape , unknown, unknown> = async (arg, api) => {
+  const shape: ArgShape = typeof arg === 'string' ? { url: arg } : arg;
+  const { url, method = 'GET', body, params, responseType = 'json', responseHandler } = shape;
+  try {
+    const qs = params ? '?' + Object.entries(params).filter(([,v])=> v!==undefined).map(([k,v])=> encodeURIComponent(k)+'='+encodeURIComponent(String(v))).join('&') : '';
+    const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+    const finalBody = body && !isFormData && method !== 'GET' ? JSON.stringify(body) : (isFormData ? body : undefined);
+    const headers = body && !isFormData ? { 'Content-Type': 'application/json' } : undefined;
+    const res = await authManager.fetch(url + qs, { method, body: finalBody, headers });
     api.dispatch(setServerOnline(true));
-  }
-  
-  const isRefreshCall = typeof args === 'object' && (args as FetchArgs).url?.includes('/api/auth/refresh');
-  
-  if (result.error && result.error.status === 401 && !isRefreshCall) {
-    const state = api.getState() as RootState;
-    const hasRefresh = !!state.auth.refreshToken;
-    if (!hasRefresh) {
-      // Нет refresh токена — немедленно logout
+    if (responseHandler) return { data: await responseHandler(res) } as any;
+    if (responseType === 'blob') return { data: await res.blob() } as any;
+    if (responseType === 'text') return { data: await res.text() } as any;
+    return { data: await res.json() } as any;
+  } catch (e: any) {
+    // Unauthorized propagated from AuthManager after failed refresh
+    if (e?.message === 'Unauthorized') {
       api.dispatch(logout());
-      return result;
+      return { error: { status: 401, data: 'Unauthorized' } } as any;
     }
-    // Если refresh уже выполняется, ждем его завершения
-    if (isRefreshing && refreshPromise) {
-      try {
-        await refreshPromise;
-        // После завершения refresh повторяем оригинальный запрос
-        result = await rawBaseQuery(args, api, extraOptions);
-        return result;
-      } catch (error) {
-        // Если refresh неудачный, возвращаем ошибку авторизации
-        return result;
-      }
+    // AbortError (requests cancelled during refresh) — не считаем оффлайном
+    if (e?.name === 'AbortError') {
+      return { error: { status: 'ABORTED', data: 'Aborted' } } as any;
     }
-
-    // Запускаем refresh токенов
-    isRefreshing = true;
-    api.dispatch(setRefreshingTokens(true));
-    
-    refreshPromise = (async () => {
-      const refreshResult = await rawBaseQuery(
-        {
-          url: '/api/auth/refresh',
-          method: 'POST',
-          credentials: 'include',
-        },
-        api,
-        extraOptions,
-      );
-      
-      if (refreshResult.data) {
-        const tokens = refreshResult.data as TokenDTO;
-        api.dispatch(setTokens(tokens));
-        api.dispatch(setServerOnline(true));
-        return { success: true };
-      } else {
-        api.dispatch(logout());
-        throw new Error('Refresh failed');
-      }
-    })();
-
-    try {
-      await refreshPromise;
-      // Повторяем оригинальный запрос с новым токеном
-      result = await rawBaseQuery(args, api, extraOptions);
-    } catch (error) {
-      // Refresh failed, logout already called
-    } finally {
-      // Сбрасываем состояние refresh
-      isRefreshing = false;
-      refreshPromise = null;
-      api.dispatch(setRefreshingTokens(false));
+    // HTTP errors inside AuthManager come as Error('HTTP xxx') — сервер отвечал => онлайн
+    if (typeof e?.message === 'string' && /^HTTP \d{3}$/.test(e.message)) {
+      return { error: { status: Number(e.message.split(' ')[1]), data: e.message } } as any;
     }
+    // TypeError from fetch usually указывает на сетевую проблему (CORS/доступ/соединение)
+    if (e instanceof TypeError) {
+      api.dispatch(setServerOnline(false));
+      return { error: { status: 'NETWORK_ERROR', data: e.message } } as any;
+    }
+    // Default fallback — не считаем оффлайном чтобы избежать ложных флагов
+    return { error: { status: e?.status || 'FETCH_ERROR', data: e?.message || 'Error' } } as any;
   }
-  return result;
 };
 
 export const baseApi = createApi({
   reducerPath: 'api',
-  baseQuery: baseQueryWithReauth,
+  baseQuery,
   // Отключаем автоматический рефетч при изменении фокуса, чтобы избежать лишних запросов
   refetchOnFocus: false,
   // Отключаем автоматический рефетч при переподключении
@@ -109,18 +53,9 @@ export const baseApi = createApi({
   tagTypes: [
   'User','Skill','SkillVersions','JobRole','Tag','File','Image','Test','UserSkill','UserSkills','SkillUsers','JobRoleSkill','Profile','ProfileSkill','MyJobroles','MySkills','MyJobroleSkills','MyServicedSkills','MyPermissions','UserJobroleSkillsByJobrole'
   ],
-  endpoints: (builder) => ({
-    logout: builder.mutation<{success: boolean}, void>({
-      query: () => ({ url: '/api/auth/logout', method: 'POST' }),
-      async onQueryStarted(_, { dispatch, queryFulfilled }) {
-        try {
-          await queryFulfilled;
-        } finally {
-          dispatch(logout());
-        }
-      }
-    }),
+  endpoints: () => ({
+    // logout убран из RTK Query - теперь только через authManager.forceLogout()
   }),
 });
 
-export const { useLogoutMutation } = baseApi;
+export const { } = baseApi;

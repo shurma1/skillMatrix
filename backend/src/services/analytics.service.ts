@@ -7,6 +7,7 @@ import {formatDate} from "../utils/formatDate";
 import SkillRepository from "../repositories/skill.repository";
 import JobRoleRepository from "../repositories/jobRole.repository";
 import ExcelJS from 'exceljs';
+import {SkillConfirmType} from "../models/types/SkillConfirmType";
 
 class AnalyticsService {
 	async kpi() {
@@ -961,6 +962,122 @@ class AnalyticsService {
 			},
 			colLabels,
 			data
+		};
+	}
+	
+	async datesFamiliarization(skillId: string) {
+		const colLabels = ['ФИО', 'Дата ознакомления'];
+		
+		// Проверяем существование навыка
+		await SkillService.checkSkillExist(skillId);
+		
+		// Получаем всех пользователей связанных с навыком (прямо и через должности)
+		const allUsers = await SkillRepository.getAllUsersBySkillId(skillId);
+		
+		// Для каждого пользователя получаем подтверждения и ищем первое получение уровня 1 типа 'acquired'
+		const data = await Promise.all(
+			allUsers.map(async user => {
+				const fio = `${user.lastname} ${user.firstname}${user.patronymic ? ' ' + user.patronymic : ''}`;
+				
+				// Если текущий уровень пользователя равен 0, возвращаем null
+				if (user.currentLevel === 0) {
+					return {
+						fio,
+						date: null
+					};
+				}
+				
+				// Получаем все подтверждения пользователя по этому навыку
+				const confirmations = await UserService.getConfirmations(user.userId, skillId);
+				
+				// Ищем подтверждение с типом 'acquired' и уровнем 1
+				const acquiredConfirmation = confirmations.find(
+					confirmation =>
+						confirmation.type === SkillConfirmType.Acquired &&
+						confirmation.level === 1
+				);
+				
+				return {
+					fio,
+					date: acquiredConfirmation ? acquiredConfirmation.date : null
+				};
+			})
+		);
+		
+		return {
+			colLabels,
+			data
+		}
+	}
+
+	async downloadDatesFamiliarization(skillId: string) {
+		const analytics = await this.datesFamiliarization(skillId);
+
+		const workbook = new ExcelJS.Workbook();
+		const worksheet = workbook.addWorksheet('DatesFamiliarization');
+
+		const colLabels = analytics.colLabels as string[];
+		const data = analytics.data as {fio: string, date: Date | null}[];
+
+		// Header row
+		for (let j = 0; j < colLabels.length; j++) {
+			const cell = worksheet.getCell(1, j + 1);
+			cell.value = colLabels[j];
+			cell.font = { bold: true };
+			cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+		}
+
+		// Data rows
+		for (let i = 0; i < data.length; i++) {
+			const r = i + 2;
+			// ФИО
+			const fioCell = worksheet.getCell(r, 1);
+			fioCell.value = data[i].fio;
+			fioCell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+			
+			// Дата ознакомления
+			const dateCell = worksheet.getCell(r, 2);
+			if (data[i].date) {
+				dateCell.value = data[i].date;
+				dateCell.numFmt = 'dd.mm.yyyy';
+			} else {
+				dateCell.value = 'Не ознакомлен';
+			}
+			dateCell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+		}
+
+		// Column widths
+		worksheet.getColumn(1).width = 35; // ФИО
+		worksheet.getColumn(2).width = 20; // Дата ознакомления
+
+		// Borders
+		const lastRow = 1 + data.length;
+		const lastCol = colLabels.length;
+		for (let r = 1; r <= Math.max(lastRow, 2); r++) {
+			for (let c = 1; c <= lastCol; c++) {
+				worksheet.getCell(r, c).border = {
+					top: { style: 'thin' },
+					left: { style: 'thin' },
+					bottom: { style: 'thin' },
+					right: { style: 'thin' },
+				};
+			}
+		}
+
+		// Freeze header row
+		worksheet.views = [{ state: 'frozen', xSplit: 0, ySplit: 1 }];
+
+		const arrayBuffer = await workbook.xlsx.writeBuffer();
+		const buffer: Buffer = Buffer.isBuffer(arrayBuffer)
+			? (arrayBuffer as Buffer)
+			: Buffer.from(arrayBuffer as ArrayBuffer);
+
+		const dateStr = new Date().toISOString().slice(0, 10);
+		const filename = `dates_familiarization_${dateStr}.xlsx`;
+		return {
+			buffer,
+			filename,
+			contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 		};
 	}
 }

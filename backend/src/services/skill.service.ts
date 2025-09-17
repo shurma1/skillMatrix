@@ -17,7 +17,7 @@ import MailService from "./mail.service";
 import MailRepository from "../repositories/mail.repository";
 import {formatDate} from "../utils/formatDate";
 import {generateAuditReminderHtml} from "../utils/mailTemplates";
-import {SkillVersionInstance} from "../models/entities/SkillVersion";
+import {SkillType} from "../models/types/SkillType";
 
 const MOUNTS_BEFORE_AUDIT = config.get<number>('times.MOUNTS_BEFORE_AUDIT');
 const MOUNTS_TO_NOTIFY = config.get<number>('times.MOUNTS_TO_NOTIFY');
@@ -397,6 +397,9 @@ class SkillService {
 		const skills = await this.getAll();
 		
 		for (const skill of skills) {
+			if(skill.type === SkillType.Skill) {
+				continue; // для навыков не нужно оповещение
+			}
 			const auditDate = new Date(skill.auditDate);
 			
 			if(skill.authorId) {
@@ -435,6 +438,10 @@ class SkillService {
 			skills.push(...jobRoleSkills as UserSkillSearchDto)
 			
 			for(const skill of skills) {
+				if(skill.type === SkillType.Skill) { //Навыки не обнулять
+					continue;
+				}
+				
 				const confirmations = await UserService.getConfirmations(user.id, skill.skillId);
 				if(! confirmations.length) {
 					continue;
@@ -449,7 +456,7 @@ class SkillService {
 				const confirmationDate = new Date(confirmations[0].date);
 				
 				if(confirmationDate > auditDate) {
-					await UserService.addConfirmation(user.id, skill.skillId, SkillConfirmType.Debuff, 0);
+					await UserService.addConfirmation(user.id, skill.skillId, SkillConfirmType.AdminSet, 0);
 				}
 			}
 		}

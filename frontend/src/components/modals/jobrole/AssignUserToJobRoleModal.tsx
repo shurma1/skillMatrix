@@ -1,4 +1,7 @@
 import { Modal, Form, Select } from 'antd';
+import { useState } from 'react';
+import { useSearchUsersQuery } from '@/store/endpoints';
+import { useDebounce } from '@/hooks/useDebounce';
 import type { FC } from 'react';
 import type { UserDTO } from '@/types/api/auth';
 
@@ -24,6 +27,9 @@ const AssignUserToJobRoleModal: FC<AssignUserToJobRoleModalProps> = ({
   onSubmit
 }) => {
   const [form] = Form.useForm<FormData>();
+  const [query, setQuery] = useState('');
+  const debounced = useDebounce(query, 400);
+  const { data: searched, isFetching } = useSearchUsersQuery({ query: debounced });
 
   const handleOk = async () => {
     try {
@@ -40,12 +46,12 @@ const AssignUserToJobRoleModal: FC<AssignUserToJobRoleModalProps> = ({
     onCancel();
   };
 
-  const userOptions = users
-    .filter(user => !disabledUserIds.includes(user.id))
-    .map(user => ({
-      label: `${user.lastname} ${user.firstname} ${user.patronymic} (${user.login})`,
-      value: user.id
-    }));
+  const base = debounced ? (searched?.rows || []) : users;
+  const filtered = base.filter(u => !disabledUserIds.includes(u.id));
+  const userOptions = filtered.map(user => {
+    const fio = [user.firstname, user.lastname, (user as any).middlename || user.patronymic].filter(Boolean).join(' ');
+    return { label: `${fio} (${user.login})`, value: user.id };
+  });
 
   return (
     <Modal
@@ -71,7 +77,10 @@ const AssignUserToJobRoleModal: FC<AssignUserToJobRoleModalProps> = ({
           <Select
             showSearch
             placeholder="Выберите пользователя"
-            optionFilterProp="label"
+            filterOption={false}
+            onSearch={(v) => setQuery(v)}
+            loading={isFetching}
+            notFoundContent={isFetching ? 'Загрузка...' : undefined}
             options={userOptions}
           />
         </Form.Item>

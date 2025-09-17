@@ -192,44 +192,55 @@ class TestRepository {
 		return !! await UserTest.findOne({where: {userId, testId}});
 	}
 
-		async deleteUserTest(userId: string, testId: string): Promise<number> {
-			const userTests = await UserTest.findAll({ where: { userId, testId } });
+	async deleteUserTest(userId: string, testId: string): Promise<number> {
+		// Use a transaction to guarantee referential integrity in concurrent scenarios
+		const sequelize = UserTest.sequelize!; // reuse existing sequelize instance
+		return await sequelize.transaction(async (t) => {
+			// Fetch only ids and lock rows to avoid race conditions with parallel deletions
+			const userTests = await UserTest.findAll({
+				where: { userId, testId },
+				attributes: ['id'],
+				transaction: t,
+				lock: t.LOCK.UPDATE
+			});
 			if (!userTests.length) return 0;
 
 			const ids = userTests.map(ut => ut.id);
-			await UserTestResult.destroy({ where: { userTestId: ids } });
-			const deleted = await UserTest.destroy({ where: { id: ids } });
-			return deleted;
+			// Manually remove dependent results (no ON DELETE CASCADE defined on association)
+			await UserTestResult.destroy({ where: { userTestId: ids }, transaction: t });
+			const deleted = await UserTest.destroy({ where: { id: ids }, transaction: t });
+			return deleted; // number of UserTest rows removed
+		});
+	}
+
+	async updateTest(testId: string, data: CreateTestData): Promise<TestInstance> {
+		const test = await Test.findByPk(testId) as TestInstance | null;
+		if (!test) throw new Error('TEST_NOT_FOUND');
+
+		// Update basic fields
+		test.title = data.title;
+		test.needScore = data.needScore;
+		test.timeLimit = data.timeLimit;
+		test.questionsCount = data.questionsCount;
+		await test.save();
+
+		// Replace questions and answers
+		const existingQuestions = await Question.findAll({ where: { testId } });
+		const qIds = existingQuestions.map(q => q.id);
+		if (qIds.length) {
+			await AnswerVariant.destroy({ where: { questionId: qIds } });
+		}
+		await Question.destroy({ where: { testId } });
+
+		for (const q of data.questions) {
+			const question = await Question.create({ testId: test.id, text: q.text });
+			for (const av of q.answerVariants) {
+				await AnswerVariant.create({ questionId: question.id, text: av.text, isTrue: av.isTrue });
+			}
 		}
 
-			async updateTest(testId: string, data: CreateTestData): Promise<TestInstance> {
-				const test = await Test.findByPk(testId) as TestInstance | null;
-				if (!test) throw new Error('TEST_NOT_FOUND');
-
-				// Update basic fields
-				test.title = data.title;
-				test.needScore = data.needScore;
-				test.timeLimit = data.timeLimit;
-				test.questionsCount = data.questionsCount;
-				await test.save();
-
-				// Replace questions and answers
-				const existingQuestions = await Question.findAll({ where: { testId } });
-				const qIds = existingQuestions.map(q => q.id);
-				if (qIds.length) {
-					await AnswerVariant.destroy({ where: { questionId: qIds } });
-				}
-				await Question.destroy({ where: { testId } });
-
-				for (const q of data.questions) {
-					const question = await Question.create({ testId: test.id, text: q.text });
-					for (const av of q.answerVariants) {
-						await AnswerVariant.create({ questionId: question.id, text: av.text, isTrue: av.isTrue });
-					}
-				}
-
-				return test;
-			}
+		return test;
+	}
 }
 
 export default new TestRepository();

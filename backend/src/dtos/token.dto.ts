@@ -5,27 +5,27 @@
  *     TokenDTO:
  *       type: object
  *       properties:
- *         access_token:
+ *         accessToken:
  *           type: string
- *         refresh_token:
+ *         refreshToken:
  *           type: string
  *     RefreshRequestDTO:
  *       type: object
- *       required: [refresh_token]
+ *       required: [refreshToken]
  *       properties:
- *         refresh_token:
+ *         refreshToken:
  *           type: string
  */
 export class TokenDTO {
-	access_token: string;
-	refresh_token: string;
+	accessToken: string;
+	refreshToken: string;
 
 	constructor(
-		access_token: string,
-		refresh_token: string,
+		accessToken: string,
+		refreshToken: string,
 	) {
-		this.access_token = access_token;
-		this.refresh_token = refresh_token;
+		this.accessToken = accessToken;
+		this.refreshToken = refreshToken;
 	}
 
 }

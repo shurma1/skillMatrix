@@ -15,6 +15,9 @@ interface BaseProps {
   options: SelectOption[];
   onCancel: () => void;
   confirmLoading?: boolean;
+  remoteSearch?: boolean; // if true, don't use built-in filter, rely on onSearch
+  onSearchChange?: (value: string) => void;
+  searchLoading?: boolean;
 }
 
 interface SingleSelectProps extends BaseProps {
@@ -86,11 +89,14 @@ const SelectEntityModal: React.FC<SelectEntityModalProps> = (props) => {
           <Select
             showSearch
             placeholder={`Выберите ${fieldLabel.toLowerCase()}`}
-            filterOption={(input, option) =>
+            filterOption={props.remoteSearch ? false : (input, option) =>
               (option?.label as string)
                 .toLowerCase()
                 .includes(input.toLowerCase())
             }
+            onSearch={props.remoteSearch ? props.onSearchChange : undefined}
+            loading={props.searchLoading}
+            notFoundContent={props.searchLoading ? 'Загрузка...' : undefined}
             options={options}
           />
         </Form.Item>

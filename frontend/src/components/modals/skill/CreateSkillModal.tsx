@@ -9,8 +9,10 @@ import type { TagDTO, TagCreateDTO, TagUpdateDTO } from '@/types/api/tag';
 import {
   useCreateTagMutation,
   useUpdateTagMutation,
-  useSearchTagsQuery
+  useSearchTagsQuery,
+  useSearchUsersQuery
 } from '@/store/endpoints';
+import { useDebounce } from '@/hooks/useDebounce';
 import TagSelectWithActions from '../../shared/TagSelectWithActions';
 import CreateTagModal from '../tag/CreateTagModal';
 import EditTagModal from '../tag/EditTagModal';
@@ -36,7 +38,7 @@ export interface CreateSkillModalFormData extends Omit<CreateSkillDTO, 'approved
 const CreateSkillModal: FC<CreateSkillModalProps> = ({
   open,
   confirmLoading,
-  users,
+  users: _users, // renamed to indicate it's intentionally unused
   tags,
   onCancel,
   onSubmit
@@ -44,6 +46,12 @@ const CreateSkillModal: FC<CreateSkillModalProps> = ({
   const [form] = Form.useForm<CreateSkillModalFormData>();
   const [selectedCreateTags, setSelectedCreateTags] = useState<string[]>([]);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  // Independent search state for author & verifier
+  const [authorQuery, setAuthorQuery] = useState('');
+  const [verifierQuery, setVerifierQuery] = useState('');
+  const [activeSearch, setActiveSearch] = useState<'author' | 'verifier' | null>(null);
+  const debouncedAuthorQuery = useDebounce(authorQuery, 400);
+  const debouncedVerifierQuery = useDebounce(verifierQuery, 400);
   
   // Tag modals state
   const [isCreateTagOpen, setIsCreateTagOpen] = useState(false);
@@ -56,6 +64,8 @@ const CreateSkillModal: FC<CreateSkillModalProps> = ({
   const [createTag, { isLoading: isCreatingTag }] = useCreateTagMutation();
   const [updateTag, { isLoading: isUpdatingTag }] = useUpdateTagMutation();
   const { refetch: refetchTags } = useSearchTagsQuery({ query: '' });
+  const { data: authorUsersSearch, isFetching: isAuthorLoading } = useSearchUsersQuery({ query: debouncedAuthorQuery });
+  const { data: verifierUsersSearch, isFetching: isVerifierLoading } = useSearchUsersQuery({ query: debouncedVerifierQuery });
 
   const handleOk = () => {
     form.submit();
@@ -178,10 +188,17 @@ const CreateSkillModal: FC<CreateSkillModalProps> = ({
           >
             <Select
               showSearch
-              options={users.map(user => ({
-                value: user.id,
-                label: `${user.lastname} ${user.firstname}`.trim()
-              }))}
+              placeholder="Выберите проверяющего"
+              filterOption={false}
+              onSearch={(v) => setVerifierQuery(v)}
+              onFocus={() => { setActiveSearch('verifier'); setVerifierQuery(''); }}
+              onBlur={() => setActiveSearch(prev => prev === 'verifier' ? null : prev)}
+              loading={activeSearch === 'verifier' && isVerifierLoading}
+              notFoundContent={activeSearch === 'verifier' && isVerifierLoading ? 'Загрузка...' : null}
+              options={(verifierUsersSearch?.rows || []).map(user => {
+                const fio = [user.firstname, user.lastname, user.patronymic].filter(Boolean).join(' ');
+                return { value: user.id, label: fio };
+              })}
             />
           </Form.Item>
           
@@ -189,10 +206,17 @@ const CreateSkillModal: FC<CreateSkillModalProps> = ({
             <Select
               allowClear
               showSearch
-              options={users.map(user => ({
-                value: user.id,
-                label: `${user.lastname} ${user.firstname}`.trim()
-              }))}
+              placeholder="Выберите автора"
+              filterOption={false}
+              onSearch={(v) => setAuthorQuery(v)}
+              onFocus={() => { setActiveSearch('author'); setAuthorQuery(''); }}
+              onBlur={() => setActiveSearch(prev => prev === 'author' ? null : prev)}
+              loading={activeSearch === 'author' && isAuthorLoading}
+              notFoundContent={activeSearch === 'author' && isAuthorLoading ? 'Загрузка...' : null}
+              options={(authorUsersSearch?.rows || []).map(user => {
+                const fio = [user.firstname, user.lastname, user.patronymic].filter(Boolean).join(' ');
+                return { value: user.id, label: fio };
+              })}
             />
           </Form.Item>
           

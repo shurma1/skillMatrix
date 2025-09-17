@@ -1,4 +1,4 @@
-import { Tag } from '../models';
+import {Sequelize, Tag} from '../models';
 import { TagInstance } from '../models/entities/Tag';
 import { Op } from 'sequelize';
 
@@ -33,9 +33,15 @@ class TagRepository {
 	}
 
 	async search(query: string): Promise<TagInstance[]> {
+		const searchTerm = `%${query.toLowerCase()}%`;
+		
 		return await Tag.findAll({
 			where: {
-				name: { [Op.iLike]: `%${query}%` },
+				[Op.or]: [
+					Sequelize.literal(
+						`LOWER("name") LIKE '${searchTerm}'`
+					),
+				]
 			},
 		});
 	}

@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Card, Button, Table, Space, Typography, Tag } from 'antd';
 import { TeamOutlined, EyeOutlined, DownloadOutlined } from '@ant-design/icons';
-import { useGetAnalyticsSkillToUsersQuery, useDownloadAnalyticsSkillToUsersQuery } from '@/store/endpoints';
+import { useGetAnalyticsSkillToUsersQuery, useLazyDownloadAnalyticsSkillToUsersQuery } from '@/store/endpoints';
 import Loader from '@/components/Loader';
 
 const { Text, Title } = Typography;
@@ -16,7 +16,7 @@ const SkillToUsersCard: React.FC<SkillToUsersCardProps> = ({ skillId }) => {
   const { data, isFetching, error } = useGetAnalyticsSkillToUsersQuery(skillId, {
     skip: !expanded,
   });
-  const { refetch: refetchDownload, isFetching: isDownloading } = useDownloadAnalyticsSkillToUsersQuery(skillId, { skip: true });
+  const [triggerDownload, { isFetching: isDownloading }] = useLazyDownloadAnalyticsSkillToUsersQuery();
 
   const columns = useMemo(() => {
     if (!data) return [] as any[];
@@ -61,15 +61,19 @@ const SkillToUsersCard: React.FC<SkillToUsersCardProps> = ({ skillId }) => {
       extra={
         <Space>
           <Button icon={<DownloadOutlined />} onClick={async () => {
-            const res = await refetchDownload();
-            const payload = res.data as unknown as { blob: Blob; filename?: string } | undefined;
-            if (!payload) return;
-            const url = URL.createObjectURL(payload.blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = payload.filename || 'skillToUsers.xlsx';
-            a.click();
-            URL.revokeObjectURL(url);
+            try {
+              const res = await triggerDownload(skillId);
+              const payload = res.data as unknown as { blob: Blob; filename?: string } | undefined;
+              if (!payload) return;
+              const url = URL.createObjectURL(payload.blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = payload.filename || 'skillToUsers.xlsx';
+              a.click();
+              URL.revokeObjectURL(url);
+            } catch (error) {
+              console.error('Ошибка скачивания:', error);
+            }
           }} loading={isDownloading}>
             Скачать Excel
           </Button>
