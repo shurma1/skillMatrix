@@ -36,7 +36,6 @@ const SkillConfirmationsContainer: React.FC<SkillConfirmationsContainerProps> = 
   const {
     data: confirmations = [],
     isFetching: isLoadingConfirmations,
-    refetch: refetchConfirmations
   } = useListUserSkillConfirmationsQuery({
     id: userId,
     skillId
