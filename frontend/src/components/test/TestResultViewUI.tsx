@@ -38,11 +38,11 @@ const TestResultViewUI: React.FC<TestResultViewUIProps> = ({
 
   if (isLoading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '50vh' 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '50vh'
       }}>
         <Spin size="large" />
       </div>
@@ -53,12 +53,12 @@ const TestResultViewUI: React.FC<TestResultViewUIProps> = ({
     return (
       <Result
         status="error"
-        title="Ошибка загрузки результатов"
+        title="Данные результатов отсутствуют"
         subTitle="Не удалось загрузить результаты тестирования"
         extra={[
-          <Button 
-            type="primary" 
-            key="home" 
+          <Button
+            type="primary"
+            key="home"
             onClick={onNavigateHome}
           >
             На главную
@@ -74,10 +74,10 @@ const TestResultViewUI: React.FC<TestResultViewUIProps> = ({
   );
 
   return (
-    <div style={{ 
-      maxWidth: 800, 
-      margin: '0 auto', 
-      padding: '24px' 
+    <div style={{
+      maxWidth: 800,
+      margin: '0 auto',
+      padding: '24px'
     }}>
       <Result
         status={isPassed ? 'success' : 'error'}
@@ -135,20 +135,20 @@ const TestResultViewUI: React.FC<TestResultViewUIProps> = ({
             userAnswers.every(ua => ua.isTrue);
 
           return (
-            <div 
-              key={question.QuestionID} 
-              style={{ 
-                marginBottom: 24, 
-                padding: 16, 
+            <div
+              key={question.QuestionID}
+              style={{
+                marginBottom: 24,
+                padding: 16,
                 border: `1px solid ${token.colorBorder}`,
                 borderRadius: 4,
                 background: token.colorBgContainer,
               }}
             >
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                marginBottom: 12 
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                marginBottom: 12
               }}>
                 <Title level={5} style={{ margin: 0, marginRight: 8 }}>
                   Вопрос {index + 1}

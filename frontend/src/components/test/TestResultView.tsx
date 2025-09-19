@@ -52,11 +52,11 @@ const TestResultView: React.FC<TestResultViewProps> = ({
 
   if (isLoading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '50vh' 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '50vh'
       }}>
         <Spin size="large" />
       </div>
@@ -67,7 +67,7 @@ const TestResultView: React.FC<TestResultViewProps> = ({
     return (
       <Result
         status="error"
-        title="Ошибка загрузки результатов"
+        title="Данные результатов отсутствуют"
         subTitle="Не удалось загрузить результаты тестирования"
         extra={[
           <Button type="primary" key="home" onClick={onNavigateHome}>
@@ -145,20 +145,20 @@ const TestResultView: React.FC<TestResultViewProps> = ({
             userAnswers.every(ua => ua.isTrue);
 
           return (
-              <div 
-                key={question.QuestionID} 
-                style={{ 
-                  marginBottom: 24, 
-                  padding: 16, 
+              <div
+                key={question.QuestionID}
+                style={{
+                  marginBottom: 24,
+                  padding: 16,
                   border: `1px solid ${token.colorBorder}`,
                   borderRadius: 4,
                   background: token.colorBgContainer,
                 }}
               >
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  marginBottom: 12 
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  marginBottom: 12
                 }}>
                   <Title level={5} style={{ margin: 0, marginRight: 8 }}>
                     Вопрос {index + 1}

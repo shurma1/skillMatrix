@@ -40,8 +40,8 @@ export const isPowerpointDocument = (mimeType: string, fileName: string): boolea
 export const isExcelDocument = (mimeType: string, fileName: string): boolean => {
   return mimeType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
          mimeType === 'application/vnd.ms-excel' ||
-         fileName.toLowerCase().endsWith('.xlsx') ||
-         fileName.toLowerCase().endsWith('.xls');
+         mimeType === 'application/vnd.oasis.opendocument.spreadsheet' ||
+         /\.(xlsx|xls|xlsm|xlsb|ods)$/i.test(fileName);
 };
 
 /**
@@ -86,7 +86,14 @@ export const getDocumentTypeName = (mimeType: string, fileName: string): string 
   if (isDocxDocument(mimeType, fileName)) return 'Word документ (DOCX)';
   if (isDocDocument(mimeType, fileName)) return 'Word документ (DOC)';
   if (isPowerpointDocument(mimeType, fileName)) return 'PowerPoint презентация';
-  if (isExcelDocument(mimeType, fileName)) return 'Excel таблица';
+  if (isExcelDocument(mimeType, fileName)) {
+    if (/\.xlsx$/i.test(fileName)) return 'Excel таблица (XLSX)';
+    if (/\.xls$/i.test(fileName)) return 'Excel таблица (XLS)';
+    if (/\.xlsm$/i.test(fileName)) return 'Excel таблица с макросами (XLSM)';
+    if (/\.xlsb$/i.test(fileName)) return 'Excel двоичная книга (XLSB)';
+    if (/\.ods$/i.test(fileName)) return 'OpenDocument таблица (ODS)';
+    return 'Excel таблица';
+  }
   if (isTextDocument(mimeType, fileName)) return 'Текстовый документ';
   if (isImageDocument(mimeType, fileName)) return 'Изображение';
   return 'Документ';

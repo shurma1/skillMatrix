@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, Button, message, Spin, Alert, Space, Typography, Tabs } from 'antd';
-import { DownloadOutlined, FileTextOutlined, FileImageOutlined, FilePdfOutlined, FileUnknownOutlined } from '@ant-design/icons';
+import { DownloadOutlined, FileTextOutlined, FileImageOutlined, FilePdfOutlined, FileUnknownOutlined, FileExcelOutlined } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store/store';
 // API_BASE_URL no longer needed here; requests go through authManager
@@ -49,9 +49,10 @@ interface MammothLib {
 }
 
 interface XlsxLib {
-  read: (data: ArrayBuffer, options?: { type: string }) => Workbook;
+  read: (data: ArrayBuffer, options?: { type: string; cellStyles?: boolean; cellDates?: boolean }) => Workbook;
   utils: {
-    sheet_to_html: (worksheet: WorkSheet) => string;
+    sheet_to_html: (worksheet: WorkSheet, options?: { editable?: boolean; header?: string; footer?: string }) => string;
+    sheet_to_json: (worksheet: WorkSheet, options?: any) => any[];
   };
 }
 
@@ -77,7 +78,7 @@ const { Text } = Typography;
  * - Изображения (img)
  * - Текстовые файлы (pre)
  * - DOCX (mammoth с поддержкой изображений)
- * - XLSX (отображение листов в виде таблиц)
+ * - XLSX, XLS, XLSM, XLSB, ODS (отображение листов в виде таблиц)
  */
 const DocumentViewer: React.FC<DocumentViewerProps> = ({
   fileId,
@@ -122,7 +123,10 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
       return 'docx';
     }
     
-    if (/\.xlsx$/i.test(nameLower)) {
+    if (/\.(xlsx|xls|xlsm|xlsb|ods)$/i.test(nameLower) || 
+        mimeType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+        mimeType === 'application/vnd.ms-excel' ||
+        mimeType === 'application/vnd.oasis.opendocument.spreadsheet') {
       return 'xlsx';
     }
     
@@ -176,11 +180,65 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
         xlsxLib = await import('xlsx') as XlsxLib;
       }
 
-      const workbook = xlsxLib.read(arrayBuffer, { type: 'array' });
-      const sheets: XlsxSheet[] = workbook.SheetNames.map(sheetName => ({
-        name: sheetName,
-        html: xlsxLib!.utils.sheet_to_html(workbook.Sheets[sheetName])
-      }));
+      // Читаем файл с расширенными опциями для сохранения стилей
+      const workbook = xlsxLib.read(arrayBuffer, { 
+        type: 'array',
+        cellStyles: true,
+        cellDates: true
+      });
+      
+      if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+        throw new Error('Файл не содержит листов или поврежден');
+      }
+
+      const sheets: XlsxSheet[] = workbook.SheetNames.map(sheetName => {
+        const worksheet = workbook.Sheets[sheetName];
+        if (!worksheet) {
+          return { name: sheetName, html: '<p>Лист пуст или не может быть прочитан</p>' };
+        }
+        
+        try {
+          // Используем расширенные опции для лучшего HTML
+          let html = xlsxLib!.utils.sheet_to_html(worksheet, {
+            editable: false,
+            header: `<style>
+              table { border-collapse: collapse; width: 100%; font-family: Arial, sans-serif; }
+              td, th { 
+                border: 1px solid #ccc; 
+                padding: 4px 8px; 
+                text-align: left;
+                color: #262626 !important;
+                background-color: #fff !important;
+              }
+              th { 
+                background-color: #f5f5f5 !important; 
+                font-weight: bold; 
+                color: #262626 !important;
+              }
+              tr:nth-child(even) td { background-color: #f9f9f9 !important; }
+              tr:hover td { background-color: #e6f7ff !important; }
+            </style>`,
+            footer: ''
+          });
+          
+          // Дополнительная очистка и улучшение HTML
+          html = html
+            // Удаляем проблематичные inline стили
+            .replace(/style="[^"]*color:\s*white[^"]*"/gi, '')
+            .replace(/style="[^"]*background:\s*white[^"]*"/gi, '')
+            .replace(/style="[^"]*background-color:\s*white[^"]*"/gi, '')
+            .replace(/style="[^"]*background-color:\s*#ffffff[^"]*"/gi, '')
+            .replace(/style="[^"]*background-color:\s*#fff[^"]*"/gi, '')
+            // Заменяем пустые ячейки на неразрывный пробел для лучшего отображения
+            .replace(/<td><\/td>/g, '<td>&nbsp;</td>')
+            .replace(/<th><\/th>/g, '<th>&nbsp;</th>');
+          
+          return { name: sheetName, html: html || '<p>Лист пуст</p>' };
+        } catch (error) {
+          console.warn(`Ошибка обработки листа "${sheetName}":`, error);
+          return { name: sheetName, html: '<p>Ошибка обработки листа</p>' };
+        }
+      });
 
       if (isMounted) {
         setXlsxSheets(sheets);
@@ -386,21 +444,54 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
       case 'xlsx':
         return xlsxSheets.length > 0 ? (
           <div style={{ maxHeight: '70vh', overflow: 'auto' }}>
+            <Alert
+              type="info"
+              showIcon
+              message="Предварительный просмотр Excel"
+              description="Отображается только содержимое ячеек. Изображения, диаграммы и сложное форматирование не поддерживаются. Скачайте файл для полного просмотра."
+              style={{ marginBottom: 16 }}
+              closable
+            />
             <Tabs
               items={xlsxSheets.map((sheet, index) => ({
                 key: index.toString(),
                 label: sheet.name,
                 children: (
                   <div 
+                    className="xlsx-content"
                     dangerouslySetInnerHTML={{ __html: sheet.html }}
-                    style={{ overflow: 'auto' }}
+                    style={{ 
+                      overflow: 'auto',
+                      fontSize: '12px',
+                      lineHeight: '1.4',
+                      color: '#262626',
+                      background: '#fff'
+                    }}
                   />
                 )
               }))}
+              size="small"
+              type="card"
             />
           </div>
         ) : (
-          <Alert type="warning" message="Не удалось обработать XLSX файл" />
+          <Alert 
+            type="warning" 
+            showIcon 
+            message="Не удалось обработать Excel файл" 
+            description="Файл может быть поврежден или содержать неподдерживаемые элементы. Скачайте файл для просмотра в Excel."
+            action={
+              <Button 
+                type="primary" 
+                icon={<DownloadOutlined />}
+                onClick={handleDownload}
+                loading={isDownloading}
+                size="small"
+              >
+                Скачать
+              </Button>
+            }
+          />
         );
 
       case 'unsupported':
@@ -439,7 +530,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
       case 'docx':
         return <FileTextOutlined style={{ color: '#1890ff' }} />;
       case 'xlsx':
-        return <FileTextOutlined style={{ color: '#52c41a' }} />;
+        return <FileExcelOutlined style={{ color: '#52c41a' }} />;
       default:
         return <FileUnknownOutlined style={{ color: '#999' }} />;
     }

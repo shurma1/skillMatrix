@@ -3,7 +3,7 @@ import { Modal, Form, Select, Upload, Input } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { Checkbox } from 'antd';
 import type { UploadProps } from 'antd';
-import { useSearchUsersQuery, useUploadFileMutation, useGetSkillQuery } from '@/store/endpoints';
+import { useSearchUsersQuery, useUploadFileMutation, useGetSkillQuery, useGetUserQuery } from '@/store/endpoints';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { CreateSkillVersionDTO, UpdateSkillVersionDTO } from '@/types/api/skill';
 import type { UserDTO } from '@/types/api/auth';
@@ -69,6 +69,10 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
   const { data: verifierUsersSearch, isFetching: isVerifierLoading } = useSearchUsersQuery({ query: debouncedVerifierQuery });
   const { data: skill } = useGetSkillQuery(skillId, { skip: !skillId });
   const [uploadFile] = useUploadFileMutation();
+
+  // Запросы для получения данных предустановленных пользователей
+  const { data: initialAuthor } = useGetUserQuery(initialAuthorId as string, { skip: !initialAuthorId });
+  const { data: initialVerifier } = useGetUserQuery(initialVerifierId as string, { skip: !initialVerifierId });
 
   // Проверяем, нужен ли файл для данного типа навыка
   const isDocumentType = skill?.type === 'document';
@@ -202,36 +206,33 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
     },
   };
 
-  // Функция для создания фантомной опции для уже выбранного пользователя
-  const createPlaceholderOption = (userId: string) => ({
-    value: userId,
-    label: `Загрузка... (${userId.slice(0, 8)})`
-  });
-
   // Функция для формирования опций пользователей
-  const createUserOptions = (users: UserDTO[], selectedUserId?: string) => {
-    const options = users.map(user => {
-      const nameParts = [user.lastname, user.firstname, user.patronymic]
-        .filter(part => part && typeof part === 'string' && part.trim().length > 0);
+  const createUserOptions = (users: UserDTO[]) => {
+    return users.map(user => {
+      const nameParts = [user.lastname, user.firstname, user.patronymic].filter(part => part && part.length > 0);
       const fio = nameParts.length > 0 
           ? nameParts.join(' ') 
-          : user.login || `Пользователь ${user.id.slice(0, 8)}`;
+          : user.login || user.id;
       return { value: user.id, label: fio };
     });
-
-    // Если есть выбранный пользователь, которого нет в текущих результатах поиска,
-    // добавляем для него фантомную опцию
-    if (selectedUserId && !users.find(user => user.id === selectedUserId)) {
-      options.unshift(createPlaceholderOption(selectedUserId));
-    }
-
-    return options;
   };
 
   const authorUsers = authorUsersSearch?.rows || [];
   const verifierUsers = verifierUsersSearch?.rows || [];
-  const authorOptions = createUserOptions(authorUsers, initialAuthorId);
-  const verifierOptions = createUserOptions(verifierUsers, initialVerifierId);
+  
+  // Добавляем предустановленных пользователей к опциям, если они не найдены в поиске
+  const authorUsersWithInitial = [...authorUsers];
+  if (initialAuthor && !authorUsers.find(u => u.id === initialAuthor.id)) {
+    authorUsersWithInitial.unshift(initialAuthor);
+  }
+  
+  const verifierUsersWithInitial = [...verifierUsers];
+  if (initialVerifier && !verifierUsers.find(u => u.id === initialVerifier.id)) {
+    verifierUsersWithInitial.unshift(initialVerifier);
+  }
+  
+  const authorOptions = createUserOptions(authorUsersWithInitial);
+  const verifierOptions = createUserOptions(verifierUsersWithInitial);
 
   return (
     <Modal
@@ -278,12 +279,16 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
         >
           <Select
             showSearch
-            allowClear
-            showArrow
             placeholder="Выберите автора"
             filterOption={false}
             onSearch={(v) => setAuthorQuery(v)}
-            onFocus={() => { setActiveSearch('author'); setAuthorQuery(''); }}
+            onFocus={() => {
+              setActiveSearch('author');
+              // Если поиск пустой и нет выбранного значения, инициируем поиск
+              if (!authorQuery && !form.getFieldValue('authorId')) {
+                setAuthorQuery('');
+              }
+            }}
             onBlur={() => setActiveSearch(prev => prev === 'author' ? null : prev)}
             loading={activeSearch === 'author' && isAuthorLoading}
             notFoundContent={activeSearch === 'author' && isAuthorLoading ? 'Загрузка...' : null}
@@ -297,12 +302,16 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
         >
           <Select
             showSearch
-            allowClear
-            showArrow
             placeholder="Выберите проверяющего"
             filterOption={false}
             onSearch={(v) => setVerifierQuery(v)}
-            onFocus={() => { setActiveSearch('verifier'); setVerifierQuery(''); }}
+            onFocus={() => {
+              setActiveSearch('verifier');
+              // Если поиск пустой и нет выбранного значения, инициируем поиск
+              if (!verifierQuery && !form.getFieldValue('verifierId')) {
+                setVerifierQuery('');
+              }
+            }}
             onBlur={() => setActiveSearch(prev => prev === 'verifier' ? null : prev)}
             loading={activeSearch === 'verifier' && isVerifierLoading}
             notFoundContent={activeSearch === 'verifier' && isVerifierLoading ? 'Загрузка...' : null}
