@@ -13,7 +13,8 @@
     "lint": "eslint src --ext .ts,.js",
     "lint:fix": "eslint src --ext .ts,.js --fix",
     "create:admin": "ts-node scripts/create-admin.ts",
-    "create:permissions": "ts-node scripts/create-permissions.ts"
+    "create:permissions": "ts-node scripts/create-permissions.ts",
+    "update:skill-versions": "ts-node scripts/updateSkillVersions.ts"
   },
   "keywords": [],
   "author": "",

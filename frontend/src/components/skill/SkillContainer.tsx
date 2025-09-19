@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { message, Space } from 'antd';
-import { 
-  useGetSkillQuery, 
+import {
+  useGetSkillQuery,
   useListSkillVersionsQuery,
-  useCreateTestMutation, 
+  useCreateTestMutation,
   useGetTestQuery,
   useGetUserQuery,
   useGetFileInfoQuery,
@@ -41,19 +41,19 @@ const SkillContainer: React.FC = () => {
   // no direct user usage here
 
   // API queries
-  const { 
-    data: skill, 
-    isFetching: isSkillLoading 
+  const {
+    data: skill,
+    isFetching: isSkillLoading
   } = useGetSkillQuery(skillId, { skip: !skillId });
 
-  const { 
+  const {
     data: versions = []
   } = useListSkillVersionsQuery(skillId, { skip: !skillId });
 
-  const { 
-    data: test, 
+  const {
+    data: test,
     isFetching: isTestLoading,
-    refetch: refetchTest 
+    refetch: refetchTest
   } = useGetTestQuery(skill?.testId as string, { skip: !skill?.testId });
 
   // Получаем результаты теста по testId (для текущего пользователя)
@@ -104,20 +104,20 @@ const SkillContainer: React.FC = () => {
   const effectiveSkillRow = mySkillRow || jobroleSkillRow;
 
   // User queries для автора и проверяющего
-  const { 
-    data: author, 
-    isFetching: isAuthorLoading 
+  const {
+    data: author,
+    isFetching: isAuthorLoading
   } = useGetUserQuery(skill?.authorId as string, { skip: !skill?.authorId });
 
-  const { 
-    data: verifier, 
-    isFetching: isVerifierLoading 
+  const {
+    data: verifier,
+    isFetching: isVerifierLoading
   } = useGetUserQuery(skill?.verifierId as string, { skip: !skill?.verifierId });
 
   // File queries
-  const { 
-    data: fileInfo, 
-    isFetching: isFileInfoLoading 
+  const {
+    data: fileInfo,
+    isFetching: isFileInfoLoading
   } = useGetFileInfoQuery(skill?.fileId as string, { skip: !skill?.fileId });
 
   // API mutations
@@ -186,12 +186,9 @@ const SkillContainer: React.FC = () => {
   // Проверяем доступность кнопки ревизии
   const canMakeRevision = useMemo(() => {
     if (!skill || !currentUser) return false;
-    
-    // Пользователи с правами "EDIT_ALL" могут проводить ревизию
-    if (hasPermission('EDIT_ALL')) return true;
-    
-    // Авторы и проверяющие могут проводить ревизию
-    if (skill.authorId === currentUser.id || skill.verifierId === currentUser.id) {
+	
+    // Пользователи с правами "EDIT_ALL", Авторы и проверяющие могут проводить ревизию
+    if (skill.authorId === currentUser.id || skill.verifierId === currentUser.id || hasPermission('EDIT_ALL')) {
       // Проверяем что текущая дата больше чем (дата ревизии - один месяц)
       if (skill.auditDate) {
         const auditDate = new Date(skill.auditDate);
@@ -221,8 +218,9 @@ const SkillContainer: React.FC = () => {
   const handleOpenEdit = useCallback(() => setIsEditOpen(true), []);
   const handleCloseEdit = useCallback(() => setIsEditOpen(false), []);
 
-  const handleOpenRevision = useCallback(() => setIsRevisionOpen(true), []);
-  const handleCloseRevision = useCallback(() => setIsRevisionOpen(false), []);
+  const handleOpenRevision = useCallback(() => {
+    setIsRevisionOpen(true);
+  }, []);
 
   const handleSubmitEdit = useCallback(async (values: UpdateSkillDTO) => {
     if (!skillId) return;
@@ -239,11 +237,16 @@ const SkillContainer: React.FC = () => {
     try {
       await makeRevision(values).unwrap();
       message.success('Ревизия проведена успешно');
-      setIsRevisionOpen(false);
-    } catch {
+      // Модальное окно закроется само через onCancel в handleFinish
+    } catch (error) {
       message.error('Ошибка при проведении ревизии');
+      throw error; // Пробрасываем ошибку для модального окна
     }
   }, [makeRevision]);
+
+  const handleCloseRevision = useCallback(() => {
+    setIsRevisionOpen(false);
+  }, []);
 
   const handleCreateTest = useCallback(async (data: CreateTestDTO) => {
     try {
@@ -289,7 +292,7 @@ const SkillContainer: React.FC = () => {
 
   return (
     <Space direction="vertical" size={24} style={{ width: '100%' }}>
-      <SkillInfoCard 
+      <SkillInfoCard
         skill={skill as SkillWithCurrentVersionDTO | undefined}
         loading={isSkillLoading}
         author={author}

@@ -23,6 +23,7 @@ import TestRepository from "./test.repository";
 import user from "../models/entities/User";
 import SkillService from "../services/skill.service";
 import {ApiError} from "../error/apiError";
+import {SkillNotify} from "../models/model";
 
 export interface SkillWithTagsInstance extends SkillInstance {
 	tags: TagInstance[];
@@ -557,6 +558,21 @@ class SkillRepository {
 		);
 	}
 	
+	async isSkillNotified(skillId: string): Promise<boolean> {
+		return !! await SkillNotify.findOne({where: {skillId}});
+	}
+	
+	async markSkillAsNotified(skillId: string) {
+		const isAlreadyMarked = await this.isSkillNotified(skillId);
+		
+		if(isAlreadyMarked) return;
+		
+		await SkillNotify.create({skillId});
+	}
+	
+	async unmarkSkillAsNotified(skillId: string) {
+		await SkillNotify.destroy({where: {skillId}});
+	}
 	
 	private unionSkill(skill: SkillInstance, skillVersion: SkillVersionInstance, tags: TagType[], fileId?: string, testId?: string): SkillWithVersion  {
 		return {

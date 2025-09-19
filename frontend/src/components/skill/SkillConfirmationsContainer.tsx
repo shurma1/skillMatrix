@@ -4,8 +4,10 @@ import PermissionButton from '@/components/shared/PermissionButton';
 import { CheckCircleOutlined } from '@ant-design/icons';
 import {
   useListUserSkillConfirmationsQuery,
-  useAddUserSkillConfirmationMutation
+  useAddUserSkillConfirmationMutation,
+  api
 } from '@/store/endpoints';
+import { useAppDispatch } from '@/hooks/storeHooks';
 import type { ConfirmationCreateDTO } from '@/types/api/user';
 import SkillConfirmationsList from './SkillConfirmationsList';
 import AddConfirmationModal from '@/components/modals/skill/AddConfirmationModal';
@@ -29,6 +31,7 @@ const SkillConfirmationsContainer: React.FC<SkillConfirmationsContainerProps> = 
   forceAllowAdd = false,
 }) => {
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const dispatch = useAppDispatch();
 
   const {
     data: confirmations = [],
@@ -39,33 +42,46 @@ const SkillConfirmationsContainer: React.FC<SkillConfirmationsContainerProps> = 
     skillId
   });
 
-  const [addConfirmation, { isLoading: isAddingConfirmation }] = 
-    useAddUserSkillConfirmationMutation();
+  const [addConfirmation, { isLoading: isAddingConfirmation }] = useAddUserSkillConfirmationMutation();
 
-  const handleAddConfirmation = async (
-    confirmationData: ConfirmationCreateDTO
-  ) => {
+  const handleAddConfirmation = async (confirmationData: ConfirmationCreateDTO) => {
     try {
-      await addConfirmation({
-        id: userId,
-        skillId,
-        body: confirmationData
-      }).unwrap();
-      
+      await addConfirmation({ id: userId, skillId, body: confirmationData }).unwrap();
+      // Точечный апдейт jobrole списка (если в контексте должности)
+      if (_jobroleId) {
+        try {
+          dispatch(
+            api.util.updateQueryData(
+              'listUserSkillsInJobrole',
+              { id: userId, jobroleId: _jobroleId },
+              (draft: any[]) => {
+                const item = draft?.find(s => s.skillId === skillId);
+                if (item) {
+                  // Обновляем уровень и цель при необходимости
+                  
+                  const lvl = confirmationData.level;
+                  if (typeof lvl === 'number') {
+                    item.level = lvl;
+                    if (item.targetLevel < lvl) item.targetLevel = lvl;
+                    item.isConfirmed = item.level >= item.targetLevel;
+                  }
+                }
+              }
+            )
+          );
+        } catch { /* silent */ }
+      }
       message.success('Подтверждение добавлено');
       setAddModalOpen(false);
-      refetchConfirmations();
-  // If inside jobrole context, optimistically refetch its list by invalidating cache via manual refetch hook of parent not available here
-  // Rely on API tag invalidation; optional: emit custom event
+      // Без refetch: оптимистическое обновление уже внесено в кэш мутацией
     } catch (error) {
-      const errorMessage = 
-        error && 
-        typeof error === 'object' && 
+      const errorMessage =
+        error &&
+        typeof error === 'object' &&
         'data' in error &&
         typeof (error as { data?: { message?: string } }).data?.message === 'string'
           ? (error as { data: { message: string } }).data.message
           : 'Ошибка добавления подтверждения';
-      
       message.error(errorMessage);
     }
   };

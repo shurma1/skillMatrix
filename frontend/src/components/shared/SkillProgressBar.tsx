@@ -38,4 +38,10 @@ const SkillProgressBar: React.FC<SkillProgressBarProps> = ({
   );
 };
 
-export default SkillProgressBar;
+export default React.memo(SkillProgressBar, (prevProps, nextProps) => {
+  return (
+    prevProps.level === nextProps.level &&
+    prevProps.target === nextProps.target &&
+    prevProps.height === nextProps.height
+  );
+});

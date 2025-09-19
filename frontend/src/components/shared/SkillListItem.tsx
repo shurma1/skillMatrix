@@ -137,4 +137,28 @@ const SkillListItem: React.FC<SkillListItemProps> = ({
   );
 };
 
-export default React.memo(SkillListItem);
+export default React.memo(SkillListItem, (prevProps, nextProps) => {
+  // Сравниваем основные пропсы
+  if (
+    prevProps.showConfirmations !== nextProps.showConfirmations ||
+    prevProps.userId !== nextProps.userId ||
+    prevProps.jobroleId !== nextProps.jobroleId ||
+    prevProps.showTestInfo !== nextProps.showTestInfo
+  ) {
+    return false;
+  }
+  
+  // Глубокое сравнение важных полей skill
+  const prevSkill = prevProps.skill;
+  const nextSkill = nextProps.skill;
+  
+  return (
+    prevSkill.skillId === nextSkill.skillId &&
+    prevSkill.title === nextSkill.title &&
+    prevSkill.level === nextSkill.level &&
+    prevSkill.targetLevel === nextSkill.targetLevel &&
+    prevSkill.isConfirmed === nextSkill.isConfirmed &&
+    prevSkill.isNew === nextSkill.isNew &&
+    JSON.stringify(prevSkill.tags) === JSON.stringify(nextSkill.tags)
+  );
+});

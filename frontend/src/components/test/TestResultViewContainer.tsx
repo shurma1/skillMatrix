@@ -27,12 +27,14 @@ const TestResultViewContainer: React.FC = () => {
   };
 
   const handleDelete = async () => {
-    if (!testId || !testResult?.userId) return;
+    if (!testId) return;
+    const uid = testResult?.userId ? String(testResult.userId) : userIdParam;
+    if (!uid) return;
     try {
-      await deleteUserTestResult({ testId, userId: String(testResult.userId) }).unwrap();
+      await deleteUserTestResult({ testId, userId: uid }).unwrap();
       message.success('Результат удалён');
-      navigate(-1);
-    } catch (e) {
+      navigate('/');
+    } catch {
       message.error('Не удалось удалить результат');
     }
   };
@@ -43,7 +45,7 @@ const TestResultViewContainer: React.FC = () => {
       isLoading={isLoading}
       error={error}
       onNavigateHome={handleNavigateHome}
-  canDelete={Boolean(canDeleteResp?.can)}
+  	  canDelete={Boolean(canDeleteResp?.can)}
       onDelete={handleDelete}
       deleting={isDeleting}
     />

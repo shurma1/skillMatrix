@@ -188,6 +188,8 @@ class SkillService {
 			}
 		}))
 		
+		await SkillRepository.unmarkSkillAsNotified(skillId);
+		
 		return this.getVersion(skillVersion.id);
 	}
 	
@@ -407,13 +409,14 @@ class SkillService {
 					const user = await UserService.getByID(skill.authorId);
 					
 					if(user.email) {
-						if (!(await MailRepository.wasNotifiedInLastMonths(user.email, 1))) {
+						const isAlreadyNotified = await SkillRepository.isSkillNotified(skill.skillId);
+						if (! isAlreadyNotified) {
 							await MailService.SendMail({
 								recipient: user.email,
 								title: `Напоминание. Проведите ревизию документа ${skill.title} до ${formatDate(auditDate)}`,
 								HTML: generateAuditReminderHtml(skill.title, formatDate(auditDate) || '', `${user.firstname} ${user.patronymic}`)
 							});
-							await MailRepository.create(user.email);
+							await SkillRepository.markSkillAsNotified(skill.skillId);
 						}
 					}
 				}
@@ -486,6 +489,7 @@ class SkillService {
 		}
 		
 		await SkillRepository.updateRevisionDate(skill.id, newRevisionDate);
+		await SkillRepository.unmarkSkillAsNotified(skill.id);
 	}
 
 	async getAllUsersBySkillId(skillId: string) {

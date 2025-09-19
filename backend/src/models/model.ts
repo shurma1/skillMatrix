@@ -21,6 +21,7 @@ import Question from './entities/Question';
 import AnswerVariant from './entities/AnswerVariant';
 import Token from "./entities/Token";
 import Mail from "./entities/Mail";
+import SkillNotify from './entities/SkillNotify';
 
 // User <-> Token (one-to-many)
 User.hasMany(Token);
@@ -92,7 +93,6 @@ Question.belongsTo(Test, { foreignKey: 'testId' });
 Question.hasMany(AnswerVariant, { foreignKey: 'questionId' });
 AnswerVariant.belongsTo(Question, { foreignKey: 'questionId' });
 
-
 JobRoleToSkills.belongsTo(JobRole, { foreignKey: 'jobRoleId' });
 JobRole.hasMany(JobRoleToSkills, { foreignKey: 'jobRoleId' });
 
@@ -123,5 +123,6 @@ export {
 	Question,
 	AnswerVariant,
 	Token,
-	Mail
+	Mail,
+	SkillNotify
 };

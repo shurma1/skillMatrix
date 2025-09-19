@@ -300,7 +300,20 @@ export const api = baseApi.injectEndpoints({
       invalidatesTags: ['File'],
     }),
     confirmFileAcknowledgment: build.mutation<void, string>({
-      query: (id) => ({ url: `/api/file/${id}/confirm`, method: 'GET' }),
+      query: (id) => ({
+        url: `/api/file/${id}/confirm`,
+        method: 'GET',
+        responseHandler: async (response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          // Для статус кода 200 без тела ответа просто возвращаем undefined
+          return undefined;
+        }
+      }),
+      transformResponse: (_response, _meta) => {
+        return undefined;
+      },
     }),
 
     // Image
@@ -560,7 +573,14 @@ export const api = baseApi.injectEndpoints({
       query: (body) => ({
         url: '/api/skill/makeRevision',
         method: 'POST',
-        body
+        body,
+        responseHandler: async (response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          // Для статус кода 200 без тела ответа просто возвращаем undefined
+          return undefined;
+        }
       }),
       invalidatesTags: (_, __, { skillId }) => [{ type: 'Skill' as const, id: skillId }],
     }),
@@ -660,6 +680,13 @@ export const api = baseApi.injectEndpoints({
       query: ({ testId, userId }) => ({
         url: `/api/test/${testId}/result/user/${userId}`,
         method: 'DELETE',
+		  responseHandler: async (response) => {
+			  if (!response.ok) {
+				  throw new Error(`HTTP ${response.status}`);
+			  }
+			  // Для статус кода 200 без тела ответа просто возвращаем undefined
+			  return undefined;
+		  },
       }),
       invalidatesTags: (_r, _e, { testId }) => [{ type: 'Test' as const, id: testId }],
     }),
@@ -694,6 +721,7 @@ export const api = baseApi.injectEndpoints({
     listUserSkills: build.query<UserSkillSearchDto[], string>({
       query: (id) => `/api/user/${id}/skill`,
       keepUnusedDataFor: 0,
+      providesTags: (_, __, id) => [{ type: 'UserSkills' as const, id }],
     }),
     addUserSkill: build.mutation<
       UserSkillDto,
@@ -778,10 +806,68 @@ export const api = baseApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-  invalidatesTags: (_result, _error, { id }) => [
-        // Broad user skills list
-        { type: 'UserSkills' as const, id },
-        // Note: We cannot know jobroleId here; specific panel refetch is driven by the list's own providesTags when it's active
+      async onQueryStarted({ id, skillId, body }, { dispatch, queryFulfilled }) {
+        // 1. Оптимистично обновляем список подтверждений
+        const patchConfirmations = dispatch(
+          api.util.updateQueryData('listUserSkillConfirmations', { id, skillId }, (draft: ConfirmationDTO[]) => {
+            // Подставляем минимально необходимые поля; неизвестные ставим по умолчанию
+            draft.unshift({
+              id: 'temp-' + Date.now(),
+              level: (body as any).level ?? 0,
+              date: new Date().toISOString(),
+              version: (draft[0]?.version || 0) + 1
+            } as ConfirmationDTO);
+          })
+        );
+        // 2. Обновляем уровень и targetLevel в списке user skills (если загружен)
+        const patchUserSkills = dispatch(
+          api.util.updateQueryData('listUserSkills', id, (draft: UserSkillSearchDto[]) => {
+            const skill = draft.find(s => s.skillId === skillId);
+            if (skill) {
+              skill.level = body.level; // текущий достигнутый
+              if (skill.targetLevel < body.level) {
+                skill.targetLevel = body.level; // синхронизация требуемого при прямом подтверждении
+              }
+              skill.isConfirmed = skill.level >= skill.targetLevel;
+            }
+          })
+        );
+        // 3. Аналогично обновляем кеш getMySkills (если актуально)
+        const patchMySkills = dispatch(
+          api.util.updateQueryData('getMySkills', undefined, (draft: UserSkillSearchDto[]) => {
+            const skill = draft?.find(s => s.skillId === skillId);
+            if (skill) {
+              skill.level = body.level;
+              if (skill.targetLevel < body.level) {
+                skill.targetLevel = body.level;
+              }
+              skill.isConfirmed = skill.level >= skill.targetLevel;
+            }
+          })
+        );
+        try {
+          const { data } = await queryFulfilled;
+          // Заменяем временное подтверждение реальным (по id)
+          dispatch(
+            api.util.updateQueryData('listUserSkillConfirmations', { id, skillId }, (draft: ConfirmationDTO[]) => {
+              const idx = draft.findIndex(c => c.id.startsWith('temp-'));
+              if (idx !== -1) {
+                draft[idx] = data;
+              } else {
+                draft.unshift(data);
+              }
+            })
+          );
+        } catch (e) {
+          // Откат изменений при ошибке
+            patchConfirmations.undo();
+            patchUserSkills.undo();
+            patchMySkills.undo();
+        }
+      },
+      // Узкая инвалидация: только сам skill для точного обновления при необходимости
+      invalidatesTags: (_result, _error, { skillId }) => [
+        { type: 'Skill' as const, id: skillId },
       ],
     }),
     deleteUserSkillConfirmation: build.mutation<void, { id: string; skillId: string; confirmationId: string }>({
@@ -789,8 +875,14 @@ export const api = baseApi.injectEndpoints({
         url: `/api/user/${id}/skill/${skillId}/confirmation/${confirmationId}`,
         method: 'DELETE'
       }),
-  invalidatesTags: (_result, _error, { id }) => [
+      invalidatesTags: (_result, _error, { id, skillId }) => [
         { type: 'UserSkills' as const, id },
+        // Invalidate the skill cache to update targetLevel when confirmation is deleted
+        { type: 'Skill' as const, id: skillId },
+        // Invalidate my skills cache (if it's current user)
+        'MySkills',
+        // Invalidate jobrole skills cache (we don't know jobroleId, so invalidate all)
+        'MyJobroleSkills',
       ],
     }),
 
@@ -867,10 +959,12 @@ export const api = baseApi.injectEndpoints({
     getMySkills: build.query<UserSkillSearchDto[], void>({
       query: () => '/api/me/skills',
       keepUnusedDataFor: 0,
+      providesTags: ['MySkills'],
     }),
     getMySkillsInJobrole: build.query<UserSkillSearchDto[], string>({
       query: (jobroleId) => `/api/me/jobrole/${jobroleId}/skills`,
       keepUnusedDataFor: 0,
+      providesTags: (_, __, jobroleId) => [{ type: 'MyJobroleSkills' as const, id: jobroleId }],
     }),
     getMyServicedSkills: build.query<SkillWithCurrentVersionDTO[], void>({
       query: () => '/api/me/servicedSkills',

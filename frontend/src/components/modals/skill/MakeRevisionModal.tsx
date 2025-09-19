@@ -10,7 +10,7 @@ interface MakeRevisionModalProps {
   skillId: string;
   currentAuditDate?: string;
   onCancel: () => void;
-  onSubmit: (values: MakeRevisionDTO) => void;
+  onSubmit: (values: MakeRevisionDTO) => Promise<void>;
 }
 
 const MakeRevisionModal: FC<MakeRevisionModalProps> = ({
@@ -30,6 +30,9 @@ const MakeRevisionModal: FC<MakeRevisionModalProps> = ({
       form.setFieldsValue({
         date: defaultDate
       });
+    } else {
+      // Сбрасываем форму при закрытии модального окна
+      form.resetFields();
     }
   }, [open, form]);
 
@@ -37,16 +40,23 @@ const MakeRevisionModal: FC<MakeRevisionModalProps> = ({
     form.submit();
   };
 
-  const handleFinish = (values: { date: dayjs.Dayjs }) => {
-    const formattedDate = values.date.toISOString();
-    onSubmit({
-      skillId,
-      date: formattedDate
-    });
+  const handleFinish = async (values: { date: dayjs.Dayjs }) => {
+    try {
+      const formattedDate = values.date.toISOString();
+      await onSubmit({
+        skillId,
+        date: formattedDate
+      });
+      
+      // Успешно выполнено - закрываем модальное окно
+      onCancel();
+    } catch (error) {
+      // Ошибка уже обработана в родительском компоненте
+      // Модальное окно остается открытым для повторной попытки
+    }
   };
 
   const handleCancel = () => {
-    form.resetFields();
     onCancel();
   };
 
