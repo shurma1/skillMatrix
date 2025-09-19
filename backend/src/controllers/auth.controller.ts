@@ -1,6 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
 import AuthService from "../services/auth.service";
 import TokenService from "../services/token.service";
+import { isDev } from '../index';
+
+// Настройки куки для разных окружений
+const getCookieOptions = () => ({
+	httpOnly: true,
+	secure: false,
+	sameSite: 'lax' as const,
+	...(isDev && { domain: 'localhost' }),
+});
 
 class AuthController {
 	async login(req: Request, res: Response, next: NextFunction) {
@@ -9,12 +18,7 @@ class AuthController {
 
 			const authDTO = await AuthService.login(identifier, password);
 			
-			res.cookie('refreshToken', authDTO.refreshToken, {
-				httpOnly: true,
-				secure: false,
-				sameSite: 'lax',
-				domain: 'localhost',
-			});
+			res.cookie('refreshToken', authDTO.refreshToken, getCookieOptions());
 			
 			res.json(authDTO);
 		} catch (err) {
@@ -32,12 +36,7 @@ class AuthController {
 			
 			const tokens = await AuthService.refresh(refreshToken);
 			
-			res.cookie('refreshToken', tokens.refreshToken, {
-				httpOnly: true,
-				secure: false,
-				sameSite: 'lax',
-				domain: 'localhost',
-			});
+			res.cookie('refreshToken', tokens.refreshToken, getCookieOptions());
 			res.json(tokens);
 		} catch (err) {
 			next(err);
@@ -51,12 +50,7 @@ class AuthController {
 				await TokenService.RemoveToken(refreshToken);
 			}
 			// Очищаем куку (должны совпасть опции с установкой)
-			res.clearCookie('refreshToken', {
-				httpOnly: true,
-				secure: false,
-				sameSite: 'lax',
-				domain: 'localhost'
-			});
+			res.clearCookie('refreshToken', getCookieOptions());
 			res.json({ success: true });
 		} catch (err) {
 			next(err);

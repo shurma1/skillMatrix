@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Form, Select, Upload, Input } from 'antd';
-import dayjs from 'dayjs';
+import dayjs, { type Dayjs } from 'dayjs';
 import { Checkbox } from 'antd';
 import type { UploadProps } from 'antd';
 import { useSearchUsersQuery, useUploadFileMutation, useGetSkillQuery } from '@/store/endpoints';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { CreateSkillVersionDTO, UpdateSkillVersionDTO } from '@/types/api/skill';
+import type { UserDTO } from '@/types/api/auth';
 import { extractErrMessage } from '../../../utils/errorHelpers';
 import DatePickerWithPaste from '@/components/DatePickerWithPaste.tsx';
 
@@ -31,8 +32,8 @@ interface CreateVersionModalProps {
 interface FormData {
   authorId: string;
   verifierId: string;
-  approvedDate?: any;
-  auditDate?: any;
+  approvedDate?: Dayjs;
+  auditDate?: Dayjs;
   autoTransferTest?: boolean;
 }
 
@@ -101,7 +102,7 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
     try {
       const values = await form.validateFields();
       // Build payload with only changed fields for update
-      const payload: UpdateSkillVersionDTO = {};
+      const payload: UpdateSkillVersionDTO & { approvedDate?: string; auditDate?: string } = {};
       // Approved date diff
       if (values.approvedDate) {
         const iso = typeof values.approvedDate === 'string'
@@ -109,7 +110,7 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
           : values.approvedDate.toDate ? values.approvedDate.toDate().toISOString() : undefined;
         if (iso) {
           // always include for create; for update include when provided
-          (payload as any).approvedDate = iso;
+          payload.approvedDate = iso;
         }
       }
       if (values.auditDate) {
@@ -117,11 +118,11 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
           ? values.auditDate
           : values.auditDate.toDate ? values.auditDate.toDate().toISOString() : undefined;
         if (isoAudit) {
-          (payload as any).auditDate = isoAudit;
+          payload.auditDate = isoAudit;
         }
-      } else if ((payload as any).approvedDate) {
+      } else if (payload.approvedDate) {
         // fallback генерируем дату ревизии +3 года
-        (payload as any).auditDate = dayjs((payload as any).approvedDate).add(3, 'year').toISOString();
+        payload.auditDate = dayjs(payload.approvedDate).add(3, 'year').toISOString();
       }
 
       // Author diff
@@ -147,18 +148,18 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
 
       // For create flow, ensure required fields present
       if (!initialAuthorId && !initialVerifierId) {
-        const createPayload: CreateSkillVersionDTO = {
+        const createPayload: CreateSkillVersionDTO & { approvedDate?: string; auditDate?: string } = {
           fileId,
           authorId: values.authorId,
           verifierid: values.verifierId
         };
-        if (payload && (payload as any).approvedDate) {
-          (createPayload as any).approvedDate = (payload as any).approvedDate;
+        if (payload && payload.approvedDate) {
+          createPayload.approvedDate = payload.approvedDate;
         }
-        if (payload && (payload as any).auditDate) {
-          (createPayload as any).auditDate = (payload as any).auditDate;
-        } else if ((createPayload as any).approvedDate) {
-          (createPayload as any).auditDate = dayjs((createPayload as any).approvedDate).add(3, 'year').toISOString();
+        if (payload && payload.auditDate) {
+          createPayload.auditDate = payload.auditDate;
+        } else if (createPayload.approvedDate) {
+          createPayload.auditDate = dayjs(createPayload.approvedDate).add(3, 'year').toISOString();
         }
         if (onSubmitEx) {
           await onSubmitEx(createPayload, { autoTransferTest: values.autoTransferTest });
@@ -201,16 +202,36 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
     },
   };
 
+  // Функция для создания фантомной опции для уже выбранного пользователя
+  const createPlaceholderOption = (userId: string) => ({
+    value: userId,
+    label: `Загрузка... (${userId.slice(0, 8)})`
+  });
+
+  // Функция для формирования опций пользователей
+  const createUserOptions = (users: UserDTO[], selectedUserId?: string) => {
+    const options = users.map(user => {
+      const nameParts = [user.lastname, user.firstname, user.patronymic]
+        .filter(part => part && typeof part === 'string' && part.trim().length > 0);
+      const fio = nameParts.length > 0 
+          ? nameParts.join(' ') 
+          : user.login || `Пользователь ${user.id.slice(0, 8)}`;
+      return { value: user.id, label: fio };
+    });
+
+    // Если есть выбранный пользователь, которого нет в текущих результатах поиска,
+    // добавляем для него фантомную опцию
+    if (selectedUserId && !users.find(user => user.id === selectedUserId)) {
+      options.unshift(createPlaceholderOption(selectedUserId));
+    }
+
+    return options;
+  };
+
   const authorUsers = authorUsersSearch?.rows || [];
   const verifierUsers = verifierUsersSearch?.rows || [];
-  const authorOptions = authorUsers.map(user => {
-    const fio = [user.lastname, user.firstname, user.patronymic].filter(Boolean).join(' ');
-    return { value: user.id, label: fio };
-  });
-  const verifierOptions = verifierUsers.map(user => {
-    const fio = [user.lastname, user.firstname, user.patronymic].filter(Boolean).join(' ');
-    return { value: user.id, label: fio };
-  });
+  const authorOptions = createUserOptions(authorUsers, initialAuthorId);
+  const verifierOptions = createUserOptions(verifierUsers, initialVerifierId);
 
   return (
     <Modal
@@ -257,6 +278,8 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
         >
           <Select
             showSearch
+            allowClear
+            showArrow
             placeholder="Выберите автора"
             filterOption={false}
             onSearch={(v) => setAuthorQuery(v)}
@@ -274,6 +297,8 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
         >
           <Select
             showSearch
+            allowClear
+            showArrow
             placeholder="Выберите проверяющего"
             filterOption={false}
             onSearch={(v) => setVerifierQuery(v)}

@@ -30,9 +30,16 @@ export const server = http.createServer(app);
 
 app.use(cookieParser());
 
-const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || `http://${HOST}:${PORT}`;
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || `http://${HOST}:5173`;
 app.use(cors({
-	origin: isDev ? 'http://localhost:5173' : FRONTEND_ORIGIN,
+	origin: isDev ? 'http://localhost:5173' : [
+		FRONTEND_ORIGIN,
+		`http://${HOST}:5173`,
+		// Добавляем поддержку для различных IP адресов в локальной сети
+		/^http:\/\/192\.168\.\d+\.\d+:\d+$/,
+		/^http:\/\/10\.\d+\.\d+\.\d+:\d+$/,
+		/^http:\/\/172\.(1[6-9]|2\d|3[01])\.\d+\.\d+:\d+$/
+	],
 	credentials: true,
 	methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 	allowedHeaders: ['Content-Type', 'Authorization']
