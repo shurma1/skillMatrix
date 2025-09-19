@@ -52,7 +52,7 @@ jobrole_users AS (
 ),
 -- Объединяем всех пользователей и берем максимальный targetLevel
 all_users AS (
-  SELECT 
+  SELECT
     "skillId",
     "userId",
     login,
@@ -72,7 +72,7 @@ SELECT
   au."skillId",
   s.title,
   s.type,
-  COALESCE(ucs.level, 0) AS "currentLevel",
+  COALESCE(ucs.level, 0) AS "level",
   au."targetLevel",
   CASE WHEN ucs.level >= au."targetLevel" THEN true ELSE false END AS "isConfirmed",
   CASE WHEN COALESCE(ul.last_viewed_version, 0) >= COALESCE(last_sv.version, 0) THEN false ELSE true END AS "isNew",
