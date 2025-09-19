@@ -440,6 +440,8 @@ class SkillService {
 			//@ts-expect-error
 			skills.push(...jobRoleSkills as UserSkillSearchDto)
 			
+			const now = new Date(Date.now());
+			
 			for(const skill of skills) {
 				if(skill.type === SkillType.Skill) { //Навыки не обнулять
 					continue;
@@ -449,7 +451,7 @@ class SkillService {
 				if(! confirmations.length) {
 					continue;
 				}
-				const auditDate = new Date(skill.auditDate);
+				
 				const lastConfirmation = confirmations[0];
 				
 				if(lastConfirmation.level === 0) {
@@ -457,8 +459,8 @@ class SkillService {
 				}
 				
 				const confirmationDate = new Date(confirmations[0].date);
-				
-				if(confirmationDate > auditDate) {
+				confirmationDate.setMonth(confirmationDate.getMonth() + MOUNTS_BEFORE_AUDIT)
+				if(confirmationDate < now) {
 					await UserService.addConfirmation(user.id, skill.skillId, SkillConfirmType.AdminSet, 0);
 				}
 			}
