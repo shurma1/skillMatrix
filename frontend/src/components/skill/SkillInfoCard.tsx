@@ -53,12 +53,7 @@ const SkillInfoCard: React.FC<SkillInfoCardProps> = ({
       <Skeleton active paragraph={{ rows: 6 }} />
     ) : (
       <Space direction="vertical" size={16} style={{ width: '100%' }}>
-        <div>
-          <Title level={4} style={{ margin: 0 }}>{skill.title}</Title>
-          <Text type="secondary">
-            Тип: {skill.type === 'document' ? 'Документ' : 'Навык'}
-          </Text>
-        </div>
+        
         
         <Space direction="vertical" size={8} style={{ width: '100%' }}>
           <Paragraph style={{ margin: 0 }}>

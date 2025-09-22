@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { message, Space } from 'antd';
+import {message, Skeleton, Space, Typography} from 'antd';
 import {
   useGetSkillQuery,
   useListSkillVersionsQuery,
@@ -31,6 +31,9 @@ import DatesFamiliarizationCard from '@/components/analytics/DatesFamiliarizatio
 import EditSkillModal from '@/components/modals/skill/EditSkillModal';
 import MakeRevisionModal from '@/components/modals/skill/MakeRevisionModal';
 // no duplicate imports
+
+const { Title, Text } = Typography;
+
 
 const SkillContainer: React.FC = () => {
   const { skillId = '' } = useParams<{ skillId: string }>();
@@ -291,71 +294,81 @@ const SkillContainer: React.FC = () => {
   // duplicate effect removed (handled above)
 
   return (
-    <Space direction="vertical" size={24} style={{ width: '100%' }}>
-      <SkillInfoCard
-        skill={skill as SkillWithCurrentVersionDTO | undefined}
-        loading={isSkillLoading}
-        author={author}
-        verifier={verifier}
-        loadingUsers={loadingUsers}
-        versionCount={versionCount}
-        onOpenVersions={handleOpenVersions}
-        onEditSkill={handleOpenEdit}
-        onMakeRevision={handleOpenRevision}
-        canEditSkill={canEditSkill}
-        canOpenVersions={canOpenVersions}
-        canMakeRevision={canMakeRevision}
-      />
-      <EditSkillModal
-        open={isEditOpen}
-        confirmLoading={isUpdatingSkill}
-        skill={skill as SkillWithCurrentVersionDTO | undefined}
-        tags={allTags}
-        onCancel={handleCloseEdit}
-        onSubmit={handleSubmitEdit}
-      />
-      
-      <MakeRevisionModal
-        open={isRevisionOpen}
-        confirmLoading={isMakingRevision}
-        skillId={skillId}
-        currentAuditDate={skill?.auditDate}
-        onCancel={handleCloseRevision}
-        onSubmit={handleSubmitRevision}
-      />
-      
-      {hasFile && (
-        <FileCard
-          fileInfo={fileInfo}
-          loading={isFileInfoLoading}
-          skillId={skillId}
-        />
-      )}
-      
-      <SkillTestCard
-        test={test as PreviewTestDto | undefined}
-        hasTest={hasTest}
-        loading={isTestLoading}
-        creating={isCreatingTest}
-        deleting={false}
-        userTestResult={userTestResult}
-        isUserTestResultLoading={isUserTestResultLoading}
-        onCreateTest={handleCreateTest}
-        onDeleteTest={handleDeleteTest}
-        onEditTest={handleEditTest}
-        onTakeTest={handleTakeTest}
-        onGoToCreateTest={handleGoToCreateTest}
-        onViewTestResults={handleViewTestResults}
-  canTakeTest={canTakeTestByLevel}
-  takeTestDisabledReason={takeTestDisabledReason}
-      />
-
-  {/* Analytics: Users by Skill (visible only with ANALYTICS_VIEW permission) */}
-  {canSeeAnalytics && <SkillToUsersCard skillId={skillId} />}
-  
-  {/* Analytics: Dates of Familiarization (visible only with ANALYTICS_VIEW permission) */}
-  {canSeeAnalytics && <DatesFamiliarizationCard skillId={skillId} />}
-    </Space>
+	  <Space direction="vertical" size={24} style={{width: '100%'}}>
+		  
+		  {
+			  !skill
+			  && <Skeleton active paragraph={{rows: 1}}/>
+			  || <div>
+					<Title level={4} style={{margin: 0}}>{(skill as SkillWithCurrentVersionDTO)?.title}</Title>
+					<Text type="secondary">
+						Тип: {(skill as SkillWithCurrentVersionDTO)?.type === 'document' ? 'Документ' : 'Навык'}
+					</Text>
+				</div>
+		  }
+		  
+		  {hasFile && (
+			  <FileCard
+				  fileInfo={fileInfo}
+				  loading={isFileInfoLoading}
+				  skillId={skillId}
+			  />
+		  )}
+		  
+		  <SkillTestCard
+			  test={test as PreviewTestDto | undefined}
+			  hasTest={hasTest}
+			  loading={isTestLoading}
+			  creating={isCreatingTest}
+			  deleting={false}
+			  userTestResult={userTestResult}
+			  isUserTestResultLoading={isUserTestResultLoading}
+			  onCreateTest={handleCreateTest}
+			  onDeleteTest={handleDeleteTest}
+			  onEditTest={handleEditTest}
+			  onTakeTest={handleTakeTest}
+			  onGoToCreateTest={handleGoToCreateTest}
+			  onViewTestResults={handleViewTestResults}
+			  canTakeTest={canTakeTestByLevel}
+			  takeTestDisabledReason={takeTestDisabledReason}
+		  />
+		  <SkillInfoCard
+			  skill={skill as SkillWithCurrentVersionDTO | undefined}
+			  loading={isSkillLoading}
+			  author={author}
+			  verifier={verifier}
+			  loadingUsers={loadingUsers}
+			  versionCount={versionCount}
+			  onOpenVersions={handleOpenVersions}
+			  onEditSkill={handleOpenEdit}
+			  onMakeRevision={handleOpenRevision}
+			  canEditSkill={canEditSkill}
+			  canOpenVersions={canOpenVersions}
+			  canMakeRevision={canMakeRevision}
+		  />
+		  <EditSkillModal
+			  open={isEditOpen}
+			  confirmLoading={isUpdatingSkill}
+			  skill={skill as SkillWithCurrentVersionDTO | undefined}
+			  tags={allTags}
+			  onCancel={handleCloseEdit}
+			  onSubmit={handleSubmitEdit}
+		  />
+		  
+		  <MakeRevisionModal
+			  open={isRevisionOpen}
+			  confirmLoading={isMakingRevision}
+			  skillId={skillId}
+			  currentAuditDate={skill?.auditDate}
+			  onCancel={handleCloseRevision}
+			  onSubmit={handleSubmitRevision}
+		  />
+		  {/* Analytics: Users by Skill (visible only with ANALYTICS_VIEW permission) */}
+		  {canSeeAnalytics && <SkillToUsersCard skillId={skillId}/>}
+		  
+		  {/* Analytics: Dates of Familiarization (visible only with ANALYTICS_VIEW permission) */}
+		  {canSeeAnalytics && <DatesFamiliarizationCard skillId={skillId}/>}
+	  </Space>
   );
 };
 
