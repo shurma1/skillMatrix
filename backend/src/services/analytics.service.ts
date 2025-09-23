@@ -767,18 +767,26 @@ class AnalyticsService {
 
 		const colLabels = analytics.colLabels as string[];
 		const data = analytics.data as (string | number | null)[][];
+		const skill = analytics.skill;
 
-		// Header row
+		// Title row with skill name
+		const titleCell = worksheet.getCell(1, 1);
+		titleCell.value = `Навык: ${skill.title}${skill.version ? ` (версия ${skill.version})` : ''}`;
+		titleCell.font = { bold: true, size: 14 };
+		titleCell.alignment = { vertical: 'middle', horizontal: 'left' };
+		worksheet.mergeCells(1, 1, 1, colLabels.length);
+
+		// Header row (moved to row 3)
 		for (let j = 0; j < colLabels.length; j++) {
-			const cell = worksheet.getCell(1, j + 1);
+			const cell = worksheet.getCell(3, j + 1);
 			cell.value = colLabels[j];
 			cell.font = { bold: true };
 			cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
 		}
 
-		// Data rows
+		// Data rows (starting from row 4)
 		for (let i = 0; i < data.length; i++) {
-			const r = i + 2;
+			const r = i + 4;
 			for (let j = 0; j < colLabels.length; j++) {
 				const cell = worksheet.getCell(r, j + 1);
 				const value = data[i]?.[j] ?? null;
@@ -801,10 +809,10 @@ class AnalyticsService {
 			worksheet.getColumn(j).width = 14;
 		}
 
-		// Borders
-		const lastRow = 1 + data.length;
+		// Borders (starting from row 3)
+		const lastRow = 3 + data.length;
 		const lastCol = colLabels.length;
-		for (let r = 1; r <= Math.max(lastRow, 2); r++) {
+		for (let r = 3; r <= Math.max(lastRow, 4); r++) {
 			for (let c = 1; c <= lastCol; c++) {
 				worksheet.getCell(r, c).border = {
 					top: { style: 'thin' },
@@ -815,7 +823,8 @@ class AnalyticsService {
 			}
 		}
 
-		worksheet.views = [{ state: 'frozen', xSplit: 0, ySplit: 1 }];
+		// Freeze header row (row 3)
+		worksheet.views = [{ state: 'frozen', xSplit: 0, ySplit: 3 }];
 
 		const arrayBuffer = await workbook.xlsx.writeBuffer();
 		const buffer: Buffer = Buffer.isBuffer(arrayBuffer)
@@ -971,6 +980,9 @@ class AnalyticsService {
 		// Проверяем существование навыка
 		await SkillService.checkSkillExist(skillId);
 		
+		// Получаем информацию о навыке
+		const skill = await SkillService.get(skillId);
+		
 		// Получаем всех пользователей связанных с навыком (прямо и через должности)
 		const allUsers = await SkillRepository.getAllUsersBySkillId(skillId);
 		
@@ -1005,6 +1017,12 @@ class AnalyticsService {
 		);
 		
 		return {
+			skill: {
+				id: skill?.id,
+				title: skill?.title,
+				version: skill?.version,
+				documentId: skill?.documentId
+			},
 			colLabels,
 			data
 		}
@@ -1018,18 +1036,26 @@ class AnalyticsService {
 
 		const colLabels = analytics.colLabels as string[];
 		const data = analytics.data as {fio: string, date: Date | null}[];
+		const skill = analytics.skill;
 
-		// Header row
+		// Title row with skill name
+		const titleCell = worksheet.getCell(1, 1);
+		titleCell.value = `Навык: ${skill.title}${skill.version ? ` (версия ${skill.version})` : ''}`;
+		titleCell.font = { bold: true, size: 14 };
+		titleCell.alignment = { vertical: 'middle', horizontal: 'left' };
+		worksheet.mergeCells(1, 1, 1, colLabels.length);
+
+		// Header row (moved to row 3)
 		for (let j = 0; j < colLabels.length; j++) {
-			const cell = worksheet.getCell(1, j + 1);
+			const cell = worksheet.getCell(3, j + 1);
 			cell.value = colLabels[j];
 			cell.font = { bold: true };
 			cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
 		}
 
-		// Data rows
+		// Data rows (starting from row 4)
 		for (let i = 0; i < data.length; i++) {
-			const r = i + 2;
+			const r = i + 4;
 			// ФИО
 			const fioCell = worksheet.getCell(r, 1);
 			fioCell.value = data[i].fio;
@@ -1050,10 +1076,10 @@ class AnalyticsService {
 		worksheet.getColumn(1).width = 35; // ФИО
 		worksheet.getColumn(2).width = 20; // Дата ознакомления
 
-		// Borders
-		const lastRow = 1 + data.length;
+		// Borders (starting from row 3)
+		const lastRow = 3 + data.length;
 		const lastCol = colLabels.length;
-		for (let r = 1; r <= Math.max(lastRow, 2); r++) {
+		for (let r = 3; r <= Math.max(lastRow, 4); r++) {
 			for (let c = 1; c <= lastCol; c++) {
 				worksheet.getCell(r, c).border = {
 					top: { style: 'thin' },
@@ -1064,8 +1090,8 @@ class AnalyticsService {
 			}
 		}
 
-		// Freeze header row
-		worksheet.views = [{ state: 'frozen', xSplit: 0, ySplit: 1 }];
+		// Freeze header row (row 3)
+		worksheet.views = [{ state: 'frozen', xSplit: 0, ySplit: 3 }];
 
 		const arrayBuffer = await workbook.xlsx.writeBuffer();
 		const buffer: Buffer = Buffer.isBuffer(arrayBuffer)
