@@ -12,7 +12,6 @@ import {DailyTaskService} from "./services/dailyTask.service";
 import SkillService from "./services/skill.service";
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import SkillRepository from "./repositories/skill.repository";
 import * as http from "node:http";
 import {getLocalIp} from "./utils/getLocalIp";
 initEnv();
@@ -80,8 +79,6 @@ const start  = async () => {
 	
 	await Sequelize.authenticate();
 	await Sequelize.sync();
-	
-	await SkillRepository.isAuthorOrVerifier('c3ecec0c-1438-44f4-a969-d745a6642f63', '3d5dd56b-0732-48fe-afac-2a99a15bd704')
 	
 	const ADDRESS =`http://${isDev ? 'localhost' : HOST}:${PORT}`;
 	
