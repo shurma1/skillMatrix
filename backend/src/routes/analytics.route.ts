@@ -9,6 +9,11 @@ router.get(
 	AnalyticsController.getResultPreview
 );
 
+router.get(
+	'/downloadResultPreview',
+	AnalyticsController.downloadResultPreview
+);
+
 /**
  * @openapi
  * /api/analytics/datesFamiliarization/{skillId}:

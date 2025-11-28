@@ -185,6 +185,26 @@ class AnalyticsController {
 		}
 	}
 	
+	async downloadResultPreview(req: Request, res: Response, next: NextFunction) {
+		try {
+			let {query} = req.query;
+			
+			if(typeof query === 'undefined') {
+				query = '';
+			}
+			else {
+				query = decodeURIComponent(query as string);
+			}
+			
+			const file = await AnalyticsService.downloadResultPreview(query);
+			res.setHeader('Content-Type', file.contentType);
+			res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(file.filename)}`);
+			res.send(file.buffer);
+		} catch (err) {
+			next(err);
+		}
+	}
+	
 }
 
 export default new AnalyticsController();

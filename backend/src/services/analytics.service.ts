@@ -1125,6 +1125,87 @@ class AnalyticsService {
 		const result = await UserRepository.getResultPreview(query);
 		return result;
 	}
+	
+	async downloadResultPreview(query: string) {
+		const data = await UserRepository.getResultPreview(query);
+
+		const workbook = new ExcelJS.Workbook();
+		const worksheet = workbook.addWorksheet('ResultPreview');
+
+		// Дата печати в самом верху
+		const printDate = new Date();
+		const printDateStr = `${String(printDate.getDate()).padStart(2, '0')}.${String(printDate.getMonth() + 1).padStart(2, '0')}.${printDate.getFullYear()}`;
+		const printDateCell = worksheet.getCell(1, 1);
+		printDateCell.value = `Дата печати: ${printDateStr}`;
+		printDateCell.font = { bold: true };
+		printDateCell.alignment = { vertical: 'middle', horizontal: 'left' };
+
+		// Заголовки колонок
+		const headers = ['ФИО', 'Должность', '%'];
+		for (let j = 0; j < headers.length; j++) {
+			const cell = worksheet.getCell(2, j + 1);
+			cell.value = headers[j];
+			cell.font = { bold: true };
+			cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+		}
+
+		// Данные строк
+		for (let i = 0; i < data.length; i++) {
+			const r = i + 3;
+			const user = data[i];
+			
+			// ФИО
+			const fioCell = worksheet.getCell(r, 1);
+			fioCell.value = `${user.lastname} ${user.firstname} ${user.patronymic ?? ''}`.trim();
+			fioCell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+			
+			// Должность
+			const jobRoleCell = worksheet.getCell(r, 2);
+			jobRoleCell.value = user.jobRoles;
+			jobRoleCell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+			
+			// %
+			const percentCell = worksheet.getCell(r, 3);
+			percentCell.value = user.percent / 100;
+			percentCell.numFmt = '0%';
+			percentCell.alignment = { vertical: 'middle', horizontal: 'center' };
+		}
+
+		// Ширина колонок
+		worksheet.getColumn(1).width = 35; // ФИО
+		worksheet.getColumn(2).width = 30; // Должность
+		worksheet.getColumn(3).width = 12; // %
+
+		// Границы для заголовков и данных (начиная со строки 2)
+		const lastRow = 2 + data.length;
+		const lastCol = headers.length;
+		for (let r = 2; r <= Math.max(lastRow, 2); r++) {
+			for (let c = 1; c <= lastCol; c++) {
+				worksheet.getCell(r, c).border = {
+					top: { style: 'thin' },
+					left: { style: 'thin' },
+					bottom: { style: 'thin' },
+					right: { style: 'thin' },
+				};
+			}
+		}
+
+		// Закрепление заголовка
+		worksheet.views = [{ state: 'frozen', xSplit: 0, ySplit: 2 }];
+
+		const arrayBuffer = await workbook.xlsx.writeBuffer();
+		const buffer: Buffer = Buffer.isBuffer(arrayBuffer)
+			? (arrayBuffer as Buffer)
+			: Buffer.from(arrayBuffer as ArrayBuffer);
+
+		const dateStr = new Date().toISOString().slice(0, 10);
+		const filename = `result_preview_${dateStr}.xlsx`;
+		return {
+			buffer,
+			filename,
+			contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+		};
+	}
 }
 
 export default new AnalyticsService();

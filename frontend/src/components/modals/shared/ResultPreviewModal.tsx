@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Modal, Input, Table, Empty } from 'antd';
+import { Modal, Input, Table, Empty, Button } from 'antd';
+import { DownloadOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { FC } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
-import { useGetUserResultPreviewQuery } from '@/store/endpoints';
+import { useGetUserResultPreviewQuery, useLazyDownloadAnalyticsResultPreviewQuery } from '@/store/endpoints';
 import type { UserResultPreviewDTO } from '@/types/api/user';
 
 interface ResultPreviewModalProps {
@@ -21,12 +22,30 @@ const ResultPreviewModal: FC<ResultPreviewModalProps> = ({ open, onClose }) => {
     { skip: !open }
   );
 
+  const [triggerDownload, { isFetching: isDownloading }] = useLazyDownloadAnalyticsResultPreviewQuery();
+
   // When opened, trigger immediate refetch to ensure fresh data regardless of cache
   useEffect(() => {
     if (open) {
       refetch();
     }
   }, [open, refetch]);
+
+  const handleDownload = async () => {
+    try {
+      const res = await triggerDownload({ query: debounced });
+      const payload = res.data as unknown as { blob: Blob; filename?: string } | undefined;
+      if (!payload) return;
+      const url = URL.createObjectURL(payload.blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = payload.filename || 'result_preview.xlsx';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Ошибка скачивания:', error);
+    }
+  };
 
   const columns = useMemo<ColumnsType<UserResultPreviewDTO>>(
     () => [
@@ -68,7 +87,16 @@ const ResultPreviewModal: FC<ResultPreviewModalProps> = ({ open, onClose }) => {
           allowClear
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          style={{ flex: 1 }}
         />
+        <Button
+          icon={<DownloadOutlined />}
+          onClick={handleDownload}
+          loading={isDownloading}
+          type="primary"
+        >
+          Скачать Excel
+        </Button>
       </div>
 
       <Table<UserResultPreviewDTO>

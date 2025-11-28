@@ -267,6 +267,24 @@ export const api = baseApi.injectEndpoints({
       }),
       keepUnusedDataFor: 0,
     }),
+    downloadAnalyticsResultPreview: build.query<{ blob: Blob; filename?: string }, { query: string }>({
+      query: ({ query }) => ({
+        url: `/api/analytics/downloadResultPreview`,
+        params: { query },
+        responseHandler: async (response) => {
+          if (!response.ok) {
+            const text = await response.text();
+            throw new Error(text || `HTTP ${response.status}`);
+          }
+          const cd = response.headers.get('Content-Disposition') || undefined;
+          const match = cd?.match(/filename\*=UTF-8''([^;]+)/);
+          const filename = match ? decodeURIComponent(match[1]) : undefined;
+          const blob = await response.blob();
+          return { blob, filename };
+        },
+      }),
+      keepUnusedDataFor: 0,
+    }),
     // Auth
     login: build.mutation<AuthDTO, LoginRequestDTO>({
       query: (body) => ({ url: '/api/auth/login', method: 'POST', body }),
@@ -1123,8 +1141,10 @@ export const {
   useDownloadAnalyticsUserToSkillsQuery,
   useDownloadAnalyticsSkillToUsersQuery,
   useDownloadAnalyticsDatesFamiliarizationQuery,
+  useDownloadAnalyticsResultPreviewQuery,
   useDownloadMySharedStatQuery,
   useLazyDownloadAnalyticsUserToSkillsQuery,
+  useLazyDownloadAnalyticsResultPreviewQuery,
   useLazyDownloadAnalyticsSkillToUsersQuery,
   useLazyDownloadAnalyticsDatesFamiliarizationQuery,
   useGetUserResultPreviewQuery,

@@ -5,6 +5,14 @@ WITH filtered_users AS (
          OR LOWER(u.firstname || ' ' || u.lastname || ' ' || u.patronymic) LIKE '%' || LOWER(:query) || '%'
          OR LOWER(u.login) LIKE '%' || LOWER(:query) || '%')
 ),
+user_job_roles AS (
+  SELECT ur."userId",
+         STRING_AGG(jr.title, ', ' ORDER BY jr.title) AS "jobRoles"
+  FROM "userToJobRoles" ur
+  JOIN "jobRoles" jr ON jr.id = ur."jobRoleId"
+  JOIN filtered_users fu ON fu.id = ur."userId"
+  GROUP BY ur."userId"
+),
 user_target_sum AS (
   -- targetLevel только из ролей (jobRoles)
   SELECT ur."userId",
@@ -70,8 +78,10 @@ SELECT fu.id AS "userId",
        CASE
          WHEN COALESCE(ucs.level, 0) = 0 OR COALESCE(uts."targetLevel", 0) = 0 THEN 0
          ELSE ROUND((ucs.level::numeric / uts."targetLevel"::numeric) * 100)::integer
-       END AS percent
+       END AS percent,
+       COALESCE(ujr."jobRoles", '-') AS "jobRoles"
 FROM filtered_users fu
 LEFT JOIN user_current_sum ucs ON ucs."userId" = fu.id
 LEFT JOIN user_target_sum uts ON uts."userId" = fu.id
+LEFT JOIN user_job_roles ujr ON ujr."userId" = fu.id
 ORDER BY fu.lastname, fu.firstname, fu.patronymic;
