@@ -6,6 +6,7 @@ import UserService from "./user.service";
 import {formatDate} from "../utils/formatDate";
 import SkillRepository from "../repositories/skill.repository";
 import JobRoleRepository from "../repositories/jobRole.repository";
+import UserRepository from "../repositories/user.repossitory";
 import ExcelJS from 'exceljs';
 import {SkillConfirmType} from "../models/types/SkillConfirmType";
 
@@ -1118,6 +1119,11 @@ class AnalyticsService {
 			filename,
 			contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 		};
+	}
+	
+	async getResultPreview(query: string) {
+		const result = await UserRepository.getResultPreview(query);
+		return result;
 	}
 }
 

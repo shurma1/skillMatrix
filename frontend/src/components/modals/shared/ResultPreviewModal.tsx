@@ -36,6 +36,11 @@ const ResultPreviewModal: FC<ResultPreviewModalProps> = ({ open, onClose }) => {
         render: (_, rec) => `${rec.lastname} ${rec.firstname} ${rec.patronymic ?? ''}`.trim(),
       },
       {
+        title: 'Должность',
+        dataIndex: 'jobRoles',
+        key: 'jobRoles',
+      },
+      {
         title: '%',
         dataIndex: 'percent',
         key: 'percent',

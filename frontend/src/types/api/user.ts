@@ -21,6 +21,7 @@ export interface UserResultPreviewDTO {
 	level: number;
 	targetLevel: number;
 	percent: number; // completion percent
+	jobRoles: string;
 }
 
 // User statistics for home page

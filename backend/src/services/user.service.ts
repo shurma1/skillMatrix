@@ -437,12 +437,6 @@ class UserService {
 		return confirmations;
 	}
 	
-	async getResultPreview(query: string) {
-		
-		const result = await UserRepossitory.getResultPreview(query);
-		return result;
-	}
-	
 	private instanceToUserDTO(user: UserInstance): UserDTO {
 		return new UserDTO(
 			user.id,

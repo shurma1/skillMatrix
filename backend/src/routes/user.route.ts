@@ -8,13 +8,6 @@ import permissionMiddleware from "../middlewares/permission.middleware";
 
 const router = express.Router();
 
-
-
-router.get(
-	'/getResultPreview',
-	UserController.getResultPreview
-);
-
 /**
  * @openapi
  * /api/user/search:

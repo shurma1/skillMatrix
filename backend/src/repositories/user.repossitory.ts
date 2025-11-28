@@ -41,6 +41,7 @@ interface UserPreview {
 	percent: number;
 	level: number;
 	targetLevel: number;
+	jobRoles: string;
 }
 
 

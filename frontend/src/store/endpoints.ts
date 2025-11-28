@@ -1002,7 +1002,7 @@ export const api = baseApi.injectEndpoints({
 
     // Result preview for login popup (no caching; always refetch on demand)
     getUserResultPreview: build.query<UserResultPreviewDTO[], { query: string }>({
-      query: ({ query }) => ({ url: '/api/user/getResultPreview', params: { query } }),
+      query: ({ query }) => ({ url: '/api/analytics/getResultPreview', params: { query } }),
       keepUnusedDataFor: 0,
     }),
   }),

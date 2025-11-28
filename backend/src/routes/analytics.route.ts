@@ -4,6 +4,11 @@ import permissionMiddleware from "../middlewares/permission.middleware";
 
 const router = express.Router();
 
+router.get(
+	'/getResultPreview',
+	AnalyticsController.getResultPreview
+);
+
 /**
  * @openapi
  * /api/analytics/datesFamiliarization/{skillId}:

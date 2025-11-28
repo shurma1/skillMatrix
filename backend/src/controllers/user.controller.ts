@@ -147,24 +147,7 @@ class UserController {
 		}
 	}
 	
-	async getResultPreview(req: Request, res: Response, next: NextFunction) {
-		try {
-			let {query} = req.query;
-			
-			if(typeof query === 'undefined') {
-				query = '';
-			}
-			else {
-				query = decodeURIComponent(query as string);
-			}
-			
-			const rusult = await UserService.getResultPreview(query);
-			
-			res.json(rusult);
-		} catch (err) {
-			next(err);
-		}
-	}
+
 	
 	async getSkill(req: Request, res: Response, next: NextFunction) {
 		try {

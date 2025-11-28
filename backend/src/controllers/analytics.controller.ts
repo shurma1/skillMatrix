@@ -166,6 +166,25 @@ class AnalyticsController {
 		}
 	}
 	
+	async getResultPreview(req: Request, res: Response, next: NextFunction) {
+		try {
+			let {query} = req.query;
+			
+			if(typeof query === 'undefined') {
+				query = '';
+			}
+			else {
+				query = decodeURIComponent(query as string);
+			}
+			
+			const result = await AnalyticsService.getResultPreview(query);
+			
+			res.json(result);
+		} catch (err) {
+			next(err);
+		}
+	}
+	
 }
 
 export default new AnalyticsController();
