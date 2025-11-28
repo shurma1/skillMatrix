@@ -277,7 +277,7 @@ class AnalyticsService {
 
 			for (let j = 0; j < colLabels.length; j++) {
 				const c = j + 2;
-				const value: any = data[j]?.[i] ?? 0;
+				const value = data[j]?.[i] ?? 0;
 				const cell = worksheet.getCell(r, c);
 				// Format percent column as numeric percent
 				if (colLabels[j] === '%') {
@@ -422,7 +422,7 @@ class AnalyticsService {
 			for (let j = 0; j < leftColCount; j++) {
 				const v = leftRow[j] ?? null;
 				const cell = worksheet.getCell(excelRow, j + 1);
-				cell.value = v as any;
+				cell.value = v;
 				cell.alignment = { vertical: 'middle', horizontal: j >= 2 ? 'left' : 'center', wrapText: true };
 			}
 			// Right block (matrix)
@@ -432,7 +432,7 @@ class AnalyticsService {
 				cell.value = mrow[j] ?? 0;
 				cell.alignment = { vertical: 'middle', horizontal: 'center' };
 				// pale yellow fill, like example
-				cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFDE9D9' } } as any; // subtle tint
+				cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFDE9D9' } };
 			}
 		}
 
@@ -573,7 +573,7 @@ class AnalyticsService {
 			// Left block
 			for (let j = 0; j < leftColCount; j++) {
 				const cell = worksheet.getCell(r, j + 1);
-				cell.value = (leftRow[j] ?? null) as any;
+				cell.value = leftRow[j] ?? null;
 				cell.alignment = { vertical: 'middle', horizontal: j >= 1 ? 'left' : 'center', wrapText: true };
 			}
 			// Middle block
@@ -581,14 +581,14 @@ class AnalyticsService {
 			const mcell = worksheet.getCell(r, midStartCol);
 			mcell.value = mval;
 			mcell.alignment = { vertical: 'middle', horizontal: 'center' };
-			mcell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFDE9D9' } } as any;
+			mcell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFDE9D9' } };
 			// Right block (users)
 			const urow = rightMatrix[i] ?? [];
 			for (let j = 0; j < userCount; j++) {
 				const cell = worksheet.getCell(r, rightStartCol + j);
 				cell.value = urow[j] ?? 0;
 				cell.alignment = { vertical: 'middle', horizontal: 'center' };
-				cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFDE9D9' } } as any;
+				cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFDE9D9' } };
 			}
 		}
 
@@ -643,8 +643,17 @@ class AnalyticsService {
 		const workbook = new ExcelJS.Workbook();
 		const worksheet = workbook.addWorksheet('UserToSkills');
 
-		const leftCols = analytics.left.colLabels as string[]; // 6 columns
-		const leftData = analytics.left.data as (string | number | null)[][];
+		// Дата печати в самом верху
+		const printDate = new Date();
+		const printDateStr = `${String(printDate.getDate()).padStart(2, '0')}.${String(printDate.getMonth() + 1).padStart(2, '0')}.${printDate.getFullYear()}`;
+		const printDateCell = worksheet.getCell(1, 1);
+		printDateCell.value = `Дата печати: ${printDateStr}`;
+		printDateCell.font = { bold: true };
+		printDateCell.alignment = { vertical: 'middle', horizontal: 'left' };
+
+		// Убираем первые 2 колонки: "Ответсвенный за навык / документ" и "Ответсвенный за подтверждение квалификации"
+		const leftCols = (analytics.left.colLabels as string[]).slice(2);
+		const leftData = (analytics.left.data as (string | number | null)[][]).map(row => row.slice(2));
 
 		const middleCols = (analytics.middle.colLabels?.[0] as (string | number)[][]) || [[], [], []]; // [[top],["ЦЕЛЬ"],[target]]
 		const middleMatrix = analytics.middle.data as number[][]; // skills x 1
@@ -652,70 +661,70 @@ class AnalyticsService {
 		const rightCols = analytics.right.colLabels as (string | number)[][]; // [[userName],[percent],[total]]
 		const rightMatrix = analytics.right.data as number[][]; // skills x 1
 
-		const leftColCount = leftCols.length; // expected 6
-		const midStartCol = leftColCount + 1; // 7th column
-		const rightStartCol = midStartCol + 1; // 8th column
+		const leftColCount = leftCols.length; // expected 4
+		const midStartCol = leftColCount + 1; // 5th column
+		const rightStartCol = midStartCol + 1; // 6th column
 
-		// Header row 1: left headers (vertical, merged 1..3 rows)
+		// Header row 2: left headers (vertical, merged 2..4 rows)
 		for (let j = 0; j < leftCols.length; j++) {
-			const cell = worksheet.getCell(1, j + 1);
+			const cell = worksheet.getCell(2, j + 1);
 			cell.value = leftCols[j];
 			cell.font = { bold: true };
 			cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true, textRotation: 90 } as ExcelJS.Alignment;
-			worksheet.mergeCells(1, j + 1, 3, j + 1);
+			worksheet.mergeCells(2, j + 1, 4, j + 1);
 		}
 
 		// Middle header (vertical top, then 'ЦЕЛЬ', then total target with grey fill)
-		worksheet.getCell(1, midStartCol).value = (middleCols?.[0]?.[0] ?? '') as string;
-		worksheet.getCell(1, midStartCol).font = { bold: true };
-		worksheet.getCell(1, midStartCol).alignment = { vertical: 'middle', horizontal: 'center', wrapText: true, textRotation: 90 } as ExcelJS.Alignment;
-		worksheet.getRow(1).height = 160;
-		worksheet.getCell(2, midStartCol).value = String(middleCols?.[1]?.[0] ?? 'ЦЕЛЬ');
+		worksheet.getCell(2, midStartCol).value = (middleCols?.[0]?.[0] ?? '') as string;
 		worksheet.getCell(2, midStartCol).font = { bold: true };
-		worksheet.getCell(2, midStartCol).alignment = { vertical: 'middle', horizontal: 'center' };
-		worksheet.getCell(3, midStartCol).value = Number(middleCols?.[2]?.[0] ?? 0);
+		worksheet.getCell(2, midStartCol).alignment = { vertical: 'middle', horizontal: 'center', wrapText: true, textRotation: 90 } as ExcelJS.Alignment;
+		worksheet.getRow(2).height = 160;
+		worksheet.getCell(3, midStartCol).value = String(middleCols?.[1]?.[0] ?? 'ЦЕЛЬ');
 		worksheet.getCell(3, midStartCol).font = { bold: true };
 		worksheet.getCell(3, midStartCol).alignment = { vertical: 'middle', horizontal: 'center' };
-		worksheet.getCell(3, midStartCol).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'D9D9D9' } };
+		worksheet.getCell(4, midStartCol).value = Number(middleCols?.[2]?.[0] ?? 0);
+		worksheet.getCell(4, midStartCol).font = { bold: true };
+		worksheet.getCell(4, midStartCol).alignment = { vertical: 'middle', horizontal: 'center' };
+		worksheet.getCell(4, midStartCol).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'D9D9D9' } };
 
 		// Right header (user name vertical, then percent and total current)
 		const userName = String(rightCols?.[0]?.[0] ?? '');
-		worksheet.getCell(1, rightStartCol).value = userName;
-		worksheet.getCell(1, rightStartCol).font = { bold: true };
-		worksheet.getCell(1, rightStartCol).alignment = { vertical: 'middle', horizontal: 'center', wrapText: true, textRotation: 90 } as ExcelJS.Alignment;
+		worksheet.getCell(2, rightStartCol).value = userName;
+		worksheet.getCell(2, rightStartCol).font = { bold: true };
+		worksheet.getCell(2, rightStartCol).alignment = { vertical: 'middle', horizontal: 'center', wrapText: true, textRotation: 90 } as ExcelJS.Alignment;
 		const percentVal = Number((rightCols?.[1]?.[0] as number) ?? 0);
 		const totalCurrent = Number((rightCols?.[2]?.[0] as number) ?? 0);
-		const pcCell = worksheet.getCell(2, rightStartCol);
+		const pcCell = worksheet.getCell(3, rightStartCol);
 		pcCell.value = (isFinite(percentVal) ? percentVal : 0) / 100;
 		pcCell.numFmt = '0%';
 		pcCell.alignment = { vertical: 'middle', horizontal: 'center' };
-		const totalCell = worksheet.getCell(3, rightStartCol);
+		const totalCell = worksheet.getCell(4, rightStartCol);
 		totalCell.value = totalCurrent;
 		totalCell.font = { bold: true };
 		totalCell.alignment = { vertical: 'middle', horizontal: 'center' };
 		totalCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'D9D9D9' } };
 
-		// Data rows start at 4
-		const startRow = 4;
+		// Data rows start at 5
+		const startRow = 5;
 		const rowCount = Math.max(leftData.length, middleMatrix.length, rightMatrix.length);
 		for (let i = 0; i < rowCount; i++) {
 			const r = startRow + i;
 			const leftRow = leftData[i] ?? [];
 			for (let j = 0; j < leftColCount; j++) {
 				const cell = worksheet.getCell(r, j + 1);
-				cell.value = (leftRow[j] ?? null) as any;
-				cell.alignment = { vertical: 'middle', horizontal: j >= 2 ? 'left' : 'center', wrapText: true };
+				cell.value = leftRow[j] ?? null;
+				cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
 			}
 			const mval = Number(middleMatrix?.[i]?.[0] ?? 0);
 			const mcell = worksheet.getCell(r, midStartCol);
 			mcell.value = mval;
 			mcell.alignment = { vertical: 'middle', horizontal: 'center' };
-			mcell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFDE9D9' } } as any;
+			mcell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFDE9D9' } };
 			const rval = Number(rightMatrix?.[i]?.[0] ?? 0);
 			const rcell = worksheet.getCell(r, rightStartCol);
 			rcell.value = rval;
 			rcell.alignment = { vertical: 'middle', horizontal: 'center' };
-			rcell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFDE9D9' } } as any;
+			rcell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFDE9D9' } };
 		}
 
 		// Column widths
@@ -729,10 +738,10 @@ class AnalyticsService {
 		worksheet.getColumn(midStartCol).width = 12;
 		worksheet.getColumn(rightStartCol).width = 12;
 
-		// Borders for used range
+		// Borders for used range (starting from row 2, row 1 is for print date)
 		const lastRow = startRow + rowCount - 1;
 		const lastCol = rightStartCol;
-		for (let r = 1; r <= Math.max(lastRow, 3); r++) {
+		for (let r = 2; r <= Math.max(lastRow, 4); r++) {
 			for (let c = 1; c <= lastCol; c++) {
 				worksheet.getCell(r, c).border = {
 					top: { style: 'thin' },
@@ -743,7 +752,7 @@ class AnalyticsService {
 			}
 		}
 
-		worksheet.views = [{ state: 'frozen', xSplit: midStartCol, ySplit: 3 }];
+		worksheet.views = [{ state: 'frozen', xSplit: midStartCol, ySplit: 4 }];
 
 		const arrayBuffer = await workbook.xlsx.writeBuffer();
 		const buffer: Buffer = Buffer.isBuffer(arrayBuffer)
@@ -795,7 +804,7 @@ class AnalyticsService {
 					cell.value = num / 100;
 					cell.numFmt = '0%';
 				} else {
-					cell.value = value as any;
+					cell.value = value;
 				}
 				cell.alignment = { vertical: 'middle', horizontal: j >= 3 ? 'center' : (j === 2 ? 'center' : 'left'), wrapText: true };
 			}
@@ -847,6 +856,10 @@ class AnalyticsService {
 		// Получаем все навыки связанные с пользователем
 		const skills = await SkillRepository.getSkillsByUserId(userId);
 		
+		// Получаем должности пользователя
+		const userJobRoles = await UserService.getAllJobroles(userId);
+		const jobRoleTitles = userJobRoles.map(jr => jr.title).join(', ') || 'Не указана';
+		
 		// Вспомогательная функция для сокращения имени
 		const shortenTheName = (lastname: string, firstname: string) => {
 			return `${lastname} ${firstname[0]}.`;
@@ -884,7 +897,7 @@ class AnalyticsService {
 		
 		// Middle содержит только базовую структуру с целью
 		const colLabels_2nd_p = [[
-			["Нужный уровень"],
+			[jobRoleTitles],
 			["ЦЕЛЬ"],
 			[totalTargetLevel]
 		]];
